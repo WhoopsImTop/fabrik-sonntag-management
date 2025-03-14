@@ -1,0 +1,6 @@
+@import "tailwindcss" theme(static);
+@import "@nuxt/ui";
+
+.btn {
+  @apply text-xs font-bold px-2 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-700 text-neutral-200 shadow-sm;
+}
