@@ -13,11 +13,18 @@
     "@nuxt/eslint": "^1.2.0",
     "@nuxt/ui": "^3.0.0",
     "@tailwindcss/vite": "^4.0.14",
+    "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
     "eslint": "^9.22.0",
+    "maplibre-gl": "^4.7.1",
+    "maplibre-gl-measures": "^0.0.15",
     "nuxt": "^3.16.0",
     "tailwindcss": "^4.0.14",
     "typescript": "^5.8.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@watergis/maplibre-gl-export": "^3.8.5"
   }
 }

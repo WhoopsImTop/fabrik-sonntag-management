@@ -2,16 +2,25 @@
 const items = ref([
   [
     {
-      label: "Haus 5",
+      label: "Campus",
+      icon: "i-lucide-map-pin-house",
+    },
+    {
+      label: "Gebäude",
       icon: "i-lucide-house",
-      active: true,
+      to: "/",
       defaultOpen: true,
       children: [
         {
-          label: "Haustechnik",
-          description: "Hier befinden sich die Screenshots der Zähler",
-          icon: "i-lucide-settings",
+          label: "Haus 5",
+          icon: "i-lucide-house",
+          to: "/haus-5",
           children: [
+            {
+              label: "Übersicht",
+              icon: "i-lucide-map",
+              to: "/haus-5/overview",
+            },
             {
               label: "Stromzähler",
               icon: "i-lucide-image",
@@ -25,6 +34,10 @@ const items = ref([
           ],
         },
       ],
+    },
+    {
+      label: "Mieter",
+      icon: "i-lucide-circle-user-round",
     },
   ],
   [
@@ -48,7 +61,7 @@ const items = ref([
   <UNavigationMenu
     orientation="vertical"
     :items="items"
-    class="data-[orientation=vertical]:w-56 h-screen"
+    class="data-[orientation=vertical]:w-56 h-full"
   >
   </UNavigationMenu>
 </template>
