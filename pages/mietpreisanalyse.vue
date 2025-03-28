@@ -1,12 +1,19 @@
 <template>
-  <!-- <AppAveragePriceCalculator :data="immobilienData"></AppAveragePriceCalculator> -->
   <UButton @click="openDownloadPage()">Excel herunterladen</UButton>
-  <UTable
+  <hr class="my-4 border border-neutral-100">
+  <div v-if="transformedData">
+    <AppRentalAdvertisementSummary
+      v-for="immo in transformedData"
+      :key="immo.groupId"
+      :advertisement-data="immo"
+    />
+  </div>
+  <!-- <UTable
     v-if="immobilienData"
     :columns="columns"
     :data="immobilienDataAsArray"
     class="flex-1"
-  />
+  /> -->
 </template>
 
 <script>
@@ -15,6 +22,7 @@ export default {
   data() {
     return {
       immobilienData: null,
+      transformedData: null,
       toast: useToast(),
       columns: [
         {
@@ -68,6 +76,31 @@ export default {
     },
   },
   methods: {
+    transformAdvertisementData(adData) {
+      return Object.keys(adData).map((groupId) => {
+        const ads = adData[groupId];
+
+        // Sortiere nach createdDate (älteste zuerst)
+        const sortedAds = [...ads].sort(
+          (a, b) => new Date(a.createdDate) - new Date(b.createdDate)
+        );
+
+        return {
+          groupId: groupId,
+          title: sortedAds[0].title,
+          address: sortedAds[0].address,
+          url: sortedAds[0].url,
+          squareMeters: sortedAds[0].squareMeters,
+          featureTags: sortedAds[0].featureTags,
+          lastFetch: sortedAds[sortedAds.length - 1].createdDate, // Neuester Eintrag
+          priceHistory: sortedAds.map((ad) => ({
+            price: ad.price,
+            createdDate: ad.createdDate,
+            squareMeters: ad.squareMeters,
+          })),
+        };
+      });
+    },
     openDownloadPage() {
       window.open(
         `https://haustechnik.fabrik-sonntag.de/api/immobilien/download`
@@ -78,6 +111,8 @@ export default {
         .get(import.meta.env.VITE_INTERNAL_API_URL + "/immobilien")
         .then((res) => {
           this.immobilienData = res.data;
+          this.transformedData = this.transformAdvertisementData(res.data);
+          console.log(this.transformedData);
           this.toast.add({
             title: "Immobilien geladen",
             description: "Die Immobiliendaten wurde erfolgreich geladen.",
