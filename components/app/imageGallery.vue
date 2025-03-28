@@ -1,5 +1,22 @@
 <template>
   <section>
+    <UModal
+      :open="selectedImage"
+      title="Bild löschen"
+      description="Möchtest du das ausgewählte Bild wirklich löschen?"
+    >
+      <template #body>
+        <UButton
+          active
+          color="neutral"
+          variant="outline"
+          active-color="error"
+          active-variant="solid"
+          @click="deleteImage"
+          >Bild löschen</UButton
+        >
+      </template>
+    </UModal>
     <div v-if="imageDates">
       <div
         v-for="(date, i) in Object.keys(imageDates)"
@@ -17,10 +34,16 @@
         </div>
         <div class="flex gap-4 items-center overflow-x-scroll flex-nowrap">
           <div
-            class="aspect-video min-w-90 w-90 flex items-center justify-center overflow-hidden rounded-md"
+            class="aspect-video min-w-90 w-90 flex items-center justify-center overflow-hidden rounded-md relative group"
             v-for="image in imageDates[date]"
             :key="image.name"
           >
+            <button
+              class="bg-white border-none outline-none w-8 h-8 rounded-full absolute top-2 right-2 z-10 items-center justify-center hidden group-hover:flex"
+              @click="selectedImage = image"
+            >
+              <UIcon name="i-lucide-trash-2" class="size-4" />
+            </button>
             <img :src="imagesUrl + image.url" :alt="image.name" />
           </div>
         </div>
@@ -40,7 +63,49 @@ export default {
       imageDates: null,
       imagesUrl: import.meta.env.VITE_INTERNAL_IMAGE_URL,
       toast: useToast(),
+      selectedImage: null,
     };
+  },
+  methods: {
+    deleteImage() {
+      const name = this.selectedImage.name;
+      axios
+        .delete(import.meta.env.VITE_INTERNAL_API_URL + "/images/" + name)
+        .then((res) => {
+          console.log(res.data);
+
+          // Fix: this.imageDates anstatt data verwenden
+          for (const date in this.imageDates) {
+            if (this.imageDates[date]) {
+              this.imageDates[date] = this.imageDates[date].filter(
+                (image) => image.name !== name
+              );
+
+              // Falls das Datum nach dem Entfernen leer ist, es aus dem Objekt löschen
+              if (this.imageDates[date].length === 0) {
+                delete this.imageDates[date];
+              }
+            }
+          }
+
+          this.selectedImage = null;
+          this.toast.add({
+            title: "Bild gelöscht",
+            description: "Das gewählte Bild wurde erfolgreich gelöscht.",
+            icon: "i-lucide-trash-2",
+            color: "primary",
+          });
+        })
+        .catch((e) => {
+          this.toast.add({
+            title: "Fehler beim Löschen...",
+            description:
+              "Es gab einen Fehler. Bitte versuche es später erneut.",
+            icon: "i-lucide-server-off",
+            color: "error",
+          });
+        });
+    },
   },
   mounted() {
     const routeParam = this.$route.query;
@@ -68,7 +133,7 @@ export default {
           title: "Bilder abgerufen",
           description: "Die Zählerbilder wurden erfolgreich abgerufen",
           icon: "i-lucide-image",
-          color: 'primary',
+          color: "primary",
         });
       })
       .catch((e) => {
@@ -76,7 +141,7 @@ export default {
           title: "Fehler beim Laden...",
           description: "Es gab einen Fehler bitte versuche es später erneut.",
           icon: "i-lucide-server-off",
-          color: 'error',
+          color: "error",
         });
       });
   },

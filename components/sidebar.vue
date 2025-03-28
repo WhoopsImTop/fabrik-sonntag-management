@@ -4,6 +4,7 @@ const items = ref([
     {
       label: "Campus",
       icon: "i-lucide-map-pin-house",
+      to: "/"
     },
     {
       label: "Gebäude",
@@ -17,27 +18,18 @@ const items = ref([
           to: "/haus-5",
           children: [
             {
-              label: "Übersicht",
-              icon: "i-lucide-map",
-              to: "/haus-5/overview",
-            },
-            {
-              label: "Stromzähler",
+              label: "Zähler",
               icon: "i-lucide-image",
-              to: "/haus-5/haustechnik?query=strom",
-            },
-            {
-              label: "Gaszähler",
-              icon: "i-lucide-image",
-              to: "/haus-5/haustechnik?query=gas",
+              to: "/haus-5/haustechnik",
             },
           ],
         },
       ],
     },
     {
-      label: "Mieter",
-      icon: "i-lucide-circle-user-round",
+      label: "Mietpreisanalyse",
+      icon: "i-lucide-chart-candlestick",
+      to: "/mietpreisanalyse"
     },
   ],
   [
