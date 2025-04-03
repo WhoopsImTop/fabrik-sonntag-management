@@ -1,5 +1,22 @@
 <template>
   <div class="mb-2 transition-all">
+    <UModal
+      :open="history"
+      :title="'Datenbankeintrag ' + history?.title + ' löschen?'"
+      description="Möchtest du den ausgewählten Datenbankeintrag wirklich löschen?"
+    >
+      <template #body>
+        <UButton
+          active
+          color="neutral"
+          variant="outline"
+          active-color="error"
+          active-variant="solid"
+          @click="deleteDatabaseEntry"
+          >Löschen</UButton
+        >
+      </template>
+    </UModal>
     <div
       class="flex items-center justify-between p-4 border border-neutral-200 rounded-lg bg-white"
       :class="isExpanded ? 'rounded-t-lg rounded-b-none' : ''"
@@ -8,7 +25,8 @@
         <a :href="advertisementData.url" target="_blank">
           <img :src="advertisementOwner(advertisementData.url)" class="h-4" />
         </a>
-        <span class="text-sm font-black max-w-[30vw] overflow-ellipsis whitespace-nowrap overflow-hidden"
+        <span
+          class="text-sm font-black max-w-[30vw] overflow-ellipsis whitespace-nowrap overflow-hidden"
           >{{ advertisementData.title }} | {{ advertisementData.address }}</span
         >
       </div>
@@ -53,19 +71,36 @@
       <div
         v-for="(history, index) in advertisementData.priceHistory"
         :key="index"
-        class="flex items-center gap-8 border-b border-neutral-200 py-2"
+        class="flex items-center justify-between border-b border-neutral-200 py-2"
       >
-        <p class="text-sm font-semibold">
-          Datum: {{ new Date(history.createdDate).toLocaleDateString("de-DE") }}
-        </p>
-        <p class="text-sm">Preis: {{ history.price }} €</p>
-        <p class="text-sm">Quadratmeter: {{ history.squareMeters }} m²</p>
+        <div class="flex items-center gap-8">
+          <UCheckbox
+            :model-value="selectedEntries.includes(history.id)"
+            @change="toggleSelection(history.id)"
+            :label="history.id"
+            :key="history.id"
+            :id="history.id"
+          />
+          <p class="text-sm font-semibold">
+            Datum:
+            {{ new Date(history.createdDate).toLocaleDateString("de-DE") }}
+          </p>
+          <p class="text-sm">Preis: {{ history.price }} €</p>
+          <p class="text-sm">Quadratmeter: {{ history.squareMeters }} m²</p>
+        </div>
+        <button
+          class="rounded-lg border border-neutral-200 p-2 flex items-center justify-center hover:bg-neutral-200 hover:cursor-pointer"
+          @click="askForDatabaseEntryDeletion(history)"
+        >
+          <UIcon name="i-lucide-trash-2" class="size-4" />
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 export default {
   props: {
     advertisementData: {
@@ -75,10 +110,15 @@ export default {
     averagePrice: {
       type: Number,
     },
+    selectedEntries: {
+      type: Array,
+    },
   },
   data() {
     return {
       isExpanded: false, // Zustand, ob die Preis-Historie angezeigt wird
+      history: null,
+      toast: useToast(),
     };
   },
   methods: {
@@ -90,6 +130,44 @@ export default {
     },
     togglePriceHistory() {
       this.isExpanded = !this.isExpanded; // Toggle für das Anzeigen der Preis-Historie
+    },
+    askForDatabaseEntryDeletion(history) {
+      this.history = history;
+    },
+    toggleSelection(id) {
+      const updatedSelection = this.selectedEntries.includes(id)
+        ? this.selectedEntries.filter((entryId) => entryId !== id)
+        : [...this.selectedEntries, id];
+
+      this.$emit("update-selected", updatedSelection);
+    },
+    deleteDatabaseEntry() {
+      console.log(this.history);
+      axios
+        .delete(
+          import.meta.env.VITE_INTERNAL_API_URL +
+            "/immobilien/" +
+            this.history.id
+        )
+        .then((res) => {
+          console.log(res.data);
+          this.history = null;
+          this.toast.add({
+            title: "Datenbankeintrag erfolgreich gelöscht",
+            description: "Der Datenbankeintrag wurde aus der Analyse gelöscht.",
+            icon: "i-lucide-server",
+            color: "primary",
+          });
+        })
+        .catch((err) => {
+          this.toast.add({
+            title: "Fehler beim Löschen...",
+            description:
+              "Es gab einen Fehler. Bitte versuche es später erneut.",
+            icon: "i-lucide-server-off",
+            color: "error",
+          });
+        });
     },
   },
   computed: {

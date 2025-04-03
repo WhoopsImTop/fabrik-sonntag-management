@@ -1,11 +1,23 @@
 <template>
-  <UButton @click="openDownloadPage()">Excel herunterladen</UButton>
-  <hr class="my-4 border border-neutral-100">
+  <AppAveragePrice :realEstateData="immobilienData" />
+  <div class="flex items-center justify-between">
+    <UButton @click="openDownloadPage()">Excel herunterladen</UButton
+    ><UButton @click="openCleanedDownloadPage()">Excel aufgeräumt herunterladen</UButton>
+    <UButton
+      :disabled="selectedEntriesFromParent.length === 0"
+      @click="deleteSelectedEntries()"
+      color="error"
+      >Ausgewählte löschen</UButton
+    >
+  </div>
+  <hr class="my-4 border border-neutral-100" />
   <div v-if="transformedData">
     <AppRentalAdvertisementSummary
       v-for="immo in transformedData"
       :key="immo.groupId"
       :advertisement-data="immo"
+      v-model:selectedEntries="selectedEntriesFromParent"
+      @update-selected="updateSelectedEntries"
     />
   </div>
   <!-- <UTable
@@ -24,6 +36,7 @@ export default {
       immobilienData: null,
       transformedData: null,
       toast: useToast(),
+      selectedEntriesFromParent: [],
       columns: [
         {
           accessorKey: "title",
@@ -94,6 +107,7 @@ export default {
           featureTags: sortedAds[0].featureTags,
           lastFetch: sortedAds[sortedAds.length - 1].createdDate, // Neuester Eintrag
           priceHistory: sortedAds.map((ad) => ({
+            id: ad.id,
             price: ad.price,
             createdDate: ad.createdDate,
             squareMeters: ad.squareMeters,
@@ -101,9 +115,44 @@ export default {
         };
       });
     },
+    updateSelectedEntries(newSelection) {
+      this.selectedEntriesFromParent = newSelection;
+    },
+    async deleteSelectedEntries() {
+      for (const id of this.selectedEntriesFromParent) {
+        try {
+          await axios.delete(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/immobilien/${id}`
+          );
+
+          this.toast.add({
+            title: "Datenbankeintrag gelöscht",
+            description: `Eintrag ${id} wurde entfernt.`,
+            icon: "i-lucide-server",
+            color: "primary",
+          });
+        } catch (err) {
+          this.toast.add({
+            title: "Fehler beim Löschen...",
+            description: `Fehler beim Löschen von ${id}.`,
+            icon: "i-lucide-server-off",
+            color: "error",
+          });
+        }
+      }
+
+      // Nach dem Löschen Liste leeren
+      this.selectedEntriesFromParent = [];
+      this.history = null;
+    },
     openDownloadPage() {
       window.open(
         `https://haustechnik.fabrik-sonntag.de/api/immobilien/download`
+      );
+    },
+    openCleanedDownloadPage() {
+      window.open(
+        `https://haustechnik.fabrik-sonntag.de/api/immobilien/download-cleaned`
       );
     },
     fetchImmobiliendata() {
