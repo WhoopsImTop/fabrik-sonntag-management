@@ -2,7 +2,9 @@
   <AppAveragePrice :realEstateData="immobilienData" />
   <div class="flex items-center justify-between">
     <UButton @click="openDownloadPage()">Excel herunterladen</UButton
-    ><UButton @click="openCleanedDownloadPage()">Excel aufgeräumt herunterladen</UButton>
+    ><UButton @click="openCleanedDownloadPage()"
+      >Excel aufgeräumt herunterladen</UButton
+    >
     <UButton
       :disabled="selectedEntriesFromParent.length === 0"
       @click="deleteSelectedEntries()"
@@ -12,13 +14,25 @@
   </div>
   <hr class="my-4 border border-neutral-100" />
   <div v-if="transformedData">
-    <AppRentalAdvertisementSummary
-      v-for="immo in transformedData"
-      :key="immo.groupId"
-      :advertisement-data="immo"
-      v-model:selectedEntries="selectedEntriesFromParent"
-      @update-selected="updateSelectedEntries"
-    />
+    <div class="flex flex-col">
+      <div
+        v-for="(regionObj, index) in transformedData"
+        :key="index"
+        class="mb-4"
+      >
+        <span class="font-bold text-sm mb-2 block" :id="Object.keys(regionObj)[0]">
+          {{ Object.keys(regionObj)[0] }} ({{ regionObj[Object.keys(regionObj)[0]].length }} Objekte)
+        </span>
+
+        <AppRentalAdvertisementSummary
+          v-for="immo in regionObj[Object.keys(regionObj)[0]]"
+          :key="immo.groupId"
+          :advertisement-data="immo"
+          v-model:selectedEntries="selectedEntriesFromParent"
+          @update-selected="updateSelectedEntries"
+        />
+      </div>
+    </div>
   </div>
   <!-- <UTable
     v-if="immobilienData"
@@ -90,7 +104,17 @@ export default {
   },
   methods: {
     transformAdvertisementData(adData) {
-      return Object.keys(adData).map((groupId) => {
+      const standardizedRegions = [
+        "Brühl",
+        "Freiburg",
+        "Waldkirch",
+        "Emmendingen",
+        "Gundelfingen",
+        "Elzach",
+        "Denzlingen",
+      ];
+
+      const transformedData = Object.keys(adData).map((groupId) => {
         const ads = adData[groupId];
 
         // Sortiere nach createdDate (älteste zuerst)
@@ -114,6 +138,23 @@ export default {
           })),
         };
       });
+      // Gruppiere nach 'address' basierend auf standardizedRegions
+      const groupedByRegion = transformedData.reduce((acc, item) => {
+        // Finde eine Region, die in der Adresse enthalten ist
+        const region =
+          standardizedRegions.find((r) => item.address.includes(r)) || "Andere";
+
+        if (!acc[region]) {
+          acc[region] = [];
+        }
+        acc[region].push(item);
+        return acc;
+      }, {});
+      console.log(groupedByRegion);
+      // Konvertiere das Objekt in das gewünschte Array-Format
+      return Object.keys(groupedByRegion).map((region) => ({
+        [region]: groupedByRegion[region],
+      }));
     },
     updateSelectedEntries(newSelection) {
       this.selectedEntriesFromParent = newSelection;

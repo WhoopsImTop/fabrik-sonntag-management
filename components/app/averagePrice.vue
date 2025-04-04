@@ -1,13 +1,23 @@
 <template>
   <div class="mb-8">
-    <h2 class="text-lg font-bold mb-4">Durchschnittliche Mietpreise nach Region</h2>
+    <h2 class="text-lg font-bold mb-4">
+      Durchschnittliche Mietpreise nach Region
+    </h2>
     <div
       class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
     >
-      <div class="p-4 rounded-lg shadow-sm bg-neutral-50" v-for="(average, region) in averagePrices" :key="region">
+      <a
+        class="p-4 rounded-lg shadow-sm bg-neutral-50"
+        v-for="(data, region) in averagePrices"
+        :key="region"
+        :href="'#'+region"
+      >
         <p class="text-sm font-bold">{{ region }}</p>
-        <p class="text-lg">{{ average.toFixed(2) }} €/m²</p>
-      </div>
+        <p class="text-lg">Ø {{ data.averagePricePerSqm.toFixed(2) }} €/m²</p>
+        <p class="text-xs">Min Fläche: {{ data.minSquareMeters }} m²</p>
+        <p class="text-xs">Max Fläche: {{ data.maxSquareMeters }} m²</p>
+        <p class="text-xs">Objekte: {{ data.count }}</p>
+      </a>
     </div>
   </div>
 </template>
@@ -33,26 +43,57 @@ export default {
         );
         const price = parseFloat(latestEntry.price.replace(".", ""));
 
-        if (!isNaN(squareMeters) && !isNaN(price)) {
+        if (!isNaN(squareMeters) && !isNaN(price) && squareMeters > 0) {
+          const sqmPrice = price / squareMeters;
+
           const regionKey = this.normalizeRegion(
-            latestEntry.region ? latestEntry.region : latestEntry.address
+            latestEntry.address ? latestEntry.address : latestEntry.region
           );
 
           if (!regionData[regionKey]) {
-            regionData[regionKey] = { totalPrice: 0, totalArea: 0 };
+            regionData[regionKey] = {
+              totalPrice: 0,
+              totalArea: 0,
+              minSquareMeters: Infinity,
+              maxSquareMeters: -Infinity,
+              count: 0,
+            };
           }
+
+          // Werte für die Region aktualisieren
           regionData[regionKey].totalPrice += price;
           regionData[regionKey].totalArea += squareMeters;
+          regionData[regionKey].minSquareMeters = Math.min(
+            regionData[regionKey].minSquareMeters,
+            squareMeters
+          );
+          regionData[regionKey].maxSquareMeters = Math.max(
+            regionData[regionKey].maxSquareMeters,
+            squareMeters
+          );
+          regionData[regionKey].count++;
         }
       }
-      console.log(regionData);
-      const averages = {};
+
+      // Durchschnittspreis pro Quadratmeter berechnen
+      const result = {};
       for (const region in regionData) {
-        averages[region] =
-          regionData[region].totalPrice / regionData[region].totalArea;
+        result[region] = {
+          averagePricePerSqm:
+            regionData[region].totalPrice / regionData[region].totalArea,
+          minSquareMeters:
+            regionData[region].minSquareMeters === Infinity
+              ? null
+              : regionData[region].minSquareMeters,
+          maxSquareMeters:
+            regionData[region].maxSquareMeters === -Infinity
+              ? null
+              : regionData[region].maxSquareMeters,
+          count: regionData[region].count,
+        };
       }
 
-      return averages;
+      return result;
     },
   },
   methods: {
