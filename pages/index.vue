@@ -1,5 +1,5 @@
 <template>
-  <app-map-component class="w-full h-screen"></app-map-component>
+  <app-map-component class="w-full h-full"></app-map-component>
 </template>
 
 <script>
