@@ -2,8 +2,9 @@
   <div class="relative h-full w-full">
     <AppDialogPoi
       v-if="isModalVisible"
-      class="absolute top-2 left-2 bottom-2 z-10 w-80"
+      class="absolute top-2 left-2 bottom-2 z-10 w-96"
       :poiToEdit="editingObj"
+      :isGeometryEditMode="isGeometryEditMode"
       @start-drawing="handleStartDrawing"
       @save="handleSave"
       @cancel="handleCancelEdit"
@@ -17,13 +18,27 @@
     >
       Speichere Änderungen...
     </div>
-    <button
-      v-if="!isModalVisible"
-      @click="handleCreateNew"
-      class="absolute top-20 left-2 bg-white p-2 rounded shadow-md z-10"
+    <div
+      class="absolute bottom-2 right-2 flex items-center gap-2 bg-white shadow-sm rounded-lg p-2 z-10"
     >
-      Neuen POI erstellen
-    </button>
+      <UTooltip text="Karte Editieren">
+        <button
+          @click="toggleEditingMode"
+          class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+        >
+          <UIcon name="i-lucide-pencil" class="size-6"></UIcon>
+        </button>
+      </UTooltip>
+      <UTooltip text="Eintrag in Karte hinzufügen">
+        <button
+          v-if="isEditingMode"
+          @click="handleCreateNew"
+          class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+        >
+          <UIcon name="i-lucide-map-pin-plus" class="size-6"></UIcon>
+        </button>
+      </UTooltip>
+    </div>
   </div>
 </template>
 
@@ -45,12 +60,15 @@ export default {
       map: null,
       draw: null,
       isSaving: false,
-      isModalVisible: false, // Steuert die Sichtbarkeit des Modals
-      isEditingPosition: false, // Zeigt an, ob gerade die Position bearbeitet wird
-      currentDrawFeatureId: null, // Speichert die ID des Features in MapboxDraw
-      allPoisData: [], // Speichert alle geladenen POI-Daten
-      editingObj: this.createEmptyEditingObject(), // Hält die Daten des aktuell bearbeiteten/neuen POIs
-      // areaGeoJson wird nicht mehr global gebraucht, da Geometrie Teil von editingObj ist
+      isModalVisible: false,
+      isEditingPosition: false,
+      currentDrawFeatureId: null,
+      allPoisData: [],
+      editingObj: this.createEmptyEditingObject(),
+      isEditingMode: false,
+      changesHappened: false,
+      isGeometryEditMode: false,
+      isDrawingNew: false,
     };
   },
 
@@ -63,45 +81,95 @@ export default {
     });
 
     this.draw = new MaplibreDraw({
-      displayControlsDefault: false, // Keine Standard-Controls
+      displayControlsDefault: false,
       controls: {
-        // Nur Trash-Control anzeigen, wenn etwas im Draw ist
-        trash: true,
+        point: true,
+        polygon: true,
+        trash: true
       },
-      // Optional: Styling für Draw anpassen
+      defaultMode: 'simple_select',
+      clickBuffer: 4,
+      touchBuffer: 25,
       styles: [
-        // Style für Punkte im Bearbeitungsmodus
+        // Aktive Punkte im Bearbeitungsmodus
         {
           id: "gl-draw-point-active",
           type: "circle",
-          filter: [
-            "all",
-            ["==", "$type", "Point"],
-            ["==", "meta", "feature"],
-            ["==", "active", "true"],
-          ],
+          filter: ["all", ["==", "$type", "Point"], ["==", "active", "true"]],
           paint: {
             "circle-radius": 7,
-            "circle-color": "#fbb03b", // Aktive Farbe
-          },
+            "circle-color": "#ff9800",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff"
+          }
         },
-        // Style für statische Punkte im Bearbeitungsmodus
+        // Inaktive Punkte
         {
-          id: "gl-draw-point-inactive",
+          id: "gl-draw-point",
           type: "circle",
-          filter: [
-            "all",
-            ["==", "$type", "Point"],
-            ["==", "meta", "feature"],
-            ["==", "active", "false"],
-          ],
+          filter: ["all", ["==", "$type", "Point"], ["==", "active", "false"]],
           paint: {
             "circle-radius": 5,
-            "circle-color": "#3bb2d0", // Inaktive Farbe
-          },
+            "circle-color": "#ff9800",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff"
+          }
         },
-        // Füge hier ggf. Styles für Polygone etc. hinzu
-      ],
+        // Aktive Polygon Fill
+        {
+          id: "gl-draw-polygon-fill-active",
+          type: "fill",
+          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]],
+          paint: {
+            "fill-color": "#cccccc",
+            "fill-outline-color": "#ff9800",
+            "fill-opacity": 0.4
+          }
+        },
+        // Inaktive Polygon Fill
+        {
+          id: "gl-draw-polygon-fill",
+          type: "fill",
+          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]],
+          paint: {
+            "fill-color": "#cccccc",
+            "fill-outline-color": "#ff9800",
+            "fill-opacity": 0.2
+          }
+        },
+        // Polygon Stroke - für aktive Bearbeitung
+        {
+          id: "gl-draw-polygon-stroke-active",
+          type: "line",
+          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]],
+          paint: {
+            "line-color": "#ff9800",
+            "line-width": 3
+          }
+        },
+        // Polygon Stroke - für inaktive Polygone
+        {
+          id: "gl-draw-polygon-stroke",
+          type: "line",
+          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]],
+          paint: {
+            "line-color": "#ff9800",
+            "line-width": 2
+          }
+        },
+        // Vertices - Eckpunkte für die Bearbeitung
+        {
+          id: "gl-draw-polygon-and-line-vertex-active",
+          type: "circle",
+          filter: ["all", ["==", "meta", "vertex"], ["==", "$type", "Point"]],
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#fff",
+            "circle-stroke-color": "#ff9800",
+            "circle-stroke-width": 2
+          }
+        }
+      ]
     });
 
     this.map.on("load", async () => {
@@ -116,41 +184,114 @@ export default {
         data: { type: "FeatureCollection", features: [] },
       });
 
-      // Layer für die POI-Anzeige hinzufügen (z.B. als Kreise)
+      // Layer für die POI-Anzeige hinzufügen
+      // Marker Layer für Punkte
       this.map.addLayer({
         id: POI_LAYER_ID,
-        type: "circle", // oder 'symbol' für Icons
+        type: "symbol",
         source: POI_SOURCE_ID,
-        paint: {
-          "circle-radius": 8,
-          "circle-color": "#3887be", // Blau für Anzeige
-          "circle-stroke-width": 1,
-          "circle-stroke-color": "#ffffff",
+        filter: ["==", "$type", "Point"],
+        layout: {
+          "icon-image": "marker",
+          "icon-size": 0.5,
+          "icon-allow-overlap": true,
+          "text-field": ["get", "shortName"],
+          "text-font": ["Open Sans Bold"],
+          "text-size": 24,
+          "text-offset": [0, -0.9],
+          "text-anchor": "top",
+          "text-allow-overlap": true,
+          "text-max-width": 8
         },
-        // Wichtig: Layer interaktiv machen
-        interactive: true,
+        paint: {
+          "text-color": "#000000",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2
+        }
       });
 
-      // Klick-Listener für die Anzeige-Layer hinzufügen
-      this.map.on("click", POI_LAYER_ID, this.handlePoiClick);
-      // Cursor ändern, wenn über einem POI
-      this.map.on("mouseenter", POI_LAYER_ID, () => {
-        this.map.getCanvas().style.cursor = "pointer";
+      // Layer für Polygone und Areas
+      this.map.addLayer({
+        id: "poi-area-layer",
+        type: "fill",
+        source: POI_SOURCE_ID,
+        filter: ["==", "$type", "Polygon"],
+        paint: {
+          "fill-color": "#cccccc",
+          "fill-opacity": 0.4
+        }
       });
-      this.map.on("mouseleave", POI_LAYER_ID, () => {
-        this.map.getCanvas().style.cursor = "";
+
+      // Outline für Polygone
+      this.map.addLayer({
+        id: "poi-area-outline",
+        type: "line",
+        source: POI_SOURCE_ID,
+        filter: ["==", "$type", "Polygon"],
+        paint: {
+          "line-color": "#ff9800",
+          "line-width": 2
+        }
+      });
+
+      // Lade das Marker-Bild
+      fetch("/marker.svg")
+        .then(response => response.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => {
+            if (!this.map.hasImage("marker")) {
+              this.map.addImage("marker", img);
+              URL.revokeObjectURL(url);
+            }
+          };
+          img.src = url;
+        })
+        .catch(error => console.error("Error loading marker image:", error));
+
+      // Klick-Listener für alle Layer hinzufügen
+      const poiLayers = [POI_LAYER_ID, "poi-area-layer"];
+      poiLayers.forEach(layerId => {
+        this.map.on("click", layerId, this.handlePoiClick);
+        this.map.on("mouseenter", layerId, () => {
+          this.map.getCanvas().style.cursor = "pointer";
+        });
+        this.map.on("mouseleave", layerId, () => {
+          this.map.getCanvas().style.cursor = "";
+        });
       });
 
       // Draw Event Listener
-      this.map.on("draw.update", this.handleDrawUpdate); // Wird ausgelöst, wenn Geometrie im Draw geändert wird
-      this.map.on("draw.create", this.handleDrawCreate); // Wird ausgelöst, wenn Geometrie im Draw neu erstellt wird
-      // this.map.on("draw.delete", this.handleDrawDelete); // Optional
+      this.map.on("draw.create", this.handleDrawCreate);
+      this.map.on("draw.update", this.handleDrawUpdate);
+
+      // Add area calculation listener
+      this.map.on('draw.create draw.update', (e) => {
+        if (e.features && e.features.length > 0) {
+          const feature = e.features[0];
+          if (feature.geometry.type === 'Polygon') {
+            const area = this.calculateArea(feature);
+            console.log(`Fläche: ${area.toFixed(2)} m²`);
+            // Show area in a small overlay
+            this.showAreaOverlay(area);
+          }
+        }
+      });
 
       await this.loadAndDisplayPois(); // POIs laden und in der Anzeige-Layer darstellen
     });
 
     this.map.on("error", (e) => {
       console.error("MapLibre Error:", e);
+    });
+
+    this.map.on('draw.modechange', (e) => {
+      if (e.mode === 'draw_polygon') {
+        this.map.doubleClickZoom.disable();
+      } else {
+        this.map.doubleClickZoom.enable();
+      }
     });
   },
 
@@ -160,9 +301,8 @@ export default {
       this.map.off("click", POI_LAYER_ID, this.handlePoiClick);
       this.map.off("mouseenter", POI_LAYER_ID);
       this.map.off("mouseleave", POI_LAYER_ID);
-      this.map.off("draw.update", this.handleDrawUpdate);
       this.map.off("draw.create", this.handleDrawCreate);
-      // this.map.off("draw.delete", this.handleDrawDelete);
+      this.map.off("draw.update", this.handleDrawUpdate);
 
       // Map-Instanz zerstören
       this.map.remove();
@@ -194,7 +334,7 @@ export default {
         const apiData = await response.json();
         console.log("API Data received:", apiData);
 
-        this.allPoisData = apiData; // Speichere die Rohdaten für später
+        this.allPoisData = apiData;
 
         if (!apiData || apiData.length === 0) {
           console.log("No POI data to display.");
@@ -208,21 +348,16 @@ export default {
 
         // Konvertiere API-Daten in GeoJSON Features für die Anzeige-Layer
         const features = apiData
-          .filter((poi) => poi.areaGeoJson && poi.areaGeoJson.geometry) // Nur POIs mit Geometrie
-          .map((poi) => {
-            // Wichtig: Erstelle eine Kopie des Features, um das Original nicht zu ändern
-            const feature = JSON.parse(JSON.stringify(poi.areaGeoJson));
-            // Stelle sicher, dass die ID und andere notwendige Infos in den Properties sind
-            feature.properties = {
-              ...(feature.properties || {}), // Behalte existierende Properties
-              poiId: poi.id, // Eindeutige ID des POIs
-              name: poi.name, // Name für Tooltips o.ä.
-              // Füge weitere Properties hinzu, falls benötigt
-            };
-            // Maplibre GL JS bevorzugt oft eine numerische ID im Feature selbst
-            feature.id = poi.id;
-            return feature;
-          });
+          .filter((poi) => poi.areaGeoJson && poi.areaGeoJson.geometry)
+          .map((poi) => ({
+            ...poi.areaGeoJson,
+            properties: {
+              ...poi.areaGeoJson.properties,
+              poiId: poi.id,
+              name: poi.name,
+              shortName: poi.shortName
+            }
+          }));
 
         const geoJsonData = {
           type: "FeatureCollection",
@@ -231,16 +366,9 @@ export default {
 
         console.log("Updating POI display source:", geoJsonData);
 
-        // Aktualisiere die Datenquelle der Anzeige-Layer
         if (this.map.getSource(POI_SOURCE_ID)) {
           this.map.getSource(POI_SOURCE_ID).setData(geoJsonData);
-        } else {
-          console.warn("POI Source not yet available during load");
-          // Eventuell warten, bis Source sicher da ist oder erneut versuchen
         }
-
-        // Stelle sicher, dass MapboxDraw leer ist
-        this.draw.deleteAll();
       } catch (error) {
         console.error("Error loading POIs:", error);
       }
@@ -294,148 +422,145 @@ export default {
     handleCancelEdit() {
       console.log("Edit cancelled");
       this.isModalVisible = false;
-      this.cleanupEditMode(); // Bearbeitungsmodus beenden und Draw leeren
-      this.editingObj = this.createEmptyEditingObject(); // Reset
+      this.isGeometryEditMode = false;
+      this.isDrawingNew = false;
+      this.cleanupEditMode();
+      this.editingObj = this.createEmptyEditingObject();
     },
 
-    // Wird vom Modal aufgerufen, wenn "Position bearbeiten" geklickt wird
     handleEditPositionStart() {
-      if (
-        !this.editingObj ||
-        !this.editingObj.areaGeoJson ||
-        !this.editingObj.id
-      ) {
-        console.error(
-          "Cannot edit position: No valid POI loaded in editingObj."
-        );
+      if (!this.editingObj || !this.editingObj.areaGeoJson || !this.editingObj.id) {
+        console.error("Cannot edit position: No valid POI loaded in editingObj.");
         return;
       }
 
-      console.log(`Starting position edit for POI ID: ${this.editingObj.id}`);
-      this.isEditingPosition = true;
+      this.isGeometryEditMode = !this.isGeometryEditMode;
+      console.log(`Geometry edit mode: ${this.isGeometryEditMode ? 'enabled' : 'disabled'} for POI ID: ${this.editingObj.id}`);
 
-      // 1. Feature aus der Anzeige-Layer "entfernen" (wir filtern es aus)
-      this.map.setFilter(POI_LAYER_ID, [
-        "!=",
-        ["get", "poiId"],
-        this.editingObj.id,
-      ]);
+      if (this.isGeometryEditMode) {
+        // Aktiviere Bearbeitung
+        this.isEditingPosition = true;
 
-      // 2. Feature zu MapboxDraw hinzufügen
-      const featureToAdd = JSON.parse(
-        JSON.stringify(this.editingObj.areaGeoJson)
-      );
-      // Stelle sicher, dass Draw die POI-ID kennt, falls sie nicht im Feature.id ist
-      featureToAdd.properties = {
-        ...(featureToAdd.properties || {}),
-        poiId: this.editingObj.id,
-      };
-      // MapboxDraw braucht eine eigene ID, wir speichern sie
-      const addedFeatures = this.draw.add(featureToAdd);
-      if (addedFeatures && addedFeatures.length > 0) {
-        this.currentDrawFeatureId = addedFeatures[0]; // Die von Draw vergebene ID speichern
+        // Nur für Polygone den Filter setzen
+        if (this.editingObj.areaGeoJson.geometry.type === "Polygon") {
+          this.map.setFilter("poi-area-layer", ["!=", ["get", "poiId"], this.editingObj.id]);
+          this.map.setFilter("poi-area-outline", ["!=", ["get", "poiId"], this.editingObj.id]);
+        }
 
-        // 3. In den Bearbeitungsmodus wechseln (Punkt direkt auswählbar machen)
-        this.draw.changeMode("direct_select", {
-          featureId: this.currentDrawFeatureId,
-        });
-        console.log(
-          `Feature ${this.currentDrawFeatureId} added to Draw and selected.`
-        );
+        // Feature zu MapboxDraw hinzufügen
+        const featureToAdd = JSON.parse(JSON.stringify(this.editingObj.areaGeoJson));
+        featureToAdd.properties = {
+          ...(featureToAdd.properties || {}),
+          poiId: this.editingObj.id,
+        };
+        const addedFeatures = this.draw.add(featureToAdd);
+        if (addedFeatures && addedFeatures.length > 0) {
+          this.currentDrawFeatureId = addedFeatures[0];
+          
+          // Für Punkte und Polygone unterschiedliche Modi verwenden
+          const mode = this.editingObj.areaGeoJson.geometry.type === "Point" ? "simple_select" : "direct_select";
+          this.draw.changeMode(mode, {
+            featureId: this.currentDrawFeatureId,
+          });
+        }
       } else {
-        console.error("Failed to add feature to Mapbox Draw");
-        this.cleanupEditMode(); // Rollback
+        // Deaktiviere Bearbeitung und speichere die aktuelle Geometrie
+        if (this.currentDrawFeatureId) {
+          const updatedFeature = this.draw.get(this.currentDrawFeatureId);
+          if (updatedFeature) {
+            // Aktualisiere die Geometrie im editingObj
+            this.editingObj.areaGeoJson = {
+              type: "Feature",
+              properties: updatedFeature.properties,
+              geometry: updatedFeature.geometry,
+            };
+            
+            // Aktualisiere auch in allPoisData
+            const poiIndex = this.allPoisData.findIndex(poi => poi.id === this.editingObj.id);
+            if (poiIndex !== -1) {
+              this.allPoisData[poiIndex] = {
+                ...this.allPoisData[poiIndex],
+                areaGeoJson: this.editingObj.areaGeoJson
+              };
+            }
+            
+            // Aktualisiere die Anzeige sofort
+            const geoJsonData = {
+              type: "FeatureCollection",
+              features: this.allPoisData.map(poi => ({
+                ...poi.areaGeoJson,
+                properties: {
+                  ...poi.areaGeoJson.properties,
+                  poiId: poi.id,
+                  name: poi.name,
+                  shortName: poi.shortName
+                }
+              }))
+            };
+
+            // Aktualisiere die Datenquelle
+            if (this.map.getSource(POI_SOURCE_ID)) {
+              this.map.getSource(POI_SOURCE_ID).setData(geoJsonData);
+            }
+          }
+        }
+        
+        // Cleanup
+        this.cleanupEditMode();
+        // Filter zurücksetzen
+        this.map.setFilter("poi-area-layer", null);
+        this.map.setFilter("poi-area-outline", null);
       }
     },
 
     // Wird aufgerufen, wenn die Geometrie im Draw *verändert* wurde
     async handleDrawUpdate(e) {
       if (!this.isEditingPosition || !e.features || e.features.length === 0) {
-        // Nur speichern, wenn wir explizit im Positions-Bearbeitungsmodus sind
         return;
       }
 
       const updatedFeature = e.features[0];
-      // Stelle sicher, dass es das Feature ist, das wir bearbeiten
       if (updatedFeature.id !== this.currentDrawFeatureId) {
-        console.warn(
-          "Draw update event for unexpected feature:",
-          updatedFeature.id
-        );
+        console.warn("Draw update event for unexpected feature:", updatedFeature.id);
         return;
       }
 
-      const poiId = updatedFeature.properties.poiId || this.editingObj.id; // Hole POI ID
-
-      if (!poiId) {
-        console.error(
-          "Cannot update feature: Missing 'poiId' in feature properties or editingObj.",
-          updatedFeature
-        );
-        alert(
-          "Fehler: Konnte das Objekt nicht eindeutig identifizieren. Änderung nicht gespeichert."
-        );
-        return;
-      }
-
-      console.log(
-        `Feature ${this.currentDrawFeatureId} (POI ID: ${poiId}) updated in Draw.`
-      );
-      this.isSaving = true;
-
-      // Aktualisiere die Geometrie im `editingObj` sofort
+      // Aktualisiere die Geometrie im editingObj
       this.editingObj.areaGeoJson = {
         type: "Feature",
-        properties: updatedFeature.properties, // Behalte Properties bei
+        properties: updatedFeature.properties,
         geometry: updatedFeature.geometry,
       };
 
-      // Sende nur die Geometrie-Änderung per PATCH
-      const patchData = {
-        areaGeoJson: this.editingObj.areaGeoJson,
-      };
-
-      console.log(
-        `Sending PATCH to /api/pois/${poiId} with geometry data:`,
-        patchData
-      );
-
+      // Optional: Speichern Sie die Änderungen sofort auf dem Server
+      this.isSaving = true;
       try {
         const response = await fetch(
-          `http://localhost:3001/api/pois/${poiId}`,
+          `http://localhost:3001/api/pois/${this.editingObj.id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(patchData),
+            body: JSON.stringify({
+              areaGeoJson: this.editingObj.areaGeoJson,
+            }),
           }
         );
 
         if (!response.ok) {
-          // Fehlerbehandlung wie im Originalcode
-          let errorBody = null;
-          try {
-            errorBody = await response.json();
-          } catch (e) {}
-          console.error(
-            "API PATCH request failed:",
-            response.status,
-            errorBody
-          );
-          throw new Error(
-            `API PATCH request failed with status ${response.status}. ${
-              errorBody?.message || ""
-            }`
-          );
+          throw new Error(`API request failed with status ${response.status}`);
         }
 
-        const result = await response.json();
-        console.log("API PATCH (geometry) successful:", result);
-        // Optional: Kurze Bestätigung anzeigen, aber Modal bleibt offen
-        // alert("Position erfolgreich gespeichert!");
+        // Aktualisiere allPoisData und die Anzeige
+        const poiIndex = this.allPoisData.findIndex(poi => poi.id === this.editingObj.id);
+        if (poiIndex !== -1) {
+          this.allPoisData[poiIndex] = {
+            ...this.allPoisData[poiIndex],
+            areaGeoJson: this.editingObj.areaGeoJson
+          };
+        }
       } catch (error) {
-        console.error("Error sending PATCH request for geometry:", error);
-        alert(`Fehler beim Speichern der Positionsänderung: ${error.message}`);
-        // Hier könntest du überlegen, die Bearbeitung abzubrechen oder die alte Position wiederherzustellen
+        console.error("Error updating geometry:", error);
+        alert("Fehler beim Speichern der Geometrie-Änderung");
       } finally {
         this.isSaving = false;
       }
@@ -443,101 +568,109 @@ export default {
 
     // Wird aufgerufen, wenn eine *neue* Geometrie im Draw *erstellt* wurde
     handleDrawCreate(e) {
+      console.log("Draw create event:", e);
+      
+      if (!e.features || e.features.length === 0 || !this.isDrawingNew) {
+        console.log("Ignoring invalid draw create event");
+        return;
+      }
+
       if (!this.isModalVisible || this.editingObj.id !== null) {
-        // Dies sollte nur passieren, wenn wir einen *neuen* POI erstellen
-        console.warn("draw.create triggered unexpectedly.");
-        // Lösche das gezeichnete Feature wieder, da es nicht Teil des Workflows ist
-        if (e.features && e.features.length > 0) {
-          this.draw.delete(e.features.map((f) => f.id));
-        }
+        console.warn("draw.create triggered in invalid state");
+        this.draw.delete(e.features.map(f => f.id));
         return;
       }
 
       const newFeature = e.features[0];
+      if (!newFeature || !newFeature.geometry) {
+        console.warn("Invalid feature created");
+        return;
+      }
+
+      if (this.currentDrawFeatureId === newFeature.id) {
+        console.log("Ignoring duplicate feature");
+        return;
+      }
+      this.currentDrawFeatureId = newFeature.id;
+
       console.log("New geometry created:", newFeature);
 
-      // Speichere die neue Geometrie im editingObj für den neuen POI
+      // Stelle sicher, dass die Geometrie korrekt gesetzt wird
       this.editingObj.areaGeoJson = {
         type: "Feature",
-        properties: {}, // Initial leere Properties
-        geometry: newFeature.geometry,
+        properties: {},
+        geometry: {
+          type: newFeature.geometry.type,
+          coordinates: JSON.parse(JSON.stringify(newFeature.geometry.coordinates))
+        }
       };
 
-      // Wechsle zurück in den einfachen Auswahlmodus, um versehentliches Weiterzeichnen zu verhindern
-      this.draw.changeMode("simple_select");
-      // Optional: Lösche das Feature aus Draw, da die Geometrie nun im `editingObj` ist
-      // this.draw.delete(newFeature.id); // Oder behalte es für visuelles Feedback?
+      console.log("Updated editingObj with new geometry:", this.editingObj);
+
+      this.draw.changeMode("simple_select", { featureId: newFeature.id });
+      this.map.doubleClickZoom.enable();
+      this.isDrawingNew = false;
     },
 
     // Wird vom Modal aufgerufen, um das Zeichnen für einen *neuen* POI zu starten
     handleStartDrawing(mode) {
       if (!this.map || !this.draw) return;
       if (this.editingObj.id !== null) {
-        console.warn(
-          "Drawing should only be started for new POIs via this method."
-        );
+        console.warn("Drawing should only be started for new POIs via this method.");
         return;
       }
 
-      // Vorherige Zeichnungen in Draw löschen (sollte leer sein, aber sicher ist sicher)
+      // Vorherige Zeichnungen in Draw löschen
       this.draw.deleteAll();
-      this.editingObj.areaGeoJson = null; // Geometrie zurücksetzen
+      this.editingObj.areaGeoJson = null;
+      this.isDrawingNew = true;
 
       if (mode === "point") {
         console.log("Starting to draw a point for new POI...");
         this.draw.changeMode("draw_point");
       } else if (mode === "polygon") {
         console.log("Starting to draw a polygon for new POI...");
+        this.map.doubleClickZoom.disable();
         this.draw.changeMode("draw_polygon");
-      }
-      // Füge ggf. 'line_string' etc. hinzu
-      else {
-        console.warn("Unknown drawing mode:", mode);
       }
     },
 
     // Speichert die Daten aus dem Modal (Metadaten und ggf. neue Geometrie)
     async handleSave(poiDataFromModal) {
-      console.log("Save triggered from modal with data:", poiDataFromModal);
-      this.isSaving = true;
-
-      // Kombiniere Modal-Daten mit der Geometrie aus editingObj
-      // Überschreibe Felder aus poiDataFromModal in unserem editingObj
-      const dataToSend = {
-        ...this.editingObj, // Enthält ID (wenn vorhanden) und areaGeoJson
-        ...poiDataFromModal, // Überschreibt Name, Adresse etc. mit Werten aus dem Modal
-      };
-      // Entferne die ID aus den zu sendenden Daten, wenn es ein neuer POI ist
-      if (dataToSend.id === null) {
-        delete dataToSend.id;
-      }
-
-      // Prüfe, ob eine Geometrie vorhanden ist (wichtig für neue POIs)
-      if (!dataToSend.areaGeoJson || !dataToSend.areaGeoJson.geometry) {
+      console.log("Save triggered with modal data:", poiDataFromModal);
+      
+      // Prüfe, ob eine Geometrie vorhanden ist
+      if (!this.editingObj.areaGeoJson || !this.editingObj.areaGeoJson.geometry) {
+        console.error("No geometry data available for saving", this.editingObj);
         alert("Bitte legen Sie zuerst eine Position auf der Karte fest.");
-        this.isSaving = false;
         return;
       }
 
-      try {
-        let response;
-        let url;
+      this.isSaving = true;
 
-        if (this.editingObj.id !== null) {
-          // --- UPDATE (PATCH) ---
-          url = `http://localhost:3001/api/pois/${this.editingObj.id}`;
-          console.log(`Sending PATCH to ${url} with data:`, dataToSend);
-          response = await fetch(url, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            // Sende nur die geänderten Metadaten UND die (potentiell auch geänderte) Geometrie
-            body: JSON.stringify(dataToSend),
-          });
+      try {
+        // Kombiniere Modal-Daten mit der Geometrie
+        const dataToSend = {
+          ...poiDataFromModal,
+          areaGeoJson: this.editingObj.areaGeoJson
+        };
+
+        console.log("Sending data to API:", dataToSend);
+
+        let response;
+        if (this.editingObj.id) {
+          // Update existierenden POI
+          response = await fetch(
+            `http://localhost:3001/api/pois/${this.editingObj.id}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(dataToSend),
+            }
+          );
         } else {
-          // --- CREATE (POST) ---
-          url = "http://localhost:3001/api/pois";
-          console.log(`Sending POST to ${url} with data:`, dataToSend);
-          response = await fetch(url, {
+          // Erstelle neuen POI
+          response = await fetch("http://localhost:3001/api/pois", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dataToSend),
@@ -545,45 +678,78 @@ export default {
         }
 
         if (!response.ok) {
-          // Fehlerbehandlung wie im Original
-          let errorBody = null;
-          try {
-            errorBody = await response.json();
-          } catch (e) {}
-          console.error(
-            `API ${this.editingObj.id ? "PATCH" : "POST"} request failed:`,
-            response.status,
-            errorBody
-          );
-          throw new Error(
-            `API request failed with status ${response.status}. ${
-              errorBody?.message || ""
-            }`
-          );
+          throw new Error(`API request failed with status ${response.status}`);
         }
 
         const result = await response.json();
-        console.log(
-          `API ${this.editingObj.id ? "PATCH" : "POST"} successful:`,
-          result
-        );
-        alert(
-          `POI erfolgreich ${this.editingObj.id ? "aktualisiert" : "erstellt"}!`
-        );
+        console.log("API save successful:", result);
 
-        // Nach erfolgreichem Speichern:
+        // Aktualisiere die lokalen Daten
+        if (this.editingObj.id) {
+          // Update in allPoisData
+          const index = this.allPoisData.findIndex(
+            (poi) => poi.id === this.editingObj.id
+          );
+          if (index !== -1) {
+            this.allPoisData[index] = result;
+          }
+        } else {
+          // Füge neuen POI hinzu
+          this.allPoisData.push(result);
+        }
+
+        // Aktualisiere die Kartenanzeige
+        const geoJsonData = {
+          type: "FeatureCollection",
+          features: this.allPoisData.map(poi => ({
+            ...poi.areaGeoJson,
+            properties: {
+              ...poi.areaGeoJson.properties,
+              poiId: poi.id,
+              name: poi.name,
+              shortName: poi.shortName
+            }
+          }))
+        };
+
+        if (this.map.getSource(POI_SOURCE_ID)) {
+          this.map.getSource(POI_SOURCE_ID).setData(geoJsonData);
+        }
+
+        // Cleanup
         this.isModalVisible = false;
-        this.cleanupEditMode(); // Stellt sicher, dass Draw sauber ist und Filter zurückgesetzt wird
-        await this.loadAndDisplayPois(); // Daten neu laden und anzeigen
-        this.editingObj = this.createEmptyEditingObject(); // Reset für nächsten Einsatz
-      } catch (error) {
-        console.error(
-          `Error sending ${this.editingObj.id ? "PATCH" : "POST"} request:`,
-          error
+        this.cleanupEditMode();
+        this.editingObj = this.createEmptyEditingObject();
+        this.isDrawingNew = false;
+
+        alert(
+          this.editingObj.id
+            ? "POI erfolgreich aktualisiert!"
+            : "Neuer POI erfolgreich erstellt!"
         );
-        alert(`Fehler beim Speichern des POIs: ${error.message}`);
+      } catch (error) {
+        console.error("Error saving POI:", error);
+        alert(`Fehler beim Speichern: ${error.message}`);
       } finally {
         this.isSaving = false;
+      }
+    },
+
+    toggleEditingMode() {
+      try {
+        if (!this.changesHappened) {
+          this.isEditingMode = !this.isEditingMode;
+        } else {
+          if (
+            window.confirm(
+              "Es gab änderungen wollen Sie den Editiermodus trotzdem verlassen ?"
+            )
+          ) {
+            this.isEditingMode = true;
+          }
+        }
+      } catch (e) {
+        console.log(e);
       }
     },
 
@@ -593,11 +759,14 @@ export default {
     cleanupEditMode() {
       if (this.isEditingPosition) {
         console.log("Cleaning up position edit mode.");
-        // Filter zurücksetzen, damit alle POIs wieder angezeigt werden
-        this.map.setFilter(POI_LAYER_ID, null);
+        this.map.setFilter("poi-area-layer", null);
+        this.map.setFilter("poi-area-outline", null);
         this.isEditingPosition = false;
       }
+      this.isGeometryEditMode = false;
+      this.isDrawingNew = false;
       this.cleanupDraw();
+      this.map.doubleClickZoom.enable();
     },
 
     // Leert MapboxDraw und setzt zugehörige Zustände zurück
@@ -607,8 +776,56 @@ export default {
         this.draw.deleteAll();
       }
       this.currentDrawFeatureId = null;
-      // Ggf. Modus zurücksetzen
-      this.draw.changeMode("simple_select");
+      this.draw?.changeMode("simple_select");
+    },
+
+    calculateArea(feature) {
+      const coordinates = feature.geometry.coordinates[0];
+      let area = 0;
+      
+      // Using the Shoelace formula (Gauss's area formula)
+      for (let i = 0; i < coordinates.length - 1; i++) {
+        const p1 = this.convertToMeters(coordinates[i]);
+        const p2 = this.convertToMeters(coordinates[i + 1]);
+        area += (p1[0] * p2[1]) - (p2[0] * p1[1]);
+      }
+      
+      return Math.abs(area) / 2;
+    },
+
+    convertToMeters(coord) {
+      // Convert longitude/latitude to approximate meters
+      // Using equirectangular projection (rough approximation, good enough for small areas)
+      const R = 6371000; // Earth's radius in meters
+      const lat = coord[1] * Math.PI / 180;
+      const lon = coord[0] * Math.PI / 180;
+      const x = lon * R * Math.cos(lat);
+      const y = lat * R;
+      return [x, y];
+    },
+
+    showAreaOverlay(area) {
+      // Remove existing overlay if any
+      const existingOverlay = document.getElementById('area-overlay');
+      if (existingOverlay) {
+        existingOverlay.remove();
+      }
+
+      // Create new overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'area-overlay';
+      overlay.style.position = 'absolute';
+      overlay.style.bottom = '60px';
+      overlay.style.right = '10px';
+      overlay.style.backgroundColor = 'white';
+      overlay.style.padding = '8px 12px';
+      overlay.style.borderRadius = '4px';
+      overlay.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+      overlay.style.zIndex = '1000';
+      overlay.style.fontSize = '14px';
+      overlay.innerHTML = `Fläche: ${area.toFixed(2)} m²`;
+
+      this.map.getContainer().appendChild(overlay);
     },
   },
 };

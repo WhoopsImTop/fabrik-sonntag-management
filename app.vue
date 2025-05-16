@@ -1,6 +1,6 @@
 <template>
   <div>
-    <UApp>
+    <UApp TooltipProviderProps="true">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
