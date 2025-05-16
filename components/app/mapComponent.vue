@@ -38,6 +38,19 @@
           <UIcon name="i-lucide-map-pin-plus" class="size-6"></UIcon>
         </button>
       </UTooltip>
+      <UTooltip text="Karte als PDF exportieren">
+        <button
+          @click="exportMap"
+          class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+          :disabled="isExporting"
+        >
+          <UIcon 
+            :name="isExporting ? 'i-lucide-loader-2' : 'i-lucide-download'" 
+            class="size-6"
+            :class="{ 'animate-spin': isExporting }"
+          ></UIcon>
+        </button>
+      </UTooltip>
     </div>
   </div>
 </template>
@@ -69,6 +82,7 @@ export default {
       changesHappened: false,
       isGeometryEditMode: false,
       isDrawingNew: false,
+      isExporting: false,
     };
   },
 
@@ -77,7 +91,7 @@ export default {
       container: "mapContainer",
       style: fabrikSonntagStyle,
       center: [7.968404, 48.098452],
-      zoom: 16,
+      zoom: 18,
     });
 
     this.draw = new MaplibreDraw({
@@ -826,6 +840,127 @@ export default {
       overlay.innerHTML = `Fläche: ${area.toFixed(2)} m²`;
 
       this.map.getContainer().appendChild(overlay);
+    },
+
+    async exportMap() {
+      if (!this.map || this.isExporting) return;
+      
+      try {
+        this.isExporting = true;
+
+        // Get the current view state
+        const currentCenter = this.map.getCenter();
+        const currentBearing = this.map.getBearing();
+        const currentPitch = this.map.getPitch();
+
+        // Store current dimensions
+        const container = this.map.getContainer();
+        const originalWidth = container.style.width;
+        const originalHeight = container.style.height;
+
+        // Calculate dimensions for DIN A2 (420x594mm) at 300 DPI
+        // 1 inch = 25.4mm
+        // At 300 DPI:
+        // 420mm = (420 / 25.4) * 300 = 4960 pixels
+        // 594mm = (594 / 25.4) * 300 = 7016 pixels
+        const exportWidth = 4960;  // 420mm at 300 DPI
+        const exportHeight = 7016; // 594mm at 300 DPI
+
+        // Set rectangular dimensions
+        container.style.width = `${exportWidth}px`;
+        container.style.height = `${exportHeight}px`;
+        
+        // Trigger resize and ensure the map renders completely
+        this.map.resize();
+
+        // Force exact zoom and center
+        this.map.setZoom(18);
+        this.map.setCenter(currentCenter);
+        this.map.setBearing(currentBearing);
+        this.map.setPitch(currentPitch);
+        
+        // Wait for the map to stabilize and render completely
+        await new Promise(resolve => {
+          this.map.once('idle', () => {
+            // Create a canvas and get the map canvas
+            const canvas = document.createElement('canvas');
+            const mapCanvas = this.map.getCanvas();
+            canvas.width = exportWidth;
+            canvas.height = exportHeight;
+            
+            // Draw the map onto our canvas
+            const ctx = canvas.getContext('2d');
+            
+            // First fill with white background
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, exportWidth, exportHeight);
+            
+            // Then draw the map
+            ctx.drawImage(mapCanvas, 0, 0, exportWidth, exportHeight);
+
+            resolve(canvas);
+          });
+        });
+
+        // Convert canvas to blob
+        const blob = await new Promise(resolve => {
+          const canvas = document.createElement('canvas');
+          const mapCanvas = this.map.getCanvas();
+          canvas.width = exportWidth;
+          canvas.height = exportHeight;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, exportWidth, exportHeight);
+          ctx.drawImage(mapCanvas, 0, 0, exportWidth, exportHeight);
+          
+          canvas.toBlob(resolve, 'image/png', 1.0);
+        });
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', blob, 'map-export.png');
+
+        // Restore original dimensions
+        container.style.width = originalWidth;
+        container.style.height = originalHeight;
+        this.map.resize();
+        
+        // Reset to original view
+        this.map.setZoom(18);
+        this.map.setCenter(currentCenter);
+        this.map.setBearing(currentBearing);
+        this.map.setPitch(currentPitch);
+
+        // Send to backend
+        const response = await fetch('http://localhost:3001/api/export/poi-overview', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Export failed');
+        }
+
+        // Get the PDF blob
+        const pdfBlob = await response.blob();
+        
+        // Create download link
+        const downloadUrl = window.URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'poi-overview.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+
+      } catch (error) {
+        console.error('Error exporting map:', error);
+        alert('Fehler beim Exportieren der Karte');
+      } finally {
+        this.isExporting = false;
+      }
     },
   },
 };
