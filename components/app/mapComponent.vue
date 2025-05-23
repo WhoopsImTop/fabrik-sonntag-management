@@ -44,11 +44,12 @@
           class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
           :disabled="isExporting"
         >
-          <UIcon 
-            :name="isExporting ? 'i-lucide-loader-2' : 'i-lucide-download'" 
+          <UIcon
+            :name="isExporting ? 'i-lucide-loader-2' : 'i-lucide-download'"
             class="size-6"
             :class="{ 'animate-spin': isExporting }"
-          ></UIcon>
+          >
+          </UIcon>
         </button>
       </UTooltip>
     </div>
@@ -89,7 +90,7 @@ export default {
   mounted() {
     this.map = new maplibregl.Map({
       container: "mapContainer",
-      style: fabrikSonntagStyle,
+      style: "https://tiles.openfreemap.org/styles/liberty",
       center: [7.968404, 48.098452],
       zoom: 18,
     });
@@ -99,9 +100,9 @@ export default {
       controls: {
         point: true,
         polygon: true,
-        trash: true
+        trash: true,
       },
-      defaultMode: 'simple_select',
+      defaultMode: "simple_select",
       clickBuffer: 4,
       touchBuffer: 25,
       styles: [
@@ -114,8 +115,8 @@ export default {
             "circle-radius": 7,
             "circle-color": "#ff9800",
             "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff"
-          }
+            "circle-stroke-color": "#ffffff",
+          },
         },
         // Inaktive Punkte
         {
@@ -126,8 +127,8 @@ export default {
             "circle-radius": 5,
             "circle-color": "#ff9800",
             "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff"
-          }
+            "circle-stroke-color": "#ffffff",
+          },
         },
         // Aktive Polygon Fill
         {
@@ -137,19 +138,23 @@ export default {
           paint: {
             "fill-color": "#cccccc",
             "fill-outline-color": "#ff9800",
-            "fill-opacity": 0.4
-          }
+            "fill-opacity": 0.4,
+          },
         },
         // Inaktive Polygon Fill
         {
           id: "gl-draw-polygon-fill",
           type: "fill",
-          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]],
+          filter: [
+            "all",
+            ["==", "$type", "Polygon"],
+            ["==", "active", "false"],
+          ],
           paint: {
             "fill-color": "#cccccc",
             "fill-outline-color": "#ff9800",
-            "fill-opacity": 0.2
-          }
+            "fill-opacity": 0.2,
+          },
         },
         // Polygon Stroke - für aktive Bearbeitung
         {
@@ -158,18 +163,22 @@ export default {
           filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "true"]],
           paint: {
             "line-color": "#ff9800",
-            "line-width": 3
-          }
+            "line-width": 3,
+          },
         },
         // Polygon Stroke - für inaktive Polygone
         {
           id: "gl-draw-polygon-stroke",
           type: "line",
-          filter: ["all", ["==", "$type", "Polygon"], ["==", "active", "false"]],
+          filter: [
+            "all",
+            ["==", "$type", "Polygon"],
+            ["==", "active", "false"],
+          ],
           paint: {
             "line-color": "#ff9800",
-            "line-width": 2
-          }
+            "line-width": 2,
+          },
         },
         // Vertices - Eckpunkte für die Bearbeitung
         {
@@ -180,10 +189,10 @@ export default {
             "circle-radius": 6,
             "circle-color": "#fff",
             "circle-stroke-color": "#ff9800",
-            "circle-stroke-width": 2
-          }
-        }
-      ]
+            "circle-stroke-width": 2,
+          },
+        },
+      ],
     });
 
     this.map.on("load", async () => {
@@ -215,13 +224,13 @@ export default {
           "text-offset": [0, -0.9],
           "text-anchor": "top",
           "text-allow-overlap": true,
-          "text-max-width": 8
+          "text-max-width": 8,
         },
         paint: {
           "text-color": "#000000",
           "text-halo-color": "#ffffff",
-          "text-halo-width": 2
-        }
+          "text-halo-width": 2,
+        },
       });
 
       // Layer für Polygone und Areas
@@ -232,8 +241,8 @@ export default {
         filter: ["==", "$type", "Polygon"],
         paint: {
           "fill-color": "#cccccc",
-          "fill-opacity": 0.4
-        }
+          "fill-opacity": 0.4,
+        },
       });
 
       // Outline für Polygone
@@ -244,14 +253,14 @@ export default {
         filter: ["==", "$type", "Polygon"],
         paint: {
           "line-color": "#ff9800",
-          "line-width": 2
-        }
+          "line-width": 2,
+        },
       });
 
       // Lade das Marker-Bild
       fetch("/marker.svg")
-        .then(response => response.blob())
-        .then(blob => {
+        .then((response) => response.blob())
+        .then((blob) => {
           const url = URL.createObjectURL(blob);
           const img = new Image();
           img.onload = () => {
@@ -262,11 +271,11 @@ export default {
           };
           img.src = url;
         })
-        .catch(error => console.error("Error loading marker image:", error));
+        .catch((error) => console.error("Error loading marker image:", error));
 
       // Klick-Listener für alle Layer hinzufügen
       const poiLayers = [POI_LAYER_ID, "poi-area-layer"];
-      poiLayers.forEach(layerId => {
+      poiLayers.forEach((layerId) => {
         this.map.on("click", layerId, this.handlePoiClick);
         this.map.on("mouseenter", layerId, () => {
           this.map.getCanvas().style.cursor = "pointer";
@@ -281,10 +290,10 @@ export default {
       this.map.on("draw.update", this.handleDrawUpdate);
 
       // Add area calculation listener
-      this.map.on('draw.create draw.update', (e) => {
+      this.map.on("draw.create draw.update", (e) => {
         if (e.features && e.features.length > 0) {
           const feature = e.features[0];
-          if (feature.geometry.type === 'Polygon') {
+          if (feature.geometry.type === "Polygon") {
             const area = this.calculateArea(feature);
             console.log(`Fläche: ${area.toFixed(2)} m²`);
             // Show area in a small overlay
@@ -300,8 +309,8 @@ export default {
       console.error("MapLibre Error:", e);
     });
 
-    this.map.on('draw.modechange', (e) => {
-      if (e.mode === 'draw_polygon') {
+    this.map.on("draw.modechange", (e) => {
+      if (e.mode === "draw_polygon") {
         this.map.doubleClickZoom.disable();
       } else {
         this.map.doubleClickZoom.enable();
@@ -341,7 +350,9 @@ export default {
 
     async loadAndDisplayPois() {
       try {
-        const response = await fetch("http://localhost:3001/api/pois");
+        const response = await fetch(
+          `${import.meta.env.VITE_INTERNAL_API_URL}/pois`
+        );
         if (!response.ok) {
           throw new Error(`API request failed with status ${response.status}`);
         }
@@ -369,8 +380,9 @@ export default {
               ...poi.areaGeoJson.properties,
               poiId: poi.id,
               name: poi.name,
-              shortName: poi.shortName
-            }
+              shortName: poi.shortName,
+              operator: poi.operator,
+            },
           }));
 
         const geoJsonData = {
@@ -411,6 +423,7 @@ export default {
             directionDescription: poiData.directionDescription || "",
             iconId: poiData.iconId || null,
             name: poiData.name || "",
+            operator: poiData.operator || "",
             poiType: poiData.poiType || "",
             shortName: poiData.shortName || "",
           };
@@ -443,13 +456,23 @@ export default {
     },
 
     handleEditPositionStart() {
-      if (!this.editingObj || !this.editingObj.areaGeoJson || !this.editingObj.id) {
-        console.error("Cannot edit position: No valid POI loaded in editingObj.");
+      if (
+        !this.editingObj ||
+        !this.editingObj.areaGeoJson ||
+        !this.editingObj.id
+      ) {
+        console.error(
+          "Cannot edit position: No valid POI loaded in editingObj."
+        );
         return;
       }
 
       this.isGeometryEditMode = !this.isGeometryEditMode;
-      console.log(`Geometry edit mode: ${this.isGeometryEditMode ? 'enabled' : 'disabled'} for POI ID: ${this.editingObj.id}`);
+      console.log(
+        `Geometry edit mode: ${
+          this.isGeometryEditMode ? "enabled" : "disabled"
+        } for POI ID: ${this.editingObj.id}`
+      );
 
       if (this.isGeometryEditMode) {
         // Aktiviere Bearbeitung
@@ -457,12 +480,22 @@ export default {
 
         // Nur für Polygone den Filter setzen
         if (this.editingObj.areaGeoJson.geometry.type === "Polygon") {
-          this.map.setFilter("poi-area-layer", ["!=", ["get", "poiId"], this.editingObj.id]);
-          this.map.setFilter("poi-area-outline", ["!=", ["get", "poiId"], this.editingObj.id]);
+          this.map.setFilter("poi-area-layer", [
+            "!=",
+            ["get", "poiId"],
+            this.editingObj.id,
+          ]);
+          this.map.setFilter("poi-area-outline", [
+            "!=",
+            ["get", "poiId"],
+            this.editingObj.id,
+          ]);
         }
 
         // Feature zu MapboxDraw hinzufügen
-        const featureToAdd = JSON.parse(JSON.stringify(this.editingObj.areaGeoJson));
+        const featureToAdd = JSON.parse(
+          JSON.stringify(this.editingObj.areaGeoJson)
+        );
         featureToAdd.properties = {
           ...(featureToAdd.properties || {}),
           poiId: this.editingObj.id,
@@ -470,9 +503,12 @@ export default {
         const addedFeatures = this.draw.add(featureToAdd);
         if (addedFeatures && addedFeatures.length > 0) {
           this.currentDrawFeatureId = addedFeatures[0];
-          
+
           // Für Punkte und Polygone unterschiedliche Modi verwenden
-          const mode = this.editingObj.areaGeoJson.geometry.type === "Point" ? "simple_select" : "direct_select";
+          const mode =
+            this.editingObj.areaGeoJson.geometry.type === "Point"
+              ? "simple_select"
+              : "direct_select";
           this.draw.changeMode(mode, {
             featureId: this.currentDrawFeatureId,
           });
@@ -488,28 +524,31 @@ export default {
               properties: updatedFeature.properties,
               geometry: updatedFeature.geometry,
             };
-            
+
             // Aktualisiere auch in allPoisData
-            const poiIndex = this.allPoisData.findIndex(poi => poi.id === this.editingObj.id);
+            const poiIndex = this.allPoisData.findIndex(
+              (poi) => poi.id === this.editingObj.id
+            );
             if (poiIndex !== -1) {
               this.allPoisData[poiIndex] = {
                 ...this.allPoisData[poiIndex],
-                areaGeoJson: this.editingObj.areaGeoJson
+                areaGeoJson: this.editingObj.areaGeoJson,
               };
             }
-            
+
             // Aktualisiere die Anzeige sofort
             const geoJsonData = {
               type: "FeatureCollection",
-              features: this.allPoisData.map(poi => ({
+              features: this.allPoisData.map((poi) => ({
                 ...poi.areaGeoJson,
                 properties: {
                   ...poi.areaGeoJson.properties,
                   poiId: poi.id,
                   name: poi.name,
-                  shortName: poi.shortName
-                }
-              }))
+                  shortName: poi.shortName,
+                  operator: poi.operator,
+                },
+              })),
             };
 
             // Aktualisiere die Datenquelle
@@ -518,7 +557,7 @@ export default {
             }
           }
         }
-        
+
         // Cleanup
         this.cleanupEditMode();
         // Filter zurücksetzen
@@ -535,7 +574,10 @@ export default {
 
       const updatedFeature = e.features[0];
       if (updatedFeature.id !== this.currentDrawFeatureId) {
-        console.warn("Draw update event for unexpected feature:", updatedFeature.id);
+        console.warn(
+          "Draw update event for unexpected feature:",
+          updatedFeature.id
+        );
         return;
       }
 
@@ -550,7 +592,7 @@ export default {
       this.isSaving = true;
       try {
         const response = await fetch(
-          `http://localhost:3001/api/pois/${this.editingObj.id}`,
+          `${import.meta.env.VITE_INTERNAL_API_URL}/pois/${this.editingObj.id}`,
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -565,11 +607,13 @@ export default {
         }
 
         // Aktualisiere allPoisData und die Anzeige
-        const poiIndex = this.allPoisData.findIndex(poi => poi.id === this.editingObj.id);
+        const poiIndex = this.allPoisData.findIndex(
+          (poi) => poi.id === this.editingObj.id
+        );
         if (poiIndex !== -1) {
           this.allPoisData[poiIndex] = {
             ...this.allPoisData[poiIndex],
-            areaGeoJson: this.editingObj.areaGeoJson
+            areaGeoJson: this.editingObj.areaGeoJson,
           };
         }
       } catch (error) {
@@ -583,7 +627,7 @@ export default {
     // Wird aufgerufen, wenn eine *neue* Geometrie im Draw *erstellt* wurde
     handleDrawCreate(e) {
       console.log("Draw create event:", e);
-      
+
       if (!e.features || e.features.length === 0 || !this.isDrawingNew) {
         console.log("Ignoring invalid draw create event");
         return;
@@ -591,7 +635,7 @@ export default {
 
       if (!this.isModalVisible || this.editingObj.id !== null) {
         console.warn("draw.create triggered in invalid state");
-        this.draw.delete(e.features.map(f => f.id));
+        this.draw.delete(e.features.map((f) => f.id));
         return;
       }
 
@@ -615,8 +659,10 @@ export default {
         properties: {},
         geometry: {
           type: newFeature.geometry.type,
-          coordinates: JSON.parse(JSON.stringify(newFeature.geometry.coordinates))
-        }
+          coordinates: JSON.parse(
+            JSON.stringify(newFeature.geometry.coordinates)
+          ),
+        },
       };
 
       console.log("Updated editingObj with new geometry:", this.editingObj);
@@ -630,7 +676,9 @@ export default {
     handleStartDrawing(mode) {
       if (!this.map || !this.draw) return;
       if (this.editingObj.id !== null) {
-        console.warn("Drawing should only be started for new POIs via this method.");
+        console.warn(
+          "Drawing should only be started for new POIs via this method."
+        );
         return;
       }
 
@@ -652,9 +700,12 @@ export default {
     // Speichert die Daten aus dem Modal (Metadaten und ggf. neue Geometrie)
     async handleSave(poiDataFromModal) {
       console.log("Save triggered with modal data:", poiDataFromModal);
-      
+
       // Prüfe, ob eine Geometrie vorhanden ist
-      if (!this.editingObj.areaGeoJson || !this.editingObj.areaGeoJson.geometry) {
+      if (
+        !this.editingObj.areaGeoJson ||
+        !this.editingObj.areaGeoJson.geometry
+      ) {
         console.error("No geometry data available for saving", this.editingObj);
         alert("Bitte legen Sie zuerst eine Position auf der Karte fest.");
         return;
@@ -666,7 +717,7 @@ export default {
         // Kombiniere Modal-Daten mit der Geometrie
         const dataToSend = {
           ...poiDataFromModal,
-          areaGeoJson: this.editingObj.areaGeoJson
+          areaGeoJson: this.editingObj.areaGeoJson,
         };
 
         console.log("Sending data to API:", dataToSend);
@@ -675,7 +726,9 @@ export default {
         if (this.editingObj.id) {
           // Update existierenden POI
           response = await fetch(
-            `http://localhost:3001/api/pois/${this.editingObj.id}`,
+            `${import.meta.env.VITE_INTERNAL_API_URL}/pois/${
+              this.editingObj.id
+            }`,
             {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
@@ -684,11 +737,14 @@ export default {
           );
         } else {
           // Erstelle neuen POI
-          response = await fetch("http://localhost:3001/api/pois", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataToSend),
-          });
+          response = await fetch(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/pois`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(dataToSend),
+            }
+          );
         }
 
         if (!response.ok) {
@@ -715,15 +771,16 @@ export default {
         // Aktualisiere die Kartenanzeige
         const geoJsonData = {
           type: "FeatureCollection",
-          features: this.allPoisData.map(poi => ({
+          features: this.allPoisData.map((poi) => ({
             ...poi.areaGeoJson,
             properties: {
               ...poi.areaGeoJson.properties,
               poiId: poi.id,
               name: poi.name,
-              shortName: poi.shortName
-            }
-          }))
+              shortName: poi.shortName,
+              operator: poi.operator,
+            },
+          })),
         };
 
         if (this.map.getSource(POI_SOURCE_ID)) {
@@ -796,14 +853,14 @@ export default {
     calculateArea(feature) {
       const coordinates = feature.geometry.coordinates[0];
       let area = 0;
-      
+
       // Using the Shoelace formula (Gauss's area formula)
       for (let i = 0; i < coordinates.length - 1; i++) {
         const p1 = this.convertToMeters(coordinates[i]);
         const p2 = this.convertToMeters(coordinates[i + 1]);
-        area += (p1[0] * p2[1]) - (p2[0] * p1[1]);
+        area += p1[0] * p2[1] - p2[0] * p1[1];
       }
-      
+
       return Math.abs(area) / 2;
     },
 
@@ -811,8 +868,8 @@ export default {
       // Convert longitude/latitude to approximate meters
       // Using equirectangular projection (rough approximation, good enough for small areas)
       const R = 6371000; // Earth's radius in meters
-      const lat = coord[1] * Math.PI / 180;
-      const lon = coord[0] * Math.PI / 180;
+      const lat = (coord[1] * Math.PI) / 180;
+      const lon = (coord[0] * Math.PI) / 180;
       const x = lon * R * Math.cos(lat);
       const y = lat * R;
       return [x, y];
@@ -820,23 +877,23 @@ export default {
 
     showAreaOverlay(area) {
       // Remove existing overlay if any
-      const existingOverlay = document.getElementById('area-overlay');
+      const existingOverlay = document.getElementById("area-overlay");
       if (existingOverlay) {
         existingOverlay.remove();
       }
 
       // Create new overlay
-      const overlay = document.createElement('div');
-      overlay.id = 'area-overlay';
-      overlay.style.position = 'absolute';
-      overlay.style.bottom = '60px';
-      overlay.style.right = '10px';
-      overlay.style.backgroundColor = 'white';
-      overlay.style.padding = '8px 12px';
-      overlay.style.borderRadius = '4px';
-      overlay.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-      overlay.style.zIndex = '1000';
-      overlay.style.fontSize = '14px';
+      const overlay = document.createElement("div");
+      overlay.id = "area-overlay";
+      overlay.style.position = "absolute";
+      overlay.style.bottom = "60px";
+      overlay.style.right = "10px";
+      overlay.style.backgroundColor = "white";
+      overlay.style.padding = "8px 12px";
+      overlay.style.borderRadius = "4px";
+      overlay.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+      overlay.style.zIndex = "1000";
+      overlay.style.fontSize = "14px";
       overlay.innerHTML = `Fläche: ${area.toFixed(2)} m²`;
 
       this.map.getContainer().appendChild(overlay);
@@ -844,7 +901,7 @@ export default {
 
     async exportMap() {
       if (!this.map || this.isExporting) return;
-      
+
       try {
         this.isExporting = true;
 
@@ -863,13 +920,13 @@ export default {
         // At 300 DPI:
         // 420mm = (420 / 25.4) * 300 = 4960 pixels
         // 594mm = (594 / 25.4) * 300 = 7016 pixels
-        const exportWidth = 4960;  // 420mm at 300 DPI
+        const exportWidth = 4960; // 420mm at 300 DPI
         const exportHeight = 7016; // 594mm at 300 DPI
 
         // Set rectangular dimensions
         container.style.width = `${exportWidth}px`;
         container.style.height = `${exportHeight}px`;
-        
+
         // Trigger resize and ensure the map renders completely
         this.map.resize();
 
@@ -878,23 +935,23 @@ export default {
         this.map.setCenter(currentCenter);
         this.map.setBearing(currentBearing);
         this.map.setPitch(currentPitch);
-        
+
         // Wait for the map to stabilize and render completely
-        await new Promise(resolve => {
-          this.map.once('idle', () => {
+        await new Promise((resolve) => {
+          this.map.once("idle", () => {
             // Create a canvas and get the map canvas
-            const canvas = document.createElement('canvas');
+            const canvas = document.createElement("canvas");
             const mapCanvas = this.map.getCanvas();
             canvas.width = exportWidth;
             canvas.height = exportHeight;
-            
+
             // Draw the map onto our canvas
-            const ctx = canvas.getContext('2d');
-            
+            const ctx = canvas.getContext("2d");
+
             // First fill with white background
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, exportWidth, exportHeight);
-            
+
             // Then draw the map
             ctx.drawImage(mapCanvas, 0, 0, exportWidth, exportHeight);
 
@@ -903,29 +960,29 @@ export default {
         });
 
         // Convert canvas to blob
-        const blob = await new Promise(resolve => {
-          const canvas = document.createElement('canvas');
+        const blob = await new Promise((resolve) => {
+          const canvas = document.createElement("canvas");
           const mapCanvas = this.map.getCanvas();
           canvas.width = exportWidth;
           canvas.height = exportHeight;
-          
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#ffffff';
+
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, exportWidth, exportHeight);
           ctx.drawImage(mapCanvas, 0, 0, exportWidth, exportHeight);
-          
-          canvas.toBlob(resolve, 'image/png', 1.0);
+
+          canvas.toBlob(resolve, "image/png", 1.0);
         });
-        
+
         // Create form data
         const formData = new FormData();
-        formData.append('image', blob, 'map-export.png');
+        formData.append("image", blob, "map-export.png");
 
         // Restore original dimensions
         container.style.width = originalWidth;
         container.style.height = originalHeight;
         this.map.resize();
-        
+
         // Reset to original view
         this.map.setZoom(18);
         this.map.setCenter(currentCenter);
@@ -933,31 +990,33 @@ export default {
         this.map.setPitch(currentPitch);
 
         // Send to backend
-        const response = await fetch('http://localhost:3001/api/export/poi-overview', {
-          method: 'POST',
-          body: formData
-        });
+        const response = await fetch(
+          `${import.meta.env.VITE_INTERNAL_API_URL}/export/poi-overview`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
-          throw new Error('Export failed');
+          throw new Error("Export failed");
         }
 
         // Get the PDF blob
         const pdfBlob = await response.blob();
-        
+
         // Create download link
         const downloadUrl = window.URL.createObjectURL(pdfBlob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = 'poi-overview.pdf';
+        link.download = "poi-overview.pdf";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
-
       } catch (error) {
-        console.error('Error exporting map:', error);
-        alert('Fehler beim Exportieren der Karte');
+        console.error("Error exporting map:", error);
+        alert("Fehler beim Exportieren der Karte");
       } finally {
         this.isExporting = false;
       }

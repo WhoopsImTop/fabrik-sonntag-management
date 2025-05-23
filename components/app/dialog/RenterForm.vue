@@ -3,7 +3,7 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     v-if="modelValue"
   >
-    <div class="bg-white rounded-lg p-4 w-full max-w-lg">
+    <div class="bg-white rounded-lg p-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">
           {{ editingRenter ? "Mieter bearbeiten" : "Neuer Mieter" }}
@@ -78,6 +78,72 @@
               type="url"
               class="w-full p-2 border rounded-md"
             />
+          </div>
+
+          <!-- Logo Selection -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Logo</label>
+            <div class="flex items-center gap-4">
+              <div v-if="form.logoId" class="relative w-20 h-20">
+                <img
+                  :src="getImageUrl(form.logoId)"
+                  alt="Logo"
+                  class="w-full h-full object-contain border rounded-lg"
+                />
+                <button
+                  type="button"
+                  @click="form.logoId = null"
+                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="showLogoSelector = true"
+                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+              >
+                {{ form.logoId ? 'Logo ändern' : 'Logo auswählen' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Marketing Images -->
+          <div>
+            <label class="block text-sm font-medium mb-1">Marketing Bilder</label>
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div
+                  v-for="imageId in form.marketingImageIds"
+                  :key="imageId"
+                  class="relative aspect-square"
+                >
+                  <img
+                    :src="getImageUrl(imageId)"
+                    alt="Marketing Image"
+                    class="w-full h-full object-cover border rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    @click="removeMarketingImage(imageId)"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                @click="showMarketingImagesSelector = true"
+                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+              >
+                Marketing Bilder hinzufügen
+              </button>
+            </div>
           </div>
         </div>
 
@@ -376,6 +442,58 @@
       </form>
     </div>
   </div>
+
+  <!-- Logo Selector Modal -->
+  <div
+    v-if="showLogoSelector"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+  >
+    <div class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Logo auswählen</h3>
+        <button
+          type="button"
+          @click="showLogoSelector = false"
+          class="p-2 rounded-md hover:bg-neutral-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <MediaLibrary
+        :is-multi-select="false"
+        :initial-selection="form.logoId ? [form.logoId] : []"
+        @images-selected="handleLogoSelection"
+      />
+    </div>
+  </div>
+
+  <!-- Marketing Images Selector Modal -->
+  <div
+    v-if="showMarketingImagesSelector"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+  >
+    <div class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
+        <button
+          type="button"
+          @click="showMarketingImagesSelector = false"
+          class="p-2 rounded-md hover:bg-neutral-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <MediaLibrary
+        :is-multi-select="true"
+        :initial-selection="form.marketingImageIds"
+        @images-selected="handleMarketingImagesSelection"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -384,6 +502,7 @@ import maplibregl from "maplibre-gl";
 import MaplibreDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import MediaLibrary from '../MediaLibrary.vue';
 
 const props = defineProps({
   modelValue: {
@@ -419,6 +538,8 @@ const floorForm = ref({
   description: "",
 });
 const selectedFloorId = ref("");
+const showLogoSelector = ref(false);
+const showMarketingImagesSelector = ref(false);
 
 const initialForm = {
   name: "",
@@ -426,6 +547,8 @@ const initialForm = {
   phone: "",
   email: "",
   website: "",
+  logoId: null,
+  marketingImageIds: [],
   hasArea: false,
   area: {
     squaremeters: null,
@@ -710,7 +833,7 @@ async function deleteArea() {
 // Floor management functions
 async function loadFloors() {
   try {
-    const response = await fetch(`http://localhost:3001/api/floors`);
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/floors`);
     if (!response.ok) throw new Error("Failed to load floors");
     floors.value = await response.json();
   } catch (error) {
@@ -729,7 +852,7 @@ async function deleteFloor(id) {
   if (!confirm("Möchten Sie diese Etage wirklich löschen?")) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/floors/${id}`, {
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/floors/${id}`, {
       method: "DELETE",
     });
     if (!response.ok) throw new Error("Failed to delete floor");
@@ -768,8 +891,8 @@ async function saveFloor() {
     console.log("Floor Objekt zum Speichern:", floorData);
 
     const url = editingFloor.value
-      ? `http://localhost:3001/api/floors/${editingFloor.value.id}`
-      : "http://localhost:3001/api/floors";
+      ? `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${editingFloor.value.id}`
+      : `${import.meta.env.VITE_INTERNAL_API_URL}/floors`;
 
     const response = await fetch(url, {
       method: editingFloor.value ? "PATCH" : "POST",
@@ -870,9 +993,55 @@ watch(
   { immediate: true }
 );
 
+function handleLogoSelection(selectedImages) {
+  console.log('Logo selection:', selectedImages);
+  if (selectedImages && selectedImages.length > 0) {
+    form.value.logoId = selectedImages[0];
+  } else {
+    form.value.logoId = null;
+  }
+  showLogoSelector.value = false;
+}
+
+function handleMarketingImagesSelection(selectedImages) {
+  console.log('Marketing images selection:', selectedImages);
+  form.value.marketingImageIds = selectedImages || [];
+  showMarketingImagesSelector.value = false;
+}
+
+function removeMarketingImage(imageId) {
+  form.value.marketingImageIds = form.value.marketingImageIds.filter(id => id !== imageId);
+}
+
+function getImageUrl(imageId) {
+  if (!imageId) return '';
+  const image = images.value.find(img => img.id === imageId);
+  if (!image) return '';
+  return `http://localhost:3001${image.url}`;
+}
+
+// Add images ref to store all available images
+const images = ref([]);
+
+// Add function to load images
+async function loadImages() {
+  try {
+    const response = await fetch(`http://localhost:3001/api/media`);
+    if (!response.ok) throw new Error('Failed to load images');
+    images.value = await response.json();
+  } catch (error) {
+    console.error('Error loading images:', error);
+  }
+}
+
+// Load images when component mounts
+onMounted(async () => {
+  await loadImages();
+});
+
 async function saveRenter() {
   try {
-    // Strukturiertes Renter-Objekt erstellen
+    console.log('Saving renter with form data:', form.value);
     const renterData = {
       name: form.value.name,
       operator: form.value.operator || "",
@@ -880,6 +1049,8 @@ async function saveRenter() {
       phone: form.value.phone || "",
       email: form.value.email || "",
       website: form.value.website || "",
+      logoId: form.value.logoId,
+      marketingImageIds: form.value.marketingImageIds,
       poiId: props.poiId,
 
       // Area-Informationen, falls vorhanden
@@ -906,11 +1077,11 @@ async function saveRenter() {
       },
     };
 
-    console.log("Renter Objekt zum Speichern:", renterData);
+    console.log('Renter data to save:', renterData);
 
     const url = props.editingRenter
-      ? `http://localhost:3001/api/renters/${props.editingRenter.id}`
-      : "http://localhost:3001/api/renters";
+      ? `${import.meta.env.VITE_INTERNAL_API_URL}/renters/${props.editingRenter.id}`
+      : `${import.meta.env.VITE_INTERNAL_API_URL}/renters`;
 
     const response = await fetch(url, {
       method: props.editingRenter ? "PATCH" : "POST",
@@ -918,16 +1089,16 @@ async function saveRenter() {
       body: JSON.stringify(renterData),
     });
 
-    if (!response.ok) throw new Error("Failed to save renter");
+    if (!response.ok) throw new Error('Failed to save renter');
 
     const savedRenter = await response.json();
-    console.log("Gespeicherter Renter:", savedRenter);
+    console.log('Saved renter:', savedRenter);
 
     emit("renter-saved", savedRenter);
     closeModal();
   } catch (error) {
-    console.error("Error saving renter:", error);
-    alert("Fehler beim Speichern des Mieters");
+    console.error('Error saving renter:', error);
+    alert('Fehler beim Speichern des Mieters');
   }
 }
 

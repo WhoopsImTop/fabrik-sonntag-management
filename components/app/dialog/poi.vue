@@ -323,6 +323,7 @@ const renters = ref([]);
 
 const initialRenterForm = {
   name: '',
+  operator: '',
   address: '',
   phone: '',
   email: '',
@@ -343,7 +344,7 @@ const renterForm = ref({ ...initialRenterForm });
 watch(() => props.poiToEdit, async (newPoi) => {
   if (newPoi?.id) {
     try {
-      const response = await fetch(`http://localhost:3001/api/pois/${newPoi.id}/renters`);
+      const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/pois/${newPoi.id}/renters`);
       if (!response.ok) throw new Error('Failed to load renters');
       const data = await response.json();
       renters.value = data;
@@ -356,6 +357,7 @@ watch(() => props.poiToEdit, async (newPoi) => {
 }, { immediate: true });
 
 function editRenter(renter) {
+  console.log("Edit renter", renter);
   editingRenter.value = renter;
   renterForm.value = {
     ...renter,
@@ -369,7 +371,7 @@ async function deleteRenter(renter) {
   if (!confirm('Möchten Sie diesen Mieter wirklich löschen?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/renters/${renter.id}`, {
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/renters/${renter.id}`, {
       method: 'DELETE'
     });
     if (!response.ok) throw new Error('Failed to delete renter');
