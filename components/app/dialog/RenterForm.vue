@@ -3,7 +3,9 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     v-if="modelValue"
   >
-    <div class="bg-white rounded-lg p-4 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+    <div
+      class="bg-white rounded-lg p-4 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">
           {{ editingRenter ? "Mieter bearbeiten" : "Neuer Mieter" }}
@@ -26,7 +28,7 @@
         </button>
       </div>
 
-      <form @submit.prevent="saveRenter" class="space-y-4">
+      <div class="space-y-4">
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium mb-1">Name</label>
@@ -79,12 +81,29 @@
               class="w-full p-2 border rounded-md"
             />
           </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Beschreibung</label>
+            <textarea
+              rows="3"
+              v-model="form.description"
+              type="url"
+              class="w-full p-2 border rounded-md"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Öffnungszeiten</label>
+            <app-custom-input-opening-hours
+              :openingHoursProp="form.openingHours"
+              class="w-full"
+              @update:openingHours="handleOpeningHoursUpdate"
+            />
+          </div>
 
           <!-- Logo Selection -->
           <div>
             <label class="block text-sm font-medium mb-1">Logo</label>
             <div class="flex items-center gap-4">
-              <div v-if="form.logoId" class="relative w-20 h-20">
+              <div v-if="form.logoId" class="relative w-20 h-20 bg-neutral-200">
                 <img
                   :src="getImageUrl(form.logoId)"
                   alt="Logo"
@@ -93,11 +112,9 @@
                 <button
                   type="button"
                   @click="form.logoId = null"
-                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 w-6 h-6 flex items-center justify-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
+                  <UIcon name="i-lucide-x" size="16" />
                 </button>
               </div>
               <button
@@ -105,20 +122,22 @@
                 @click="showLogoSelector = true"
                 class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
               >
-                {{ form.logoId ? 'Logo ändern' : 'Logo auswählen' }}
+                {{ form.logoId ? "Logo ändern" : "Logo auswählen" }}
               </button>
             </div>
           </div>
 
           <!-- Marketing Images -->
           <div>
-            <label class="block text-sm font-medium mb-1">Marketing Bilder</label>
+            <label class="block text-sm font-medium mb-1"
+              >Marketing Bilder</label
+            >
             <div class="space-y-4">
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 <div
                   v-for="imageId in form.marketingImageIds"
                   :key="imageId"
-                  class="relative aspect-square"
+                  class="relative aspect-square bg-neutral-200"
                 >
                   <img
                     :src="getImageUrl(imageId)"
@@ -128,11 +147,9 @@
                   <button
                     type="button"
                     @click="removeMarketingImage(imageId)"
-                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center h-6 w-6"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
+                    <UIcon name="i-lucide-x" size="16"> </UIcon>
                   </button>
                 </div>
               </div>
@@ -197,19 +214,7 @@
                   class="p-2 rounded-md border"
                   :class="{ 'bg-yellow-100 border-yellow-500': isDrawing }"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-                    <path d="M2 2l7.586 7.586" />
-                    <path d="M11 11l-4 4" />
-                  </svg>
+                  <UIcon name="i-lucide-pencil" size="24" />
                 </button>
                 <button
                   v-if="isDrawing"
@@ -217,35 +222,14 @@
                   class="p-2 rounded-md border bg-green-100 border-green-500 hover:bg-green-200"
                   title="Zeichnung bestätigen"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <UIcon name="i-lucide-check" size="24" />
                 </button>
                 <button
                   @click="deleteArea"
                   class="p-2 rounded-md border hover:bg-red-50 hover:border-red-500"
                   v-if="form.area.areaGeoJson"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-5 h-5"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M3 6h18" />
-                    <path
-                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                    />
-                  </svg>
+                  <UIcon name="i-lucide-trash" size="24" />
                 </button>
               </div>
             </div>
@@ -282,46 +266,18 @@
                       </p>
                     </div>
                     <div class="flex gap-2">
-                      <button
-                        type="button"
-                        @click.stop="editFloor(floor)"
+                      <div
+                        @click="editFloor(floor)"
                         class="p-1.5 rounded-md border border-neutral-200 hover:bg-neutral-50"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path
-                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-                          />
-                          <path
-                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
+                        <UIcon name="i-lucide-edit" size="16" />
+                      </div>
+                      <div
                         @click.stop="deleteFloor(floor.id)"
                         class="p-1.5 rounded-md border border-neutral-200 hover:bg-neutral-50 text-red-500"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path d="M3 6h18" />
-                          <path
-                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                          />
-                        </svg>
-                      </button>
+                        <UIcon name="i-lucide-trash" size="16" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -341,7 +297,7 @@
                   {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
                 </h3>
 
-                <form @submit.prevent="saveFloor" class="space-y-4">
+                <div @submit.prevent="saveFloor" class="space-y-4">
                   <div>
                     <label class="block text-sm font-medium mb-1">Name</label>
                     <input
@@ -391,7 +347,7 @@
                       {{ editingFloor ? "Speichern" : "Hinzufügen" }}
                     </button>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
 
@@ -433,13 +389,13 @@
             Abbrechen
           </button>
           <button
-            type="submit"
+            @click="saveRenter"
             class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
           >
             {{ editingRenter ? "Speichern" : "Hinzufügen" }}
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -448,7 +404,9 @@
     v-if="showLogoSelector"
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
   >
-    <div class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div
+      class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">Logo auswählen</h3>
         <button
@@ -456,7 +414,14 @@
           @click="showLogoSelector = false"
           class="p-2 rounded-md hover:bg-neutral-100"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
@@ -474,7 +439,9 @@
     v-if="showMarketingImagesSelector"
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
   >
-    <div class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div
+      class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
         <button
@@ -482,7 +449,14 @@
           @click="showMarketingImagesSelector = false"
           class="p-2 rounded-md hover:bg-neutral-100"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
@@ -502,7 +476,7 @@ import maplibregl from "maplibre-gl";
 import MaplibreDraw from "@mapbox/mapbox-gl-draw";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-import MediaLibrary from '../MediaLibrary.vue';
+import MediaLibrary from "../MediaLibrary.vue";
 
 const props = defineProps({
   modelValue: {
@@ -550,6 +524,8 @@ const initialForm = {
   logoId: null,
   marketingImageIds: [],
   hasArea: false,
+  openingHours: {},
+  description: "",
   area: {
     squaremeters: null,
     costs: null,
@@ -565,14 +541,32 @@ const form = ref({ ...initialForm });
 
 // Map initialization
 onMounted(async () => {
-  watch(() => form.value.hasArea, (hasArea) => {
-    if (hasArea && !map.value) {
-      initializeMap();
-    }
-  });
-
   // Load floors immediately when component mounts
   await loadFloors();
+  // Initialize map
+  await initializeMap();
+
+  if (props.editingRenter?.openingHours) {
+    try {
+      form.value.openingHours = JSON.parse(props.editingRenter.openingHours);
+    } catch (error) {
+      console.error("Error parsing opening hours:", error);
+      form.value.openingHours = {};
+    }
+  } else {
+    form.value.openingHours = {};
+  }
+
+  console.log("Form: ", form.value);
+  form.value.logoId = props.editingRenter?.logo.id || null;
+  if (props.editingRenter?.marketingImages) {
+    form.value.marketingImageIds = props.editingRenter.marketingImages.map(
+      (img) => img.id
+    );
+  } else {
+    form.value.marketingImageIds = [];
+  }
+  await loadImages();
 });
 
 onUnmounted(() => {
@@ -583,7 +577,10 @@ onUnmounted(() => {
 });
 
 function initializeMap() {
-  if (!mapContainer.value) return;
+  if (!mapContainer.value) {
+    console.log("MAPContainer Value empty");
+    return;
+  }
 
   console.log("Initializing map with POI:", props.poi);
   console.log("POI areaGeoJson:", props.poi.areaGeoJson);
@@ -833,7 +830,9 @@ async function deleteArea() {
 // Floor management functions
 async function loadFloors() {
   try {
-    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/floors`);
+    const response = await fetch(
+      `${import.meta.env.VITE_INTERNAL_API_URL}/floors`
+    );
     if (!response.ok) throw new Error("Failed to load floors");
     floors.value = await response.json();
   } catch (error) {
@@ -852,9 +851,12 @@ async function deleteFloor(id) {
   if (!confirm("Möchten Sie diese Etage wirklich löschen?")) return;
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/floors/${id}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!response.ok) throw new Error("Failed to delete floor");
     floors.value = floors.value.filter((f) => f.id !== id);
   } catch (error) {
@@ -891,7 +893,9 @@ async function saveFloor() {
     console.log("Floor Objekt zum Speichern:", floorData);
 
     const url = editingFloor.value
-      ? `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${editingFloor.value.id}`
+      ? `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${
+          editingFloor.value.id
+        }`
       : `${import.meta.env.VITE_INTERNAL_API_URL}/floors`;
 
     const response = await fetch(url, {
@@ -923,50 +927,36 @@ async function saveFloor() {
   }
 }
 
-// Watch for hasArea changes
-watch(
-  () => form.value.hasArea,
-  async (hasArea) => {
-    console.log("hasArea changed:", hasArea);
-    if (hasArea && !map.value) {
-      console.log("Initializing map due to hasArea change");
-      await initializeMap();
-    }
-  }
-);
-
 // Modify the watch for editingRenter
-watch(() => props.editingRenter, async (renter) => {
-  console.log("Editing renter changed:", renter);
-  if (renter) {
-    form.value = {
-      ...renter,
-      hasArea: !!renter.area,
-      area: renter.area || { ...initialForm.area },
-    };
+watch(
+  () => props.editingRenter,
+  async (renter) => {
+    console.log("Editing renter changed:", renter);
+    if (renter) {
+      form.value = {
+        ...renter,
+        hasArea: !!renter.area,
+        area: renter.area || { ...initialForm.area },
+      };
 
-    // Initialize map if area exists and not already initialized
-    if (!map.value && form.value.hasArea) {
-      console.log("Initializing map for existing area");
-      await initializeMap();
-    }
+      // Add area polygon to draw if it exists
+      if (renter.area?.areaGeoJson && map.value && draw.value) {
+        console.log("Adding area to draw:", renter.area.areaGeoJson);
+        draw.value.deleteAll();
+        draw.value.add(renter.area.areaGeoJson);
+      }
 
-    // Add area polygon to draw if it exists
-    if (renter.area?.areaGeoJson && map.value && draw.value) {
-      console.log("Adding area to draw:", renter.area.areaGeoJson);
-      draw.value.deleteAll();
-      draw.value.add(renter.area.areaGeoJson);
-    }
-
-    if (renter?.area?.floorId) {
-      selectedFloorId.value = renter.area.floorId;
+      if (renter?.area?.floorId) {
+        selectedFloorId.value = renter.area.floorId;
+      } else {
+        selectedFloorId.value = "";
+      }
     } else {
-      selectedFloorId.value = "";
+      form.value = { ...initialForm };
     }
-  } else {
-    form.value = { ...initialForm };
-  }
-}, { immediate: true });
+  },
+  { immediate: true }
+);
 
 // Watch for POI changes
 watch(
@@ -994,7 +984,7 @@ watch(
 );
 
 function handleLogoSelection(selectedImages) {
-  console.log('Logo selection:', selectedImages);
+  console.log("Logo selection:", selectedImages);
   if (selectedImages && selectedImages.length > 0) {
     form.value.logoId = selectedImages[0];
   } else {
@@ -1004,20 +994,23 @@ function handleLogoSelection(selectedImages) {
 }
 
 function handleMarketingImagesSelection(selectedImages) {
-  console.log('Marketing images selection:', selectedImages);
+  console.log("Marketing images selection:", selectedImages);
   form.value.marketingImageIds = selectedImages || [];
   showMarketingImagesSelector.value = false;
 }
 
 function removeMarketingImage(imageId) {
-  form.value.marketingImageIds = form.value.marketingImageIds.filter(id => id !== imageId);
+  form.value.marketingImageIds = form.value.marketingImageIds.filter(
+    (id) => id !== imageId
+  );
 }
 
 function getImageUrl(imageId) {
-  if (!imageId) return '';
-  const image = images.value.find(img => img.id === imageId);
-  if (!image) return '';
-  return `http://localhost:3001${image.url}`;
+  console.log("Form: ", form.value);
+  if (!imageId) return "";
+  const image = images.value.find((img) => img.id === imageId);
+  if (!image) return "";
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${image.url}`;
 }
 
 // Add images ref to store all available images
@@ -1026,22 +1019,24 @@ const images = ref([]);
 // Add function to load images
 async function loadImages() {
   try {
-    const response = await fetch(`http://localhost:3001/api/media`);
-    if (!response.ok) throw new Error('Failed to load images');
+    const response = await fetch(
+      `${import.meta.env.VITE_INTERNAL_IMAGE_URL}/api/media`
+    );
+    if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();
   } catch (error) {
-    console.error('Error loading images:', error);
+    console.error("Error loading images:", error);
   }
 }
 
-// Load images when component mounts
-onMounted(async () => {
-  await loadImages();
-});
+function handleOpeningHoursUpdate(newOpeningHours) {
+  console.log("Opening hours updated:", newOpeningHours);
+  form.value.openingHours = newOpeningHours;
+}
 
 async function saveRenter() {
   try {
-    console.log('Saving renter with form data:', form.value);
+    console.log("Saving renter with form data:", form.value);
     const renterData = {
       name: form.value.name,
       operator: form.value.operator || "",
@@ -1051,6 +1046,8 @@ async function saveRenter() {
       website: form.value.website || "",
       logoId: form.value.logoId,
       marketingImageIds: form.value.marketingImageIds,
+      openingHours: JSON.stringify(form.value.openingHours),
+      description: form.value.description || "",
       poiId: props.poiId,
 
       // Area-Informationen, falls vorhanden
@@ -1077,10 +1074,12 @@ async function saveRenter() {
       },
     };
 
-    console.log('Renter data to save:', renterData);
+    console.log("Renter data to save:", renterData);
 
     const url = props.editingRenter
-      ? `${import.meta.env.VITE_INTERNAL_API_URL}/renters/${props.editingRenter.id}`
+      ? `${import.meta.env.VITE_INTERNAL_API_URL}/renters/${
+          props.editingRenter.id
+        }`
       : `${import.meta.env.VITE_INTERNAL_API_URL}/renters`;
 
     const response = await fetch(url, {
@@ -1089,16 +1088,16 @@ async function saveRenter() {
       body: JSON.stringify(renterData),
     });
 
-    if (!response.ok) throw new Error('Failed to save renter');
+    if (!response.ok) throw new Error("Failed to save renter");
 
     const savedRenter = await response.json();
-    console.log('Saved renter:', savedRenter);
+    console.log("Saved renter:", savedRenter);
 
     emit("renter-saved", savedRenter);
     closeModal();
   } catch (error) {
-    console.error('Error saving renter:', error);
-    alert('Fehler beim Speichern des Mieters');
+    console.error("Error saving renter:", error);
+    alert("Fehler beim Speichern des Mieters");
   }
 }
 

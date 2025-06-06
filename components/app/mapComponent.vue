@@ -90,7 +90,7 @@ export default {
   mounted() {
     this.map = new maplibregl.Map({
       container: "mapContainer",
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: fabrikSonntagStyle,
       center: [7.968404, 48.098452],
       zoom: 18,
     });
@@ -219,7 +219,7 @@ export default {
           "icon-size": 0.5,
           "icon-allow-overlap": true,
           "text-field": ["get", "shortName"],
-          "text-font": ["Open Sans Bold"],
+          "text-font": ["Noto Sans Regular"],
           "text-size": 24,
           "text-offset": [0, -0.9],
           "text-anchor": "top",

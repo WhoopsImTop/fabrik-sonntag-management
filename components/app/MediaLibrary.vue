@@ -26,14 +26,13 @@
       <div
         v-for="image in images"
         :key="image.id"
-        class="relative group aspect-square border rounded-lg overflow-hidden cursor-pointer"
+        class="relative group aspect-square border rounded-lg overflow-hidden cursor-pointer bg-neutral-200"
         :class="{ 'ring-2 ring-yellow-400': selectedImages.includes(image.id) }"
       >
         <img
           :src="getImageUrl(image.url)"
           :alt="image.name || 'Image'"
-          class="w-full h-full object-cover"
-          @click="toggleImageSelection(image.id)"
+          class="w-full h-full object-contain"
         />
         <div 
           class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
@@ -44,10 +43,7 @@
             class="p-2 text-white hover:text-yellow-400"
             :title="selectedImages.includes(image.id) ? 'Auswahl aufheben' : 'Auswählen'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 6L9 17l-5-5" v-if="selectedImages.includes(image.id)" />
-              <path d="M12 5v14M5 12h14" v-else />
-            </svg>
+            <UIcon name="i-lucide-check" size="24" />
           </button>
           <button
             type="button"
@@ -55,10 +51,7 @@
             class="p-2 text-white hover:text-red-400"
             title="Bild löschen"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 6h18" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
+            <UIcon name="i-lucide-trash" size="24" />
           </button>
         </div>
       </div>
@@ -145,7 +138,7 @@ onMounted(async () => {
 
 async function loadImages() {
   try {
-    const response = await fetch(`http://localhost:3001/api/media`);
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media`);
     if (!response.ok) throw new Error('Failed to load images');
     images.value = await response.json();
   } catch (error) {
@@ -175,7 +168,7 @@ async function uploadFiles(files) {
   }
 
   try {
-    const response = await fetch(`http://localhost:3001/api/media/upload`, {
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/upload`, {
       method: 'POST',
       body: formData
     });
@@ -197,7 +190,7 @@ async function deleteImage(imageId) {
   if (!confirm('Möchten Sie dieses Bild wirklich löschen?')) return;
 
   try {
-    const response = await fetch(`http://localhost:3001/api/media/${imageId}`, {
+    const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/${imageId}`, {
       method: 'DELETE'
     });
 
@@ -212,7 +205,6 @@ async function deleteImage(imageId) {
 }
 
 function toggleImageSelection(imageId) {
-  console.log('Toggling selection for image:', imageId);
   if (props.isMultiSelect) {
     const index = selectedImages.value.indexOf(imageId);
     if (index === -1) {
@@ -223,8 +215,6 @@ function toggleImageSelection(imageId) {
   } else {
     selectedImages.value = [imageId];
   }
-  console.log('Current selection:', selectedImages.value);
-  emit('images-selected', selectedImages.value);
 }
 
 function confirmSelection() {
@@ -241,6 +231,6 @@ function getImageUrl(url) {
   // If the URL is already absolute, return it as is
   if (url.startsWith('http')) return url;
   // Otherwise, prepend the base URL
-  return `http://localhost:3001${url}`;
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${url}`;
 }
 </script> 
