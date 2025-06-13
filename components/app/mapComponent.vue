@@ -344,6 +344,7 @@ export default {
         name: "",
         poiType: "",
         shortName: "",
+        marketingImages: []
         // Füge ggf. weitere Felder hinzu
       };
     },
@@ -426,6 +427,7 @@ export default {
             operator: poiData.operator || "",
             poiType: poiData.poiType || "",
             shortName: poiData.shortName || "",
+            marketingImages: poiData.marketingImages || [],
           };
           this.isModalVisible = true; // Modal öffnen
           this.isEditingPosition = false; // Sicherstellen, dass Positionsbearbeitung aus ist

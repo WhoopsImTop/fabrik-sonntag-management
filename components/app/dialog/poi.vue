@@ -155,26 +155,76 @@
               <option value="icon-info">Info</option>
             </select>
           </div>
-
-          <!-- Datei-Upload für eigenes Icon -->
-          <div class="flex flex-col mt-2" v-if="formData.poiType === 'POINT'">
-            <label class="text-sm mb-1 font-medium text-gray-700"
-              >Eigenes Icon hochladen:</label
-            >
-            <input
-              type="file"
-              accept="image/*"
-              @change="handleIconUpload"
-              class="p-2 border rounded-md"
-            />
-            <div v-if="formData.iconId" class="mt-2">
-              <span class="text-xs text-neutral-500">Vorschau:</span><br />
-              <img
-                :src="getImageUrl(formData.iconId)"
-                alt="Icon Vorschau"
-                style="max-width: 48px; max-height: 48px"
-              />
+          <!-- Custom Icon Selection -->
+          <div class="flex flex-col mt-2">
+            <label class="block text-sm font-medium mb-1">Eigenes Icon</label>
+            <div class="flex items-center gap-4">
+              <div
+                v-if="formData.iconId && !isPredefinedIcon(formData.iconId)"
+                class="relative w-12 h-12 bg-neutral-200"
+              >
+                <img
+                  :src="getIconPreviewUrl(formData.iconId)"
+                  alt="Icon"
+                  class="w-full h-full object-contain border rounded-lg"
+                />
+                <button
+                  type="button"
+                  @click="formData.iconId = null"
+                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 w-6 h-6 flex items-center justify-center"
+                >
+                  <UIcon name="i-lucide-x" size="12" />
+                </button>
+              </div>
+              <button
+                type="button"
+                @click="showIconMediaLibrary = true"
+                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+              >
+                {{
+                  formData.iconId && !isPredefinedIcon(formData.iconId)
+                    ? "Icon ändern"
+                    : "Icon auswählen"
+                }}
+              </button>
             </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 class="text-sm font-semibold mb-3 text-neutral-500">
+          Marketing Bilder
+        </h3>
+        <div v-if="images.length > 0">
+          <label class="block text-sm font-medium mb-1">Marketing Bilder</label>
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              <div
+                v-for="(imageId, index) in formData.marketingImages"
+                :key="imageId"
+                class="relative aspect-square bg-neutral-200"
+              >
+                <img
+                  :src="getMarketingImageUrl(imageId)"
+                  alt="Marketing Image"
+                  class="w-full h-full object-cover border rounded-lg"
+                />
+                <button
+                  type="button"
+                  @click="removeMarketingImage(index)"
+                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center h-6 w-6"
+                >
+                  <UIcon name="i-lucide-x" size="16" />
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              @click="showMarketingMediaLibrary = true"
+              class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+            >
+              Marketing Bilder hinzufügen
+            </button>
           </div>
         </div>
       </div>
@@ -256,12 +306,85 @@
       :poi="poiToEdit"
       @renter-saved="handleRenterSaved"
     />
+    <!-- Media Library Modals -->
+    <div
+      v-if="showMarketingMediaLibrary"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+    >
+      <div
+        class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
+          <button
+            type="button"
+            @click="showMarketingMediaLibrary = false"
+            class="p-2 rounded-md hover:bg-neutral-100"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <MediaLibrary
+          :is-multi-select="true"
+          :initial-selection="formData.marketingImages"
+          @images-selected="handleMarketingMediaSelected"
+        />
+      </div>
+    </div>
+
+    <div
+      v-if="showIconMediaLibrary"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+    >
+      <div
+        class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+      >
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Icon auswählen</h3>
+          <button
+            type="button"
+            @click="showIconMediaLibrary = false"
+            class="p-2 rounded-md hover:bg-neutral-100"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <MediaLibrary
+          :is-multi-select="false"
+          :initial-selection="
+            formData.iconId && !isPredefinedIcon(formData.iconId)
+              ? [formData.iconId]
+              : []
+          "
+          @images-selected="handleIconMediaSelected"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import RenterForm from "./RenterForm.vue";
+import MediaLibrary from "@/components/app/MediaLibrary.vue"; // Import MediaLibrary
 
 // --- Props ---
 const props = defineProps({
@@ -286,6 +409,7 @@ const getInitialFormData = () => ({
   directionDescription: "",
   iconId: null,
   areaGeoJson: null,
+  marketingImages: [], // Initialisiere marketingImages als leeres Array
 });
 
 const formData = ref(getInitialFormData());
@@ -311,6 +435,24 @@ watch(
           JSON.stringify(newPoi.areaGeoJson)
         );
       }
+
+      // Marketing-Bilder korrekt laden
+      if (newPoi.marketingImages && Array.isArray(newPoi.marketingImages)) {
+        // Falls marketingImages ein Array von Objekten ist (mit id, url etc.)
+        formData.value.marketingImages = newPoi.marketingImages.map((img) =>
+          typeof img === "object" ? img.id : img
+        );
+      } else if (
+        newPoi.marketingImageIds &&
+        Array.isArray(newPoi.marketingImageIds)
+      ) {
+        // Falls es ein marketingImageIds Feld gibt
+        formData.value.marketingImages = [...newPoi.marketingImageIds];
+      } else {
+        formData.value.marketingImages = [];
+      }
+
+      console.log("Loaded marketing images:", formData.value.marketingImages);
     } else {
       formData.value = getInitialFormData();
     }
@@ -370,6 +512,13 @@ const handleCancel = () => {
 const showRenterForm = ref(false);
 const editingRenter = ref(null);
 const renters = ref([]);
+const showMarketingMediaLibrary = ref(false); // Ref für die Sichtbarkeit der Marketing Media Library
+const showIconMediaLibrary = ref(false); // Ref für die Sichtbarkeit der Icon Media Library
+
+// Load images on component mount
+onMounted(async () => {
+  await loadImages();
+});
 
 const initialRenterForm = {
   name: "",
@@ -453,46 +602,74 @@ function handleRenterSaved(savedRenter) {
   editingRenter.value = null;
 }
 
-async function getImageUrl(imageId) {
-  if (!imageId) return "";
-  await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/${imageId}`)
-    .then((response) => {
-      if (!response.ok) throw new Error("Failed to fetch image");
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Fetched image data:", `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${data.url}`);
-      return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${data.url}`;
-    })
-    .catch((error) => {
-      console.error("Error fetching image URL:", error);
-      return "";
-    });
+// Umbenannt und angepasst von getImageUrl zu getIconPreviewUrl
+function getIconPreviewUrl(iconId) {
+  if (!iconId || isPredefinedIcon(iconId)) {
+    // Für vordefinierte Icons oder kein Icon keine URL vom Server generieren
+    return "";
+  }
+  // Verwende gleiche Logik wie RenterForm.vue
+  const image = images.value.find((img) => img.id === iconId);
+  if (!image) return "";
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${image.url}`;
 }
 
-function handleIconUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  //upload file to /media/upload
-  const imageFormData = new FormData();
-  imageFormData.append("files", file);
-  fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/upload`, {
-    method: "POST",
-    body: imageFormData,
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Icon upload response:", data.files[0]);
-      if (data.files) {
-        formData.value.iconId = data.files[0].id; // Assuming the API returns the file URL
-      } else {
-        alert("Fehler beim Hochladen des Icons");
-      }
-    })
-    .catch((error) => {
-      console.error("Error uploading icon:", error);
-      alert("Fehler beim Hochladen des Icons");
-    });
+function isPredefinedIcon(iconId) {
+  return typeof iconId === "string" && iconId.startsWith("icon-");
+}
+
+// handleIconUpload wird entfernt, da wir MediaLibrary verwenden
+// function handleIconUpload(event) { ... }
+
+function handleIconMediaSelected(selectedImages) {
+  if (selectedImages && selectedImages.length > 0) {
+    formData.value.iconId = selectedImages[0];
+  }
+  showIconMediaLibrary.value = false;
+}
+
+// Entferne die alte handleMarketingImageUpload Funktion oder kommentiere sie aus
+function handleMarketingMediaSelected(selectedImages) {
+  if (!selectedImages) return;
+  formData.value.marketingImages = selectedImages || [];
+  showMarketingMediaLibrary.value = false;
+}
+
+function getMarketingImageUrl(imageId) {
+  if (!imageId) return "";
+
+  // Versuche, das Bild im geladenen images Array zu finden
+  const image = images.value.find((img) => img.id === imageId);
+  if (image) {
+    return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${image.url}`;
+  }
+
+  // Fallback: Direkte URL-Konstruktion wenn das Bild nicht im Array ist
+  console.warn(
+    "Bild nicht in geladenen Bildern gefunden, Fallback-URL wird verwendet für:",
+    imageId
+  );
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}/media/${imageId}`;
+}
+
+function removeMarketingImage(index) {
+  formData.value.marketingImages.splice(index, 1);
+}
+
+// Add images ref to store all available images
+const images = ref([]);
+
+// Add function to load images
+async function loadImages() {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_INTERNAL_API_URL}/media`
+    );
+    if (!response.ok) throw new Error("Failed to load images");
+    images.value = await response.json();
+  } catch (error) {
+    console.error("Error loading images:", error);
+  }
 }
 </script>
 
