@@ -900,7 +900,10 @@ async function saveFloor() {
 
     const response = await fetch(url, {
       method: editingFloor.value ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
       body: JSON.stringify(floorData),
     });
 
@@ -1084,7 +1087,10 @@ async function saveRenter() {
 
     const response = await fetch(url, {
       method: props.editingRenter ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
       body: JSON.stringify(renterData),
     });
 

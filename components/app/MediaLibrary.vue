@@ -170,6 +170,9 @@ async function uploadFiles(files) {
   try {
     const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/upload`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('jwt')}` // Include JWT token if required
+      },
       body: formData
     });
 

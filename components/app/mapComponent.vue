@@ -344,7 +344,7 @@ export default {
         name: "",
         poiType: "",
         shortName: "",
-        marketingImages: []
+        marketingImages: [],
         // Füge ggf. weitere Felder hinzu
       };
     },
@@ -414,8 +414,8 @@ export default {
 
         // Finde die vollständigen Daten zum geklickten POI
         const poiData = this.allPoisData.find((poi) => poi.id === poiId);
-
         if (poiData) {
+          console.log("POIDATA:", poiData);
           // Setze das editingObj mit den Daten des geklickten POIs
           this.editingObj = {
             id: poiData.id,
@@ -743,7 +743,10 @@ export default {
             `${import.meta.env.VITE_INTERNAL_API_URL}/pois`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+              },
               body: JSON.stringify(dataToSend),
             }
           );
@@ -996,6 +999,9 @@ export default {
           `${import.meta.env.VITE_INTERNAL_API_URL}/export/poi-overview`,
           {
             method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
             body: formData,
           }
         );

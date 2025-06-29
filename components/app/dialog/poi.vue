@@ -261,18 +261,36 @@
       </div>
 
       <div v-if="renters.length > 0" class="space-y-3">
+        <div v-if="renters.length > 1" class="text-sm text-blue-600 bg-blue-50 p-2 rounded-md mb-3">
+          💡 Ziehen Sie die Mieter-Karten, um die Reihenfolge zu ändern. Änderungen werden automatisch gespeichert.
+        </div>
+        
         <div
-          v-for="renter in renters"
+          v-for="(renter, index) in renters"
           :key="renter.id"
-          class="border border-neutral-200 rounded-lg p-3"
+          :draggable="renters.length > 1"
+          class="border border-neutral-200 rounded-lg p-3 transition-all"
+          :class="{
+            'cursor-move border-blue-300 shadow-sm': renters.length > 1,
+            'bg-neutral-50': isDragging && draggedIndex === index
+          }"
+          @dragstart="handleDragStart($event, index)"
+          @dragend="handleDragEnd"
+          @dragover="handleDragOver"
+          @drop="handleDrop($event, index)"
         >
           <div class="flex items-center justify-between">
-            <div>
-              <h4 class="font-medium">{{ renter.name }}</h4>
-              <p v-if="renter.area" class="text-sm text-neutral-600">
-                Fläche: {{ renter.area.squaremeters }}m² | Kosten:
-                {{ renter.area.costs }}€
-              </p>
+            <div class="flex items-center gap-3">
+              <div v-if="renters.length > 1" class="text-neutral-400">
+                <UIcon name="i-lucide-grip-vertical" class="h-5 w-5" />
+              </div>
+              <div>
+                <h4 class="font-medium">{{ renter.name }}</h4>
+                <p v-if="renter.area" class="text-sm text-neutral-600">
+                  Fläche: {{ renter.area.squaremeters }}m² | Kosten:
+                  {{ renter.area.costs }}€
+                </p>
+              </div>
             </div>
             <div class="flex gap-2">
               <button
@@ -515,6 +533,10 @@ const renters = ref([]);
 const showMarketingMediaLibrary = ref(false); // Ref für die Sichtbarkeit der Marketing Media Library
 const showIconMediaLibrary = ref(false); // Ref für die Sichtbarkeit der Icon Media Library
 
+// Sortierungsfunktionalität
+const isDragging = ref(false);
+const draggedIndex = ref(null);
+
 // Load images on component mount
 onMounted(async () => {
   await loadImages();
@@ -600,6 +622,102 @@ function handleRenterSaved(savedRenter) {
     renters.value.push(savedRenter);
   }
   editingRenter.value = null;
+}
+
+// Sortierungsfunktionen
+function handleDragStart(event, index) {
+  if (renters.value.length <= 1) return;
+  
+  isDragging.value = true;
+  draggedIndex.value = index;
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragEnd() {
+  isDragging.value = false;
+  draggedIndex.value = null;
+}
+
+function handleDragOver(event) {
+  if (renters.value.length <= 1) return;
+  
+  event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
+}
+
+async function handleDrop(event, targetIndex) {
+  if (renters.value.length <= 1 || draggedIndex.value === null) return;
+  
+  event.preventDefault();
+  
+  if (draggedIndex.value !== targetIndex) {
+    // Element an der Zielposition einfügen
+    const draggedRenter = renters.value.splice(draggedIndex.value, 1)[0];
+    renters.value.splice(targetIndex, 0, draggedRenter);
+    
+    // Automatisch speichern nach dem Verschieben
+    await saveSortOrder();
+  }
+  
+  isDragging.value = false;
+  draggedIndex.value = null;
+}
+
+async function saveSortOrder() {
+  if (!props.poiToEdit?.id) return;
+  
+  try {
+    // Erstelle Array mit den Area-IDs in der neuen Reihenfolge
+    // (nicht Renter-IDs, sondern Area-IDs, da das Backend Area-IDs erwartet)
+    const sortedAreaIds = renters.value
+      .filter(renter => renter.area && renter.area.id) // Nur Mieter mit gültiger Area
+      .map(renter => renter.area.id);
+    
+    // Floor-ID aus dem ersten Renter mit Area extrahieren
+    const firstRenterWithArea = renters.value.find(renter => renter.area && renter.area.floorId);
+    const floorId = firstRenterWithArea?.area?.floorId;
+    
+    if (!floorId) {
+      console.error('Keine Floor-ID gefunden. POI-Struktur:', props.poiToEdit);
+      console.error('Renters-Struktur:', renters.value);
+      throw new Error('Floor-ID konnte nicht ermittelt werden');
+    }
+    
+    console.log("Saving renter sort order:", {
+      poiToEdit: props.poiToEdit,
+      floorId: floorId,
+      sortedAreaIds: sortedAreaIds
+    });
+    
+    // Verwende die korrekte API-Route basierend auf der Backend-Funktion
+    const response = await fetch(
+      `${import.meta.env.VITE_INTERNAL_API_URL}/sort/floor/${floorId}/renters`,
+      {
+        method: 'PATCH', // Backend verwendet PUT statt PATCH
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ sortedAreaIds }) // Backend erwartet sortedAreaIds
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error('Failed to save sort order');
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('Mieter-Reihenfolge erfolgreich gespeichert');
+    } else {
+      throw new Error(result.message || 'Unknown error');
+    }
+    
+  } catch (error) {
+    console.error('Error saving sort order:', error);
+    // Optional: Fehler-Nachricht anzeigen
+    alert('Fehler beim Speichern der Reihenfolge: ' + error.message);
+  }
 }
 
 // Umbenannt und angepasst von getImageUrl zu getIconPreviewUrl
