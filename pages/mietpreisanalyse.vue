@@ -20,8 +20,14 @@
         :key="index"
         class="mb-4"
       >
-        <span class="font-bold text-sm mb-2 block" :id="Object.keys(regionObj)[0]">
-          {{ Object.keys(regionObj)[0] }} ({{ regionObj[Object.keys(regionObj)[0]].length }} Objekte)
+        <span
+          class="font-bold text-sm mb-2 block"
+          :id="Object.keys(regionObj)[0]"
+        >
+          {{ Object.keys(regionObj)[0] }} ({{
+            regionObj[Object.keys(regionObj)[0]].length
+          }}
+          Objekte)
         </span>
 
         <AppRentalAdvertisementSummary
@@ -163,7 +169,12 @@ export default {
       for (const id of this.selectedEntriesFromParent) {
         try {
           await axios.delete(
-            `${import.meta.env.VITE_INTERNAL_API_URL}/immobilien/${id}`
+            `${import.meta.env.VITE_INTERNAL_API_URL}/immobilien/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+              },
+            }
           );
 
           this.toast.add({

@@ -458,6 +458,10 @@ async function deleteFloor(id) {
       `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${id}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
       }
     );
     if (!response.ok) throw new Error("Failed to delete floor");
@@ -520,7 +524,10 @@ async function updateAreaWithFloor(floorId) {
       `${import.meta.env.VITE_INTERNAL_API_URL}/areas/${props.area.id}`,
       {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
         body: JSON.stringify({
           ...props.area,
           floorId: floorId || null,
@@ -561,6 +568,10 @@ async function deleteArea() {
       `${import.meta.env.VITE_INTERNAL_API_URL}/areas/${props.area.id}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
       }
     );
     if (!response.ok) throw new Error("Failed to delete area");

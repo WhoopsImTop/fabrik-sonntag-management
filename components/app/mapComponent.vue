@@ -597,7 +597,10 @@ export default {
           `${import.meta.env.VITE_INTERNAL_API_URL}/pois/${this.editingObj.id}`,
           {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
             body: JSON.stringify({
               areaGeoJson: this.editingObj.areaGeoJson,
             }),
@@ -733,7 +736,10 @@ export default {
             }`,
             {
               method: "PATCH",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+              },
               body: JSON.stringify(dataToSend),
             }
           );

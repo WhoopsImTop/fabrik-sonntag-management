@@ -70,7 +70,11 @@ export default {
     deleteImage() {
       const name = this.selectedImage.name;
       axios
-        .delete(import.meta.env.VITE_INTERNAL_API_URL + "/images/" + name)
+        .delete(import.meta.env.VITE_INTERNAL_API_URL + "/images/" + name, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+          },
+        })
         .then((res) => {
           console.log(res.data);
 

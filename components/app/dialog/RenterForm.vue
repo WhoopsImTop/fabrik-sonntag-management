@@ -855,6 +855,10 @@ async function deleteFloor(id) {
       `${import.meta.env.VITE_INTERNAL_API_URL}/floors/${id}`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
       }
     );
     if (!response.ok) throw new Error("Failed to delete floor");

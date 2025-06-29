@@ -194,7 +194,10 @@ async function deleteImage(imageId) {
 
   try {
     const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/media/${imageId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('jwt')}` // Include JWT token if required
+      } 
     });
 
     if (!response.ok) throw new Error('Failed to delete image');

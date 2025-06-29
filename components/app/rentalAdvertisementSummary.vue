@@ -147,7 +147,12 @@ export default {
         .delete(
           import.meta.env.VITE_INTERNAL_API_URL +
             "/immobilien/" +
-            this.history.id
+            this.history.id,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+            },
+          }
         )
         .then((res) => {
           console.log(res.data);
