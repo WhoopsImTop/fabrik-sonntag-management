@@ -198,12 +198,26 @@ export default {
     },
   },
   mounted() {
-    if (this.openingHoursProp) {
-      const openingHoursJson = JSON.parse(this.openingHoursProp);
-      this.openingHours = this.days.map((day) => ({
-        opened: openingHoursJson[day]?.opened || false,
-        blocks: openingHoursJson[day]?.blocks || [],
-      }));
+    if (typeof this.openingHoursProp === "string") {
+      if (this.openingHoursProp.trim() !== "{}") {
+        const openingHoursJson = JSON.parse(this.openingHoursProp);
+        this.openingHours = this.days.map((day) => ({
+          opened: openingHoursJson[day]?.opened || false,
+          blocks: openingHoursJson[day]?.blocks || [],
+        }));
+      }
+    } else if (
+      typeof this.openingHoursProp === "object" &&
+      this.openingHoursProp !== null
+    ) {
+      // already parsed object
+      if (Object.keys(this.openingHoursProp).length > 0) {
+        const openingHoursJson = this.openingHoursProp;
+        this.openingHours = this.days.map((day) => ({
+          opened: openingHoursJson[day]?.opened || false,
+          blocks: openingHoursJson[day]?.blocks || [],
+        }));
+      }
     }
   },
 };

@@ -326,6 +326,7 @@
       :editing-renter="editingRenter"
       :poi-id="poiToEdit?.id"
       :poi="poiToEdit"
+      :allPois="allPois"
       @renter-saved="handleRenterSaved"
     />
     <!-- Media Library Modals -->
@@ -413,6 +414,10 @@ const props = defineProps({
   poiToEdit: {
     type: Object,
     default: null,
+  },
+  allPois: {
+    type: Array,
+    default: () => [],
   },
   isGeometryEditMode: {
     type: Boolean,

@@ -5,6 +5,7 @@
       class="absolute top-2 left-2 bottom-2 z-10 w-96"
       :poiToEdit="editingObj"
       :isGeometryEditMode="isGeometryEditMode"
+      :all-pois="allPoisData"
       @start-drawing="handleStartDrawing"
       @save="handleSave"
       @cancel="handleCancelEdit"

@@ -90,6 +90,23 @@
               class="w-full p-2 border rounded-md"
             />
           </div>
+
+          <div>
+            <label class="block text-sm font-medium mb-1">Haus</label>
+            <select
+              @change="updateAreaPoiRelation(form.area.id, selectedHouseId)"
+              v-model="selectedHouseId"
+              class="w-full p-2 border rounded-md"
+            >
+              <option
+                v-for="house in allHouses"
+                :key="house.id"
+                :value="house.id"
+              >
+                {{ house.name }}
+              </option>
+            </select>
+          </div>
           <div>
             <label class="block text-sm font-medium mb-1">Öffnungszeiten</label>
             <app-custom-input-opening-hours
@@ -331,7 +348,6 @@
                       placeholder="Optionale Beschreibung der Etage"
                     ></textarea>
                   </div>
-
                   <div class="flex justify-end gap-3">
                     <button
                       type="button"
@@ -495,6 +511,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  allPois: {
+    type: Array,
+    default: () => [],
+  },
 });
 
 const emit = defineEmits(["update:modelValue", "renter-saved"]);
@@ -511,6 +531,7 @@ const floorForm = ref({
   level: 0,
   description: "",
 });
+const selectedHouseId = ref("");
 const selectedFloorId = ref("");
 const showLogoSelector = ref(false);
 const showMarketingImagesSelector = ref(false);
@@ -990,6 +1011,13 @@ watch(
   { immediate: true }
 );
 
+const allHouses = ref(
+  props.allPois.map((poi) => ({
+    id: poi.id,
+    name: poi.name,
+  })) || []
+);
+
 function handleLogoSelection(selectedImages) {
   console.log("Logo selection:", selectedImages);
   if (selectedImages && selectedImages.length > 0) {
@@ -998,6 +1026,24 @@ function handleLogoSelection(selectedImages) {
     form.value.logoId = null;
   }
   showLogoSelector.value = false;
+}
+
+async function updateAreaPoiRelation(areaId) {
+  window.confirm("Mieter in ein Anderes Haus umziehen?");
+  const area = form.value.area;
+  area.poiId = selectedHouseId.value || null;
+  await fetch(import.meta.env.VITE_INTERNAL_API_URL + "/areas/" + areaId, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    },
+    body: JSON.stringify({
+      ...area
+    }),
+  });
+  console.log("Area updated with new POI relation");
+  selectedHouseId.value = "";
 }
 
 function handleMarketingImagesSelection(selectedImages) {
