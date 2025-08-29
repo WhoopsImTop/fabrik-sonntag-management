@@ -12,7 +12,8 @@ const items = [
       color: "neutral",
       icon: "i-lucide-lock-open",
       onSelect(e) {
-        window.alert("ABMELDEN")
+        localStorage.removeItem("jwt");
+        window.location.reload();
       },
     },
   ],

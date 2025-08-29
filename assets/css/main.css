@@ -6,5 +6,5 @@
 }
 
 input, select, textarea {
-  @apply border border-neutral-900/10 rounded-md px-2 py-1.5 text-xs shadow-xs
+  @apply border border-neutral-900/10 rounded-md p-2 text-xs shadow-xs
 }
