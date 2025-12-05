@@ -2,9 +2,46 @@
 const items = ref([
   [
     {
+      label: "Buchungssystem",
+      icon: "i-lucide-calendar-heart",
+      defaultOpen: false,
+      children: [
+        {
+          label: "Dashboard",
+          icon: "i-lucide-layout-dashboard",
+          to: "/booking-system",
+        },
+        {
+          label: "Buchungen",
+          icon: "i-lucide-calendar-check",
+          to: "/booking-system/bookings",
+        },
+        {
+          label: "Kalender",
+          icon: "i-lucide-calendar",
+          to: "/booking-system/calendar",
+        },
+        {
+          label: "Nutzer",
+          icon: "i-lucide-users",
+          to: "/booking-system/users",
+        },
+        {
+          label: "Email-Vorlagen",
+          icon: "i-lucide-mail",
+          to: "/booking-system/email-templates",
+        },
+        {
+          label: "Resourcen",
+          icon: "i-lucide-table-properties",
+          to: "/booking-system/resources",
+        },
+      ],
+    },
+    {
       label: "Campus",
       icon: "i-lucide-map-pin-house",
-      to: "/"
+      to: "/",
     },
     {
       label: "Gebäude",
@@ -29,7 +66,7 @@ const items = ref([
     {
       label: "Mietpreisanalyse",
       icon: "i-lucide-chart-candlestick",
-      to: "/mietpreisanalyse"
+      to: "/mietpreisanalyse",
     },
   ],
   [

@@ -199,12 +199,12 @@ export default {
     },
     openDownloadPage() {
       window.open(
-        `https://haustechnik.fabrik-sonntag.de/api/immobilien/download`
+       import.meta.env.VITE_INTERNAL_API_URL + `/immobilien/download`
       );
     },
     openCleanedDownloadPage() {
       window.open(
-        `https://haustechnik.fabrik-sonntag.de/api/immobilien/download-cleaned`
+        import.meta.env.VITE_INTERNAL_API_URL + `/immobilien/download-cleaned`
       );
     },
     fetchImmobiliendata() {

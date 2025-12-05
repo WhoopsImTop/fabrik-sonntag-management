@@ -25,7 +25,7 @@
               v-model="username"
               type="text"
               placeholder="E-Mail-Adresse"
-              class="p-2 border rounded bg-white"
+              class="p-2 border border-black/10 shadow-sm rounded-lg bg-white"
               required
           /></label>
           <label class="flex flex-col text-xs text-neutral-600 gap-1"
@@ -34,14 +34,14 @@
               v-model="password"
               type="password"
               placeholder="Passwort"
-              class="p-2 border rounded bg-white"
+              class="p-2 border border-black/10 shadow-sm rounded-lg bg-white"
               required
             />
           </label>
         </div>
         <button
           type="submit"
-          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded text-sm w-full mb-2"
+          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-lg text-sm px-3 border border-black/10 shadow-sm w-full mb-2"
         >
           Anmelden
         </button>
