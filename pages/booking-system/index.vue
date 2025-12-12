@@ -30,53 +30,8 @@
       />
     </div>
 
-    <!-- Status Distribution -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-      <div class="bg-white rounded-lg p-4 border border-black/10 shadow-sm">
-        <h2 class="text-lg font-semibold mb-4">Status-Verteilung</h2>
-        <div class="space-y-2">
-          <div
-            v-for="status in statusDistribution"
-            :key="status.status"
-            class="flex items-center justify-between"
-          >
-            <div class="flex items-center gap-2">
-              <span
-                class="w-3 h-3 rounded-full"
-                :class="getStatusColor(status.status)"
-              ></span>
-              <span class="text-sm capitalize">{{ getStatusLabel(status.status) }}</span>
-            </div>
-            <span class="text-sm font-semibold">{{ status.count }}</span>
-          </div>
-        </div>
-      </div>
+    <!-- Calendar View -->
 
-      <!-- Quick Actions -->
-      <div class="bg-white rounded-lg p-4 border border-black/10 shadow-sm">
-        <h2 class="text-lg font-semibold mb-4">Schnellzugriff</h2>
-        <div class="space-y-2">
-          <NuxtLink
-            to="/booking-system/bookings"
-            class="block w-full bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm border border-black/10 shadow-sm text-center"
-          >
-            Alle Buchungen anzeigen
-          </NuxtLink>
-          <NuxtLink
-            to="/booking-system/calendar"
-            class="block w-full bg-neutral-100 hover:bg-neutral-200 font-bold py-2 px-4 rounded-lg text-sm border border-black/10 shadow-sm text-center"
-          >
-            Kalenderansicht
-          </NuxtLink>
-          <NuxtLink
-            to="/booking-system/users"
-            class="block w-full bg-neutral-100 hover:bg-neutral-200 font-bold py-2 px-4 rounded-lg text-sm border border-black/10 shadow-sm text-center"
-          >
-            Nutzerverwaltung
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
 
     <!-- Recent Bookings -->
     <div class="bg-white rounded-lg p-4 border border-black/10 shadow-sm">
@@ -128,7 +83,6 @@ const stats = ref({
   totalRevenue: 0
 });
 
-const statusDistribution = ref([]);
 const recentBookings = ref([]);
 
 const fetchDashboardData = async () => {
@@ -137,11 +91,102 @@ const fetchDashboardData = async () => {
     const data = await res.json();
 
     stats.value = data.overview;
-    statusDistribution.value = data.statusDistribution;
+    // statusDistribution.value = data.statusDistribution; // Removed
     recentBookings.value = data.recentBookings;
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error);
   }
+};
+
+// Calendar Logic
+const calendarDate = ref(new Date());
+const calendarBookings = ref([]);
+
+const calendarDays = computed(() => {
+  const year = calendarDate.value.getFullYear();
+  const month = calendarDate.value.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  
+  const startDate = new Date(firstDay);
+  const dayOfWeek = startDate.getDay();
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startDate.setDate(startDate.getDate() + diff);
+  
+  const days = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  for (let i = 0; i < 42; i++) { // 6 weeks
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    days.push({
+      date,
+      isCurrentMonth: date.getMonth() === month,
+      isToday: date.getTime() === today.getTime()
+    });
+  }
+  return days;
+});
+
+const fetchCalendarBookings = async () => {
+    try {
+        const year = calendarDate.value.getFullYear();
+        const month = calendarDate.value.getMonth();
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0);
+        
+        // Add buffer for prev/next month days shown
+        startDate.setDate(startDate.getDate() - 7);
+        endDate.setDate(endDate.getDate() + 7);
+
+        const params = new URLSearchParams({
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+        });
+
+        const res = await fetch(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/range?${params.toString()}`
+        );
+        const data = await res.json();
+        calendarBookings.value = data;
+    } catch (e) {
+        console.error("Failed to fetch calendar bookings", e);
+    }
+}
+
+const getBookingsForDay = (date) => {
+  const dayStart = new Date(date);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(date);
+  dayEnd.setHours(23, 59, 59, 999);
+
+  return calendarBookings.value.filter(booking => {
+    const start = new Date(booking.startTime);
+    const end = new Date(booking.endTime);
+    // Simple overlap check
+    return start < dayEnd && end > dayStart;
+  });
+};
+
+const getStatusDotColor = (status) => {
+    const colors = {
+        pending: 'bg-yellow-400',
+        confirmed: 'bg-green-400',
+        cancelled: 'bg-red-400',
+        completed: 'bg-blue-400'
+    };
+    return colors[status] || 'bg-neutral-400';
+};
+
+const calendarPrevMonth = () => {
+    calendarDate.value = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth() - 1, 1);
+    fetchCalendarBookings();
+};
+
+const calendarNextMonth = () => {
+     calendarDate.value = new Date(calendarDate.value.getFullYear(), calendarDate.value.getMonth() + 1, 1);
+     fetchCalendarBookings();
 };
 
 const getStatusColor = (status) => {
@@ -188,6 +233,7 @@ const formatDate = (dateString) => {
 
 onMounted(() => {
   fetchDashboardData();
+  fetchCalendarBookings();
 });
 </script>
 

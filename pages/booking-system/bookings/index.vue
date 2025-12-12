@@ -74,7 +74,6 @@
           <th class="px-3 py-1.5 text-sm">Start</th>
           <th class="px-3 py-1.5 text-sm">Ende</th>
           <th class="px-3 py-1.5 text-sm">Status</th>
-          <th class="px-3 py-1.5 text-sm">Zahlung</th>
           <th class="px-3 py-1.5 text-sm text-right">Preis</th>
           <th class="px-3 py-1.5 text-sm text-right">Aktionen</th>
         </tr>
@@ -92,14 +91,6 @@
               class="px-2 py-1 rounded-lg text-xs border border-black/10"
             >
               {{ getStatusLabel(booking.status) }}
-            </span>
-          </td>
-          <td class="px-3 py-2 text-sm">
-            <span
-              :class="getPaymentStatusClass(booking.paymentStatus)"
-              class="px-2 py-1 rounded-lg text-xs border border-black/10"
-            >
-              {{ getPaymentStatusLabel(booking.paymentStatus) }}
             </span>
           </td>
           <td class="px-3 py-2 text-sm text-right">{{ booking.totalPrice }} €</td>

@@ -36,6 +36,21 @@ const items = ref([
           icon: "i-lucide-table-properties",
           to: "/booking-system/resources",
         },
+        {
+          label: "Mitgliedschaften",
+          icon: "i-lucide-award",
+          to: "/booking-system/memberships",
+        },
+        {
+          label: "Services",
+          to: "/booking-system/services",
+          icon: "i-lucide-coffee",
+        },
+        {
+          label: "Rechnungen",
+          icon: "i-lucide-file-text",
+          to: "/booking-system/invoices",
+        },
       ],
     },
     {
@@ -62,6 +77,11 @@ const items = ref([
           ],
         },
       ],
+    },
+    {
+      label: "Einstellungen",
+      icon: "i-lucide-settings",
+      to: "/settings",
     },
     {
       label: "Mietpreisanalyse",
