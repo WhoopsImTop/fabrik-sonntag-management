@@ -39,8 +39,8 @@
                              <UIcon name="i-lucide-box" size="20" />
                          </div>
                          <div>
-                             <p class="font-bold text-neutral-900 text-lg">{{ booking.resource?.title || 'Unbekannt' }}</p>
-                             <p class="text-xs text-neutral-500 capitalize">{{ booking.resource?.type }} • Kapazität: {{ booking.resource?.capacity }}</p>
+                         <p class="font-bold text-neutral-900 text-lg">{{ booking.resource?.name || 'Unbekannt' }}</p>
+                             <p class="text-xs text-neutral-500 capitalize">{{ booking.resource?.category?.name }} • Kapazität: {{ booking.resource?.capacity }}</p>
                          </div>
                     </div>
                 </div>
@@ -98,7 +98,7 @@
                         <p class="font-bold text-lg text-neutral-900">
                             {{ booking.user?.firstName }} {{ booking.user?.lastName }}
                         </p>
-                        <p class="text-sm text-neutral-500">@{{ booking.user?.username }}</p>
+                        <p class="text-sm text-neutral-500">User ID: {{ booking.user?.id }}</p>
                     </div>
                 </div>
 
@@ -152,10 +152,10 @@
                             v-model="newStatus"
                             class="w-full p-2.5 bg-neutral-50 border rounded-lg border-neutral-200 text-sm focus:ring-2 focus:ring-black/5 outline-none transition-all"
                         >
-                            <option value="pending">⏳ Ausstehend</option>
-                            <option value="confirmed">✅ Bestätigt</option>
-                            <option value="cancelled">❌ Storniert</option>
-                            <option value="completed">🏁 Abgeschlossen</option>
+                            <option value="REQUESTED">⏳ Ausstehend</option>
+                             <option value="CONFIRMED">✅ Bestätigt</option>
+                             <option value="CANCELLED">❌ Storniert</option>
+                             <option value="COMPLETED">🏁 Abgeschlossen</option>
                         </select>
                         <button
                             @click="updateStatus"
@@ -204,7 +204,7 @@
                     </button>
                     
                     <button
-                        v-if="booking.status !== 'cancelled'"
+                        v-if="booking.status !== 'CANCELLED'"
                         @click="cancelBooking"
                         class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-medium py-2.5 rounded-lg text-sm border border-red-100 shadow-sm transition-all flex items-center justify-center gap-2"
                     >
@@ -252,7 +252,12 @@ const toast = useToast();
 const fetchBooking = async () => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/${route.params.id}`
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings/${route.params.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
     );
     const data = await res.json();
     booking.value = data;
@@ -271,7 +276,7 @@ const fetchBooking = async () => {
 const updateStatus = async () => {
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/${booking.value.id}`,
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings/${booking.value.id}/status`,
       {
         method: 'PATCH',
         headers: {
@@ -318,13 +323,14 @@ const cancelBooking = async () => {
 
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/${booking.value.id}/cancel`,
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings/${booking.value.id}/status`,
       {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('jwt')}`
-        }
+        },
+        body: JSON.stringify({ status: 'CANCELLED' })
       }
     );
 
@@ -368,20 +374,20 @@ const handleBookingSaved = () => {
 
 const getStatusBadgeClass = (status) => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-900',
-    confirmed: 'bg-green-100 text-green-900',
-    cancelled: 'bg-red-100 text-red-900',
-    completed: 'bg-blue-100 text-blue-900'
+    'REQUESTED': 'bg-yellow-100 text-yellow-900',
+    'CONFIRMED': 'bg-green-100 text-green-900',
+    'CANCELLED': 'bg-red-100 text-red-900',
+    'COMPLETED': 'bg-blue-100 text-blue-900'
   };
   return classes[status] || 'bg-neutral-100 text-neutral-900';
 };
 
 const getStatusLabel = (status) => {
   const labels = {
-    pending: 'Ausstehend',
-    confirmed: 'Bestätigt',
-    cancelled: 'Storniert',
-    completed: 'Abgeschlossen'
+    'REQUESTED': 'Ausstehend',
+    'CONFIRMED': 'Bestätigt',
+    'CANCELLED': 'Storniert',
+    'COMPLETED': 'Abgeschlossen'
   };
   return labels[status] || status;
 };

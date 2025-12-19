@@ -12,7 +12,7 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg p-4 border border-black/10 shadow-sm mb-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div>
           <label class="block text-sm font-medium mb-1">Status</label>
           <select
@@ -21,10 +21,10 @@
             class="w-full p-2 border rounded-lg border-black/10 shadow-sm text-sm"
           >
             <option value="">Alle</option>
-            <option value="pending">Ausstehend</option>
-            <option value="confirmed">Bestätigt</option>
-            <option value="cancelled">Storniert</option>
-            <option value="completed">Abgeschlossen</option>
+            <option value="REQUESTED">Ausstehend</option>
+            <option value="CONFIRMED">Bestätigt</option>
+            <option value="CANCELLED">Storniert</option>
+            <option value="COMPLETED">Abgeschlossen</option>
           </select>
         </div>
         <div>
@@ -36,20 +36,7 @@
           >
             <option value="">Alle</option>
             <option v-for="resource in resources" :key="resource.id" :value="resource.id">
-              {{ resource.title }}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Nutzer</label>
-          <select
-            v-model="filters.userId"
-            @change="fetchBookings"
-            class="w-full p-2 border rounded-lg border-black/10 shadow-sm text-sm"
-          >
-            <option value="">Alle</option>
-            <option v-for="user in users" :key="user.id" :value="user.id">
-              {{ user.username }}
+              {{ resource.name }}
             </option>
           </select>
         </div>
@@ -81,8 +68,8 @@
       <tbody>
         <tr v-for="booking in bookings" :key="booking.id" class="border-t border-black/10">
           <td class="px-3 py-2 text-sm">#{{ booking.id }}</td>
-          <td class="px-3 py-2 text-sm">{{ booking.user?.username || 'N/A' }}</td>
-          <td class="px-3 py-2 text-sm">{{ booking.resource?.title || 'N/A' }}</td>
+          <td class="px-3 py-2 text-sm">{{ booking.user?.firstName || '' }} {{ booking.user?.lastName || 'N/A' }}</td>
+          <td class="px-3 py-2 text-sm">{{ booking.resource?.name || 'N/A' }}</td>
           <td class="px-3 py-2 text-sm">{{ formatDate(booking.startTime) }}</td>
           <td class="px-3 py-2 text-sm">{{ formatDate(booking.endTime) }}</td>
           <td class="px-3 py-2 text-sm">
@@ -93,7 +80,7 @@
               {{ getStatusLabel(booking.status) }}
             </span>
           </td>
-          <td class="px-3 py-2 text-sm text-right">{{ booking.totalPrice }} €</td>
+          <td class="px-3 py-2 text-sm text-right">{{ parseFloat(booking.totalPrice).toFixed(2) }} €</td>
           <td class="px-3 py-2 text-sm flex items-center gap-1 justify-end">
             <NuxtLink
               :to="`/booking-system/bookings/${booking.id}`"
@@ -140,14 +127,12 @@
 <script setup>
 const bookings = ref([]);
 const resources = ref([]);
-const users = ref([]);
 const showBookingModal = ref(false);
 const selectedBooking = ref(null);
 
 const filters = ref({
   status: '',
-  resourceId: '',
-  userId: ''
+  resourceId: ''
 });
 
 const fetchBookings = async () => {
@@ -155,13 +140,17 @@ const fetchBookings = async () => {
     const params = new URLSearchParams();
     if (filters.value.status) params.append('status', filters.value.status);
     if (filters.value.resourceId) params.append('resourceId', filters.value.resourceId);
-    if (filters.value.userId) params.append('userId', filters.value.userId);
 
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings?${params.toString()}`
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
     );
     const data = await res.json();
-    bookings.value = data;
+    bookings.value = data.bookings;
   } catch (error) {
     console.error('Failed to fetch bookings:', error);
   }
@@ -169,7 +158,14 @@ const fetchBookings = async () => {
 
 const fetchResources = async () => {
   try {
-    const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + '/resources');
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/resources',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
     const data = await res.json();
     resources.value = data;
   } catch (error) {
@@ -177,21 +173,10 @@ const fetchResources = async () => {
   }
 };
 
-const fetchUsers = async () => {
-  try {
-    const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + '/users');
-    const data = await res.json();
-    users.value = data;
-  } catch (error) {
-    console.error('Failed to fetch users:', error);
-  }
-};
-
 const resetFilters = () => {
   filters.value = {
     status: '',
-    resourceId: '',
-    userId: ''
+    resourceId: ''
   };
   fetchBookings();
 };
@@ -211,13 +196,14 @@ const cancelBooking = async (booking) => {
 
   try {
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/${booking.id}/cancel`,
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings/${booking.id}/status`,
       {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('jwt')}`
-        }
+        },
+        body: JSON.stringify({ status: 'CANCELLED' })
       }
     );
 
@@ -244,20 +230,20 @@ const handleBookingSaved = () => {
 
 const getStatusBadgeClass = (status) => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-900',
-    confirmed: 'bg-green-100 text-green-900',
-    cancelled: 'bg-red-100 text-red-900',
-    completed: 'bg-blue-100 text-blue-900'
+    'REQUESTED': 'bg-yellow-100 text-yellow-900',
+    'CONFIRMED': 'bg-green-100 text-green-900',
+    'CANCELLED': 'bg-red-100 text-red-900',
+    'COMPLETED': 'bg-blue-100 text-blue-900'
   };
   return classes[status] || 'bg-neutral-100 text-neutral-900';
 };
 
 const getStatusLabel = (status) => {
   const labels = {
-    pending: 'Ausstehend',
-    confirmed: 'Bestätigt',
-    cancelled: 'Storniert',
-    completed: 'Abgeschlossen'
+    'REQUESTED': 'Ausstehend',
+    'CONFIRMED': 'Bestätigt',
+    'CANCELLED': 'Storniert',
+    'COMPLETED': 'Abgeschlossen'
   };
   return labels[status] || status;
 };
@@ -297,7 +283,6 @@ const getPaymentStatusLabel = (status) => {
 onMounted(() => {
   fetchBookings();
   fetchResources();
-  fetchUsers();
 });
 </script>
 

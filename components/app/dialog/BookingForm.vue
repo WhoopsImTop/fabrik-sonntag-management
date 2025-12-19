@@ -33,7 +33,7 @@
           >
             <option value="">Nutzer auswählen</option>
             <option v-for="user in users" :key="user.id" :value="user.id">
-              {{ user.username }} ({{ user.email }})
+              {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
             </option>
           </select>
         </div>
@@ -47,7 +47,7 @@
           >
             <option value="">Ressource auswählen</option>
             <option v-for="resource in resources" :key="resource.id" :value="resource.id">
-              {{ resource.title }} ({{ resource.type }})
+              {{ resource.title }}
             </option>
           </select>
         </div>
@@ -79,10 +79,10 @@
             v-model="form.status"
             class="w-full p-2 border rounded-lg border-black/10 shadow-sm"
           >
-            <option value="pending">Ausstehend</option>
-            <option value="confirmed">Bestätigt</option>
-            <option value="cancelled">Storniert</option>
-            <option value="completed">Abgeschlossen</option>
+            <option value="REQUESTED">Ausstehend</option>
+            <option value="CONFIRMED">Bestätigt</option>
+            <option value="CANCELLED">Storniert</option>
+            <option value="COMPLETED">Abgeschlossen</option>
           </select>
         </div>
 
@@ -133,7 +133,7 @@ const form = ref({
   resourceId: props.booking?.resourceId || '',
   startTime: props.booking?.startTime ? formatDateTimeLocal(props.booking.startTime) : '',
   endTime: props.booking?.endTime ? formatDateTimeLocal(props.booking.endTime) : '',
-  status: props.booking?.status || 'pending',
+  status: props.booking?.status || 'REQUESTED',
   notes: props.booking?.notes || ''
 });
 
@@ -147,19 +147,35 @@ function formatDateTimeLocal(dateString) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+// Users endpoint might not exist in new API - we may need to remove this
 const fetchUsers = async () => {
   try {
-    const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + '/users');
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/admin/users',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
     const data = await res.json();
     users.value = data;
   } catch (error) {
-    console.error('Failed to fetch users:', error);
+    console.error('Failed to fetch users - endpoint may not exist:', error);
+    // User dropdown will be empty if endpoint doesn't exist
   }
 };
 
 const fetchResources = async () => {
   try {
-    const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + '/resources');
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/resources',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
     const data = await res.json();
     resources.value = data;
   } catch (error) {
@@ -170,7 +186,7 @@ const fetchResources = async () => {
 const saveBooking = async () => {
   try {
     const url = props.booking?.id
-      ? `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/${props.booking.id}`
+      ? `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings/${props.booking.id}`
       : `${import.meta.env.VITE_INTERNAL_API_URL}/bookings`;
 
     const method = props.booking?.id ? 'PATCH' : 'POST';

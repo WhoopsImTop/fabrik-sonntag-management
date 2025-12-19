@@ -160,7 +160,12 @@ const fetchUsers = async () => {
     if (filters.value.isActive) params.append('isActive', filters.value.isActive);
 
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/users?${params.toString()}`
+      `${import.meta.env.VITE_INTERNAL_API_URL}/users?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
     );
     const data = await res.json();
     users.value = data;

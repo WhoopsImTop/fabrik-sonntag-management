@@ -27,7 +27,7 @@
                  <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-neutral-700 mb-1">Name</label>
                     <input
-                        v-model="form.title"
+                        v-model="form.name"
                         type="text"
                         required
                         class="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none transition-all"
@@ -46,16 +46,13 @@
                 </div>
                 
                 <div>
-                     <label class="block text-sm font-medium text-neutral-700 mb-1">Typ</label>
+                     <label class="block text-sm font-medium text-neutral-700 mb-1">Kategorie</label>
                       <select
-                        v-model="form.type"
+                        v-model="form.categoryId"
                         class="w-full p-2.5 bg-neutral-50 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none transition-all"
                       >
-                        <option value="desk">Tisch</option>
-                        <option value="room">Meetingraum</option>
-                        <option value="office">Büro</option>
-                        <option value="event">Eventlocation</option>
-                        <option value="other">Andere</option>
+                        <option value="">Bitte wählen...</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                       </select>
                 </div>
                  <div>
@@ -104,37 +101,36 @@
         <!-- Pricing Section -->
         <section class="space-y-4">
             <div class="flex justify-between items-center">
-                <h4 class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-2">Preise</h4>
+                <h4 class="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-2">Preispläne</h4>
                 <button type="button" @click="addPrice" class="text-xs bg-neutral-100 hover:bg-neutral-200 px-2 py-1 rounded border">
-                    + Preis hinzufügen
+                    + Preisplan hinzufügen
                 </button>
             </div>
             
             <div class="space-y-3">
                  <div
-                  v-for="(p, index) in form.prices"
+                  v-for="(p, index) in form.pricingPlans"
                   :key="index"
                   class="bg-neutral-50 p-3 rounded-lg border border-neutral-100 grid grid-cols-12 gap-2 items-end"
                 >
                     <div class="col-span-3">
                         <label class="text-xs text-neutral-500 mb-0.5 block">Intervall</label>
                         <select v-model="p.interval" class="w-full p-1.5 text-sm border rounded">
-                            <option value="hour">Stunde</option>
-                            <option value="day">Tag</option>
-                            <option value="month">Monat</option>
-                            <option value="fixed">Fixpreis</option>
+                            <option value="HOUR">Stunde</option>
+                            <option value="DAY">Tag</option>
+                            <option value="MONTH">Monat</option>
                         </select>
                     </div>
                     <div class="col-span-3">
-                        <label class="text-xs text-neutral-500 mb-0.5 block">Mitgliedschaft</label>
-                         <select v-model="p.membershipId" class="w-full p-1.5 text-sm border rounded">
-                            <option :value="null">Standard (Alle)</option>
-                            <option v-for="m in memberships" :key="m.id" :value="m.id">{{ m.name }}</option>
+                        <label class="text-xs text-neutral-500 mb-0.5 block">Gewährt Mitgliedschaft</label>
+                         <select v-model="p.grantsMembershipId" class="w-full p-1.5 text-sm border rounded">
+                            <option :value="null">Keine</option>
+                            <option v-for="m in memberships" :key="m.id" :value="m.id">{{ m.title }}</option>
                         </select>
                     </div>
                      <div class="col-span-3">
-                        <label class="text-xs text-neutral-500 mb-0.5 block">Label (Optional)</label>
-                        <input type="text" v-model="p.label" class="w-full p-1.5 text-sm border rounded" placeholder="z.B. Student" />
+                        <label class="text-xs text-neutral-500 mb-0.5 block">Beschreibung</label>
+                        <input type="text" v-model="p.description" class="w-full p-1.5 text-sm border rounded" placeholder="z.B. Studentenpreis" />
                     </div>
                      <div class="col-span-2">
                          <label class="text-xs text-neutral-500 mb-0.5 block">Preis (€)</label>
@@ -153,8 +149,8 @@
                          </button>
                      </div>
                 </div>
-                 <div v-if="form.prices.length === 0" class="text-center text-sm text-gray-500 py-4">
-                    Keine Preise definiert.
+                 <div v-if="!form.pricingPlans || form.pricingPlans.length === 0" class="text-center text-sm text-gray-500 py-4">
+                    Keine Preispläne definiert.
                 </div>
             </div>
         </section>
@@ -281,15 +277,15 @@ const toast = useToast();
 
 const images = ref([]);
 const memberships = ref([]);
+const categories = ref([]);
 
 const initialForm = {
   id: null,
-  title: "",
+  name: "",
   description: "",
-  type: "desk",
+  categoryId: null,
   capacity: 1,
-  prices: [],
-  isActive: false,
+  pricingPlans: [],
   areaId: null,
   images: [], 
 };
@@ -317,7 +313,14 @@ async function loadImages() {
 
 async function loadMemberships() {
     try {
-        const response = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/memberships`);
+        const response = await fetch(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/admin/memberships`,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('jwt')}`
+                }
+            }
+        );
         if (response.ok) {
             memberships.value = await response.json();
         }
@@ -326,35 +329,47 @@ async function loadMemberships() {
     }
 }
 
+async function loadCategories() {
+    try {
+        const response = await fetch(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/admin/categories`,
+            {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('jwt')}`
+                }
+            }
+        );
+        if (response.ok) {
+            categories.value = await response.json();
+        }
+    } catch (e) {
+        console.error("Failed to load categories", e);
+    }
+}
+
 onMounted(async () => {
   await loadImages();
   await loadMemberships();
+  await loadCategories();
 
-  // Ensure prices array exists
-  if (!form.value.prices) form.value.prices = [];
+  // Ensure pricingPlans array exists
+  if (!form.value.pricingPlans) form.value.pricingPlans = [];
   
   // Ensure images array exists
   if (!form.value.images) form.value.images = [];
 });
 
 function addPrice() {
-    form.value.prices.push({
-        interval: 'hour',
-        price: 0,
-        currency: 'EUR',
-        membershipId: null,
-        label: ''
+    form.value.pricingPlans.push({
+        interval: 'HOUR',
+        price: '0.00',
+        description: '',
+        grantsMembershipId: null
     });
 }
 
 function removePrice(index) {
-    // If it's an existing price (has id), we might need to handle backend deletion,
-    // but typically we send the whole array and backend handles it (ResourceController needs to be smart).
-    // The current ResourceController creates new prices on create, and replace on update?
-    // Wait, ResourceController update logic usually needs `update` or `setPrices` which replaces all.
-    // If standard Sequelize `update` with nested `prices`, it might not delete missing ones automatically unless configured.
-    // I will assume for now backend handles it or we rely on full replacement.
-    form.value.prices.splice(index, 1);
+    form.value.pricingPlans.splice(index, 1);
 }
 
 function getImageUrl(imageId) {
@@ -384,21 +399,20 @@ function removeMarketingImage(index) {
 // Save Resource
 async function saveresource() {
   try {
+    // Step 1: Create/Update the Resource WITHOUT pricing plans
     const resourceData = {
-      title: form.value.title,
+      name: form.value.name,
       description: form.value.description,
-      type: form.value.type,
+      categoryId: form.value.categoryId,
       capacity: form.value.capacity,
-      isActive: form.value.isActive,
-      areaId: form.value.areaId,
-      images: form.value.images,
-      prices: form.value.prices,
+      locationMetadata: null, // Can be extended later
+      isActive: true
     };
 
     const url =
       form.value.id != null
-        ? `${import.meta.env.VITE_INTERNAL_API_URL}/resources/${form.value.id}`
-        : `${import.meta.env.VITE_INTERNAL_API_URL}/resources`;
+        ? `${import.meta.env.VITE_INTERNAL_API_URL}/admin/resources/${form.value.id}`
+        : `${import.meta.env.VITE_INTERNAL_API_URL}/admin/resources`;
 
     const response = await fetch(url, {
       method: form.value.id != null ? "PATCH" : "POST",
@@ -409,16 +423,49 @@ async function saveresource() {
       body: JSON.stringify(resourceData),
     });
 
-    if (!response.ok) throw new Error("Failed to save resource");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to save resource");
+    }
 
     const savedResource = await response.json();
+
+    // Step 2: Add pricing plans if any (only for newly created resources for now)
+    // TODO: For editing, we'd need to handle plan updates/deletions separately
+    if (!form.value.id && form.value.pricingPlans && form.value.pricingPlans.length > 0) {
+      for (const plan of form.value.pricingPlans) {
+        try {
+          await fetch(
+            `${import.meta.env.VITE_INTERNAL_API_URL}/admin/resources/${savedResource.id}/pricing`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+              },
+              body: JSON.stringify({
+                name: plan.description || `${plan.interval} Plan`,
+                amount: parseFloat(plan.price),
+                interval: plan.interval,
+                currency: "EUR",
+                grantsMembershipId: plan.grantsMembershipId || null,
+                isActive: true
+              }),
+            }
+          );
+        } catch (planError) {
+          console.error("Error adding pricing plan:", planError);
+          // Continue with other plans even if one fails
+        }
+      }
+    }
 
     emit("resource-saved", savedResource);
     closeModal();
     
     toast.add({
         title: "Gespeichert",
-        description: `Ressource ${form.value.title} erfolgreich gespeichert.`,
+        description: `Ressource ${form.value.name} erfolgreich gespeichert.`,
         color: "green",
         icon: "i-lucide-check"
     });
@@ -427,7 +474,7 @@ async function saveresource() {
     console.error(error);
     toast.add({
         title: "Fehler",
-        description: "Fehler beim Speichern der Ressource.",
+        description: error.message || "Fehler beim Speichern der Ressource.",
         color: "red",
         icon: "i-lucide-x-circle"
     });

@@ -10,7 +10,7 @@
         >
           <option value="">Alle Ressourcen</option>
           <option v-for="resource in resources" :key="resource.id" :value="resource.id">
-            {{ resource.title }}
+            {{ resource.name }}
           </option>
         </select>
         <select
@@ -76,9 +76,9 @@
               :class="getBookingClass(booking.status)"
               class="text-xs p-1 rounded cursor-pointer truncate"
               @click="viewBooking(booking)"
-              :title="`${booking.resource?.title} - ${booking.user?.username}`"
+              :title="`${booking.resource?.name} - ${booking.user?.firstName} ${booking.user?.lastName}`"
             >
-              {{ formatTime(booking.startTime) }} {{ booking.resource?.title }}
+              {{ formatTime(booking.startTime) }} {{ booking.resource?.name }}
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@
                   @click="viewBooking(booking)"
                 >
                   {{ formatTime(booking.startTime) }} - {{ formatTime(booking.endTime) }}<br />
-                  {{ booking.resource?.title }}
+                  {{ booking.resource?.name }}
                 </div>
               </td>
             </tr>
@@ -204,7 +204,14 @@ const viewDays = computed(() => {
 
 const fetchResources = async () => {
   try {
-    const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + '/resources');
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/admin/resources',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
     const data = await res.json();
     resources.value = data;
   } catch (error) {
@@ -244,7 +251,12 @@ const fetchBookings = async () => {
     }
 
     const res = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/bookings/range?${params.toString()}`
+      `${import.meta.env.VITE_INTERNAL_API_URL}/admin/bookings?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
     );
     const data = await res.json();
     bookings.value = data;
@@ -285,10 +297,10 @@ const getBookingsForHour = (date, hour) => {
 
 const getBookingClass = (status) => {
   const classes = {
-    pending: 'bg-yellow-100 text-yellow-900 border border-yellow-300',
-    confirmed: 'bg-green-100 text-green-900 border border-green-300',
-    cancelled: 'bg-red-100 text-red-900 border border-red-300',
-    completed: 'bg-blue-100 text-blue-900 border border-blue-300'
+    'REQUESTED': 'bg-yellow-100 text-yellow-900 border border-yellow-300',
+    'CONFIRMED': 'bg-green-100 text-green-900 border border-green-300',
+    'CANCELLED': 'bg-red-100 text-red-900 border border-red-300',
+    'COMPLETED': 'bg-blue-100 text-blue-900 border border-blue-300'
   };
   return classes[status] || 'bg-neutral-100 text-neutral-900 border border-neutral-300';
 };

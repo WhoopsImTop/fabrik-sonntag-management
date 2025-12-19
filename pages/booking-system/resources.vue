@@ -16,26 +16,28 @@
       <thead class="bg-neutral-50">
         <tr class="text-left">
           <th class="px-3 py-1.5 text-sm">Name</th>
-          <th class="px-3 py-1.5 text-sm">Typ</th>
+          <th class="px-3 py-1.5 text-sm">Kategorie</th>
           <th class="px-3 py-1.5 text-sm">Kapazität</th>
-          <th class="px-3 py-1.5 text-sm">Aktiv</th>
+          <th class="px-3 py-1.5 text-sm">Preispläne</th>
           <th class="px-3 py-1.5 text-sm text-right">Aktionen</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="item in resourceData" :key="item.id">
-          <td class="px-3 py-1.5 text-sm">{{ item.title }}</td>
-          <td class="px-3 py-1.5 text-sm">{{ item.type }}</td>
+          <td class="px-3 py-1.5 text-sm">{{ item.name }}</td>
+          <td class="px-3 py-1.5 text-sm">{{ item.category?.name || 'N/A' }}</td>
           <td class="px-3 py-1.5 text-sm">{{ item.capacity }}</td>
           <td class="px-3 py-1.5 text-sm">
             <span
-              :class="
-                item.isActive
-                  ? 'bg-green-100 text-green-900 px-1.5 py-1 rounded-lg border border-black/10'
-                  : 'bg-red-100 text-red-900 px-1.5 py-1 rounded-lg border border-black/10'
-              "
-              >{{ item.isActive ? "Ja" : "Nein" }}</span
+              v-for="plan in item.pricingPlans"
+              :key="plan.id"
+              class="inline-block bg-blue-100 text-blue-900 px-2 py-0.5 rounded-lg border border-black/10 text-xs mr-1"
             >
+              {{ plan.interval }}: €{{ plan.price }}
+            </span>
+            <span v-if="!item.pricingPlans?.length" class="text-neutral-400">
+              Keine Preise
+            </span>
           </td>
           <td class="px-3 py-1.5 text-sm flex items-center gap-1 justify-end">
             <div
@@ -75,32 +77,60 @@ const showResourceModal = ref(false);
 
 const closeModal = () => {
   showResourceModal.value = false;
+  getResources(); // Refresh list after closing modal
 };
 
 const openModal = () => {
+  selectedFormData.value = null; // Reset form for new resource
   showResourceModal.value = true;
 };
 
 const getResources = async () => {
-  const res = await fetch(import.meta.env.VITE_INTERNAL_API_URL + "/resources");
-  const data = await res.json();
-
-  resourceData.value = data;
+  try {
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/admin/resources',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
+    const data = await res.json();
+    resourceData.value = data;
+  } catch (error) {
+    console.error('Failed to fetch resources:', error);
+    resourceData.value = [];
+  }
 };
 
 const deleteResource = async (item) => {
-  const res = await fetch(
-    import.meta.env.VITE_INTERNAL_API_URL + "/resources/" + item.id,
-    {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-      },
+  if (!confirm(`Möchten Sie die Resource "${item.name}" wirklich löschen?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(
+      import.meta.env.VITE_INTERNAL_API_URL + '/admin/resources/' + item.id,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('jwt')}`
+        }
+      }
+    );
+
+    if (res.ok) {
+      alert('Resource erfolgreich gelöscht');
+      getResources();
+    } else {
+      const error = await res.json();
+      alert('Fehler beim Löschen: ' + (error.error || 'Unbekannter Fehler'));
     }
-  );
-  const data = await res.json();
-  console.log(data);
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Fehler beim Löschen der Resource');
+  }
 };
 
 const editResource = (item) => {
