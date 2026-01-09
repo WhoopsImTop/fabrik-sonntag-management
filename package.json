@@ -17,6 +17,8 @@
     "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "eslint": "^9.22.0",
+    "jspdf": "^4.0.0",
+    "jspdf-autotable": "^5.0.2",
     "maplibre-gl": "^4.7.1",
     "maplibre-gl-measures": "^0.0.15",
     "nuxt": "^3.16.0",

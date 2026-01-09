@@ -571,6 +571,7 @@ onMounted(async () => {
     try {
       form.value.openingHours = JSON.parse(props.editingRenter.openingHours);
     } catch (error) {
+  localStorage.removeItem('jwt');
       console.error("Error parsing opening hours:", error);
       form.value.openingHours = {};
     }
@@ -767,6 +768,7 @@ function initializeMap() {
 
           console.log("Successfully added POI polygon to map");
         } catch (error) {
+  localStorage.removeItem('jwt');
           console.error("Error adding POI polygon:", error);
         }
       } else {
@@ -779,6 +781,7 @@ function initializeMap() {
           draw.value.add(form.value.area.areaGeoJson);
           console.log("Added area to draw");
         } catch (error) {
+  localStorage.removeItem('jwt');
           console.error("Error adding area to draw:", error);
         }
       }
@@ -810,6 +813,7 @@ async function startDrawing() {
       draw.value.changeMode("simple_select");
     }
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error changing draw mode:", error);
     isDrawing.value = false;
   }
@@ -857,6 +861,7 @@ async function loadFloors() {
     if (!response.ok) throw new Error("Failed to load floors");
     floors.value = await response.json();
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error loading floors:", error);
     alert("Fehler beim Laden der Etagen");
   }
@@ -885,6 +890,7 @@ async function deleteFloor(id) {
     if (!response.ok) throw new Error("Failed to delete floor");
     floors.value = floors.value.filter((f) => f.id !== id);
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error deleting floor:", error);
     alert("Fehler beim Löschen der Etage");
   }
@@ -950,6 +956,7 @@ async function saveFloor() {
     editingFloor.value = null;
     floorForm.value = { name: "", level: 0, description: "" };
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error saving floor:", error);
     alert("Fehler beim Speichern der Etage");
   }
@@ -1004,6 +1011,7 @@ watch(
         });
         map.value.fitBounds(bounds, { padding: 50 });
       } catch (error) {
+  localStorage.removeItem('jwt');
         console.error("Error updating POI polygon:", error);
       }
     }
@@ -1078,6 +1086,7 @@ async function loadImages() {
     if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error loading images:", error);
   }
 }
@@ -1152,6 +1161,7 @@ async function saveRenter() {
     emit("renter-saved", savedRenter);
     closeModal();
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error saving renter:", error);
     alert("Fehler beim Speichern des Mieters");
   }

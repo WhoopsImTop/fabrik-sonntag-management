@@ -585,6 +585,7 @@ watch(
         const data = await response.json();
         renters.value = data;
       } catch (error) {
+  localStorage.removeItem('jwt');
         console.error("Error loading renters:", error);
       }
     } else {
@@ -622,6 +623,7 @@ async function deleteRenter(renter) {
     if (!response.ok) throw new Error("Failed to delete renter");
     renters.value = renters.value.filter((r) => r.id !== renter.id);
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error deleting renter:", error);
     alert("Fehler beim Löschen des Mieters");
   }
@@ -729,6 +731,7 @@ async function saveSortOrder() {
       throw new Error(result.message || "Unknown error");
     }
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error saving sort order:", error);
     // Optional: Fehler-Nachricht anzeigen
     alert("Fehler beim Speichern der Reihenfolge: " + error.message);
@@ -801,6 +804,7 @@ async function loadImages() {
     if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();
   } catch (error) {
+  localStorage.removeItem('jwt');
     console.error("Error loading images:", error);
   }
 }

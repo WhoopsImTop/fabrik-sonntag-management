@@ -1,370 +1,587 @@
 <template>
-  <div class="p-4" v-if="invoice">
-    <!-- Header Actions -->
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">Rechnung erstellen</h1>
-      <div class="flex items-center gap-2">
-        <label class="flex items-center cursor-pointer select-none" @click="isNetto = !isNetto">
-          <div class="relative">
-             <div class="block w-14 h-8 rounded-full border border-gray-300" :class="isNetto ? 'bg-gray-200' : 'bg-white'"></div>
-             <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition border border-gray-300 transform" :class="isNetto ? 'translate-x-full border-green-500' : 'translate-x-0'"></div>
-          </div>
-          <div class="ml-3 text-sm font-medium text-gray-700 flex gap-2">
-              <span :class="!isNetto ? 'font-bold text-black' : 'text-gray-400'">Brutto</span>
-              <span :class="isNetto ? 'font-bold text-black' : 'text-gray-400'">Netto</span>
-          </div>
-        </label>
-        
-        <button @click="saveChanges" class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded shadow-sm text-sm">
-            Speichern
+  <div v-if="loading" class="flex justify-center items-center min-h-[50vh]">
+    <svg
+      class="animate-spin w-8 h-8 text-neutral-400"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+  </div>
+
+  <div v-else-if="!invoice" class="text-center py-12">
+    <h2 class="text-xl font-semibold text-neutral-900">
+      Rechnung nicht gefunden
+    </h2>
+    <button @click="router.back()" class="mt-4 text-blue-600 hover:underline">
+      Zurück
+    </button>
+  </div>
+
+  <div v-else class="max-w-5xl mx-auto space-y-6 pb-24">
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
+    >
+      <div class="flex items-center gap-3">
+        <button
+          @click="router.back()"
+          class="p-2 hover:bg-neutral-100 rounded-full text-neutral-500"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
         </button>
+        <div>
+          <h1
+            class="text-2xl font-bold text-neutral-900 flex items-center gap-2"
+          >
+            {{ invoice.invoice_number }}
+            <span
+              :class="[
+                'px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                getStatusClass(form.status),
+              ]"
+            >
+              {{ getStatusLabel(form.status) }}
+            </span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          @click="toggleEditMode"
+          class="px-4 py-2 text-sm font-medium border border-neutral-200 rounded-lg bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
+        >
+          {{ isEditing ? "Abbrechen" : "Bearbeiten" }}
+        </button>
+
+        <button
+          v-if="isEditing"
+          @click="saveInvoice"
+          :disabled="saving"
+          class="px-4 py-2 text-sm font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+        >
+          <svg v-if="saving" class="animate-spin w-4 h-4" viewBox="0 0 24 24">
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Speichern
+        </button>
+
+        <div v-else class="flex gap-2">
+          <button
+            @click="handleDownload"
+            class="px-4 py-2 text-sm border border-neutral-200 rounded-lg hover:bg-neutral-50"
+            title="PDF Laden"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+          </button>
+          <button
+            @click="sendInvoiceEmail"
+            class="px-4 py-2 text-sm border border-neutral-200 rounded-lg hover:bg-neutral-50"
+            title="PDF Laden"
+          >
+            Email senden
+          </button>
+          <button
+            @click="handleDelete"
+            class="px-4 py-2 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50"
+          >
+            Löschen
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Main Form Area -->
-    <div class="bg-white rounded-lg shadow-sm border border-black/5 p-6 mb-6">
-        
-        <!-- Top Section: Customer & Meta Data -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Left: Customer Address -->
-            <div class="space-y-4">
-                <div class="relative group">
-                     <label class="text-xs text-gray-500 absolute -top-2 left-2 bg-white px-1">Kunde</label>
-                     <input v-model="form.recipientData.firstName" placeholder="Vorname" class="w-1/2 p-3 border rounded-t text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                     <input v-model="form.recipientData.lastName" placeholder="Nachname" class="w-1/2 p-3 border rounded-t border-l-0 text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                </div>
-                <!-- Company/Extra -->
-                <input v-model="form.recipientData.company" placeholder="Adresszusatz / Firma" class="w-full p-3 border rounded text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                
-                <!-- Street -->
-                <input v-model="form.recipientData.street" placeholder="Straße" class="w-full p-3 border rounded text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                
-                <!-- ZIP / City -->
-                <div class="flex">
-                    <input v-model="form.recipientData.zip" placeholder="PLZ" class="w-1/3 p-3 border rounded-l text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                    <input v-model="form.recipientData.city" placeholder="Ort" class="w-2/3 p-3 border rounded-r border-l-0 text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+        <div
+          class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden"
+        >
+          <div
+            class="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/30"
+          >
+            <h3 class="font-semibold text-neutral-900">Positionen</h3>
+            <button
+              v-if="isEditing"
+              @click="addItem"
+              class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Zeile hinzufügen
+            </button>
+          </div>
 
-                <!-- Country -->
-                <div class="relative">
-                    <UIcon name="i-lucide-globe" class="absolute left-3 top-3.5 text-gray-400" size="16" />
-                    <input v-model="form.recipientData.country" placeholder="Land" class="w-full p-3 pl-10 border rounded text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                </div>
-            </div>
+          <table class="w-full text-sm text-left">
+            <thead
+              class="bg-neutral-50 text-neutral-500 font-medium border-b border-neutral-100"
+            >
+              <tr>
+                <th class="px-6 py-3 w-[45%]">Beschreibung</th>
+                <th class="px-4 py-3 text-right w-[15%]">Menge</th>
+                <th class="px-4 py-3 text-right w-[20%]">Preis (€)</th>
+                <th class="px-6 py-3 text-right w-[15%]">Gesamt</th>
+                <th v-if="isEditing" class="w-[5%]"></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-neutral-100">
+              <tr
+                v-for="(item, index) in form.items"
+                :key="index"
+                class="group hover:bg-neutral-50/50"
+              >
+                <td class="px-6 py-3">
+                  <input
+                    v-if="isEditing"
+                    type="text"
+                    v-model="item.description"
+                    class="w-full bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm placeholder-neutral-300"
+                    placeholder="Beschreibung..."
+                  />
+                  <span v-else class="font-medium text-neutral-900">{{
+                    item.description
+                  }}</span>
+                </td>
 
-            <!-- Right: Invoice Meta -->
-            <div class="space-y-4">
-                <!-- Invoice Number (Readonly likely) -->
-                <div class="relative">
-                    <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Rechnungsnummer</label>
-                    <input v-model="form.invoiceNumber" readonly class="w-full p-3 border rounded text-sm bg-gray-50 text-gray-500 border-gray-200" />
-                </div>
+                <td class="px-4 py-3 text-right">
+                  <input
+                    v-if="isEditing"
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    v-model.number="item.quantity"
+                    class="w-full text-right bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
+                  />
+                  <span v-else class="text-neutral-600">{{
+                    item.quantity
+                  }}</span>
+                </td>
 
+                <td class="px-4 py-3 text-right">
+                  <input
+                    v-if="isEditing"
+                    type="number"
+                    step="0.01"
+                    v-model.number="item.amount"
+                    class="w-full text-right bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
+                  />
+                  <span v-else>€{{ formatMoney(item.amount) }}</span>
+                </td>
 
-                <!-- Date -->
-                <div class="relative">
-                    <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Datum</label>
-                    <input type="date" :value="formatDateInput(form.invoiceDate)" @input="e => form.invoiceDate = e.target.value" class="w-full p-3 border rounded text-sm focus:outline-none focus:border-blue-500 border-gray-300" />
-                </div>
+                <td class="px-6 py-3 text-right font-medium text-neutral-900">
+                  €{{ formatMoney((item.quantity || 0) * (item.amount || 0)) }}
+                </td>
 
-                <!-- Delivery Date -->
-                <div class="flex gap-4">
-                    <div class="w-1/3">
-                         <select class="w-full p-3 border rounded text-sm bg-white border-gray-300">
-                             <option>Leistungszeitraum</option>
-                         </select>
-                    </div>
-                    <div class="flex-1 flex items-center gap-2">
-                        <input type="date" :value="formatDateInput(form.deliveryDateStart)" @input="e => form.deliveryDateStart = e.target.value" class="w-1/2 p-3 border rounded text-sm border-gray-300" />
-                        <span class="text-xs text-gray-500">bis</span>
-                        <input type="date" :value="formatDateInput(form.deliveryDateEnd)" @input="e => form.deliveryDateEnd = e.target.value" class="w-1/2 p-3 border rounded text-sm border-gray-300" />
-                    </div>
-                </div>
-            </div>
+                <td v-if="isEditing" class="px-2 text-center">
+                  <button
+                    @click="removeItem(index)"
+                    class="text-neutral-300 hover:text-red-500 transition-colors p-1"
+                    title="Zeile löschen"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+
+              <tr v-if="isEditing && form.items.length === 0">
+                <td
+                  colspan="5"
+                  class="px-6 py-8 text-center text-neutral-400 border-dashed border-2 border-neutral-100 m-4 rounded-lg"
+                >
+                  <p class="text-sm">Keine Positionen vorhanden.</p>
+                  <button
+                    @click="addItem"
+                    class="mt-2 text-blue-600 hover:underline text-sm"
+                  >
+                    Erste Zeile hinzufügen
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+
+            <tfoot class="bg-neutral-50 border-t border-neutral-200">
+              <tr>
+                <td colspan="3" class="px-6 py-3 text-right text-neutral-600">
+                  Netto
+                </td>
+                <td class="px-6 py-3 text-right text-neutral-900">
+                  €{{ formatMoney(totals.net) }}
+                </td>
+                <td v-if="isEditing"></td>
+              </tr>
+              <tr>
+                <td colspan="3" class="px-6 py-1 text-right text-neutral-600">
+                  USt (19%)
+                </td>
+                <td class="px-6 py-1 text-right text-neutral-900">
+                  €{{ formatMoney(totals.tax) }}
+                </td>
+                <td v-if="isEditing"></td>
+              </tr>
+              <tr>
+                <td
+                  colspan="3"
+                  class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
+                >
+                  Gesamtbetrag
+                </td>
+                <td
+                  class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
+                >
+                  €{{ formatMoney(totals.gross) }}
+                </td>
+                <td v-if="isEditing"></td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
 
-        <!-- Texts -->
-        <div class="mb-8 space-y-4">
-            <div class="relative">
-                 <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Belegtitel</label>
-                 <input v-model="form.title" class="w-full p-3 border rounded text-sm font-bold border-gray-300" />
-            </div>
-             <div class="relative">
-                 <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Einleitungstext</label>
-                 <textarea v-model="form.introText" class="w-full p-3 border rounded text-sm border-gray-300" rows="2"></textarea>
-            </div>
+        <div
+          class="bg-white border border-neutral-200 rounded-xl shadow-sm p-6"
+        >
+          <label class="block text-sm font-medium text-neutral-700 mb-2"
+            >Anmerkungen</label
+          >
+          <textarea
+            v-if="isEditing"
+            v-model="form.notes"
+            rows="4"
+            class="w-full border-gray-300 rounded-lg shadow-sm focus:border-neutral-900 focus:ring-neutral-900 text-sm"
+          ></textarea>
+          <p v-else class="text-neutral-600 text-sm whitespace-pre-wrap">
+            {{ invoice.notes || "Keine Anmerkungen." }}
+          </p>
         </div>
+      </div>
 
-        <!-- Items Table -->
-        <div class="border rounded-lg overflow-hidden mb-8">
-            <div class="bg-gray-50 p-2 text-xs font-bold text-gray-500 flex gap-4 uppercase tracking-wider border-b">
-                <div class="w-10 text-center">#</div>
-                <div class="flex-1">Artikel</div>
-                <div class="w-24 text-right">Menge</div>
-                <div class="w-24">Einheit</div>
-                <div class="w-32 text-right">VK ({{ isNetto ? 'Netto' : 'Brutto' }})</div>
-                <div class="w-24 text-right">Rabatt %</div>
-                <div class="w-32 text-right font-bold text-black border-l pl-2 bg-gray-100">Gesamt</div>
-                <div class="w-10"></div>
+      <div class="space-y-6">
+        <div
+          class="bg-white border border-neutral-200 rounded-xl shadow-sm p-6"
+        >
+          <h3 class="font-semibold text-neutral-900 mb-4">Einstellungen</h3>
+
+          <div class="space-y-4">
+            <div>
+              <label
+                class="block text-xs font-medium text-neutral-500 uppercase"
+                >Status</label
+              >
+              <select
+                v-if="isEditing"
+                v-model="form.status"
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-neutral-900 focus:border-neutral-900 sm:text-sm rounded-md"
+              >
+                <option value="DELETED">Storniert</option>
+                <option value="DRAFT">Entwurf</option>
+                <option value="SENT">Versendet</option>
+                <option value="PAID">Bezahlt</option>
+                <option value="OVERDUE">Überfällig</option>
+              </select>
+              <div v-else class="mt-1">
+                <span
+                  :class="[
+                    'px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                    getStatusClass(invoice.status),
+                  ]"
+                >
+                  {{ getStatusLabel(invoice.status) }}
+                </span>
+              </div>
             </div>
-            
-            <div class="divide-y">
-                <div v-for="(item, idx) in form.items" :key="idx" class="p-2 flex gap-4 items-start hover:bg-gray-50 transition group">
-                     <div class="w-10 text-center py-2 text-sm text-gray-400">{{ idx + 1 }}</div>
-                     
-                     <div class="flex-1">
-                         <input v-model="item.title" class="w-full p-2 border rounded text-sm mb-1 border-gray-300" placeholder="Bezeichnung" />
-                         <textarea v-model="item.description" class="w-full p-2 border rounded text-xs text-gray-500 border-gray-300" rows="1" placeholder="Beschreibung"></textarea>
-                     </div>
-                     
-                     <div class="w-24">
-                         <input v-model.number="item.quantity" type="number" class="w-full p-2 border rounded text-sm text-right border-gray-300" />
-                     </div>
-                     
-                     <div class="w-24">
-                         <input v-model="item.unit" class="w-full p-2 border rounded text-sm border-gray-300" placeholder="Stk" />
-                     </div>
-                     
-                     <div class="w-32">
-                         <input v-model.number="item.unitPrice" type="number" step="0.01" class="w-full p-2 border rounded text-sm text-right border-gray-300" />
-                     </div>
 
-                     <div class="w-24">
-                         <input v-model.number="item.discount" type="number" step="0.1" class="w-full p-2 border rounded text-sm text-right border-gray-300" />
-                     </div>
-                     
-                     <div class="w-32 text-right py-2 font-bold text-sm bg-gray-50 border-l border-gray-100">
-                         {{ getDisplayPrice(calculateItemTotal(item)).toFixed(2) }} €
-                     </div>
-                     
-                     <div class="w-10 text-right py-2 opacity-0 group-hover:opacity-100 cursor-pointer text-red-400 hover:text-red-600" @click="removeItem(idx)">
-                         <UIcon name="i-lucide-trash-2" size="16" />
-                     </div>
+            <div>
+              <label
+                class="block text-xs font-medium text-neutral-500 uppercase"
+                >Fälligkeit</label
+              >
+              <input
+                v-if="isEditing"
+                type="date"
+                v-model="form.due_date"
+                class="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900"
+              />
+              <p v-else class="mt-1 text-sm text-neutral-900">
+                {{ formatDate(invoice.due_date) }}
+              </p>
+            </div>
+
+            <div class="pt-4 border-t border-neutral-100">
+              <label
+                class="block text-xs font-medium text-neutral-500 uppercase"
+                >Kunde</label
+              >
+              <div v-if="invoice.User" class="mt-2 flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-600"
+                >
+                  {{ invoice.User.username?.substring(0, 2).toUpperCase() }}
                 </div>
+                <div class="overflow-hidden">
+                  <p class="text-sm font-medium text-neutral-900 truncate">
+                    {{ invoice.User.username }}
+                  </p>
+                  <p class="text-xs text-neutral-500 truncate">
+                    {{ invoice.User.email }}
+                  </p>
+                </div>
+              </div>
+              <p v-else class="mt-1 text-sm text-neutral-500 italic">
+                Gast / Manuell
+              </p>
             </div>
-            <div class="p-4 bg-gray-50 border-t flex justify-center gap-4">
-                <button @click="addItem" class="text-green-600 hover:text-green-700 font-bold text-sm flex items-center gap-2 border border-green-200 bg-white px-4 py-2 rounded shadow-sm hover:shadow">
-                    <UIcon name="i-lucide-plus" size="16" /> ARTIKEL
-                </button>
-                <select @change="addServiceItem" v-model="selectedService" class="text-sm border border-gray-300 rounded px-3 py-2 bg-white">
-                    <option value="">+ Service hinzufügen</option>
-                    <option v-for="svc in availableServices" :key="svc.id" :value="svc.id">{{ svc.name }} ({{ svc.price }} €)</option>
-                </select>
-            </div>
+          </div>
         </div>
-
-        <!-- Totals Footer -->
-        <div class="bg-neutral-800 text-white p-6 rounded-lg flex justify-between items-center shadow-lg">
-             <div class="text-sm text-gray-400">
-                 <p>Alle Preise zzgl. gesetzlicher MwSt.</p>
-             </div>
-             <div class="text-right">
-                 <div class="text-sm text-gray-400 mb-1">Gesamtbetrag {{ isNetto ? '(Netto)' : '(Brutto)' }}</div>
-                 <div class="text-4xl font-bold">{{ getDisplayPrice(calculateNetTotal()).toFixed(2) }} €</div>
-                 <div class="text-xs text-gray-500 mt-1" v-if="!isNetto">davon MwSt (19%): {{ (calculateNetTotal() * 0.19).toFixed(2) }} €</div>
-                 <div class="text-xs text-gray-500 mt-1" v-else>zzgl. MwSt (19%): {{ (calculateNetTotal() * 0.19).toFixed(2) }} €</div>
-             </div>
-        </div>
-
-        <!-- Footer Texts -->
-        <div class="mt-8 space-y-4">
-             <div class="relative">
-                 <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Zahlungsbedingung</label>
-                 <textarea v-model="form.paymentTerms" class="w-full p-3 border rounded text-sm border-gray-300" rows="2"></textarea>
-            </div>
-            <div class="relative">
-                 <label class="text-xs text-gray-400 absolute -top-2 left-2 bg-white px-1">Nachbemerkung</label>
-                 <textarea v-model="form.outroText" class="w-full p-3 border rounded text-sm border-gray-300" rows="2"></textarea>
-            </div>
-        </div>
-
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const route = useRoute();
-const isNetto = ref(true); // Default to Net logic (all prices stored as Netto)
-const hasChanges = ref(false);
+const router = useRouter();
+const api = useBookingApi();
 
-// Services
-const availableServices = ref([]);
-const selectedService = ref('');
+const loading = ref(true);
+const saving = ref(false);
+const isEditing = ref(false);
+const invoice = ref<any>(null);
 
+// Form State (Reactive)
 const form = ref({
-    invoiceNumber: '',
-    title: 'Rechnung',
-    introText: 'Unsere Leistungen stellen wir Ihnen wie folgt in Rechnung.',
-    outroText: 'Vielen Dank für die gute Zusammenarbeit.',
-    paymentTerms: 'Die Rechnung ist sofort fällig. Zahlbar innerhalb von 7 Tagen ab Rechnungsdatum.',
-    invoiceDate: new Date().toISOString().split('T')[0],
-    deliveryDateStart: '',
-    deliveryDateEnd: '',
-    recipientData: {
-        firstName: '', lastName: '', street: '', zip: '', city: '', country: '', company: ''
-    },
-    items: []
+  status: "DRAFT",
+  notes: "",
+  due_date: "",
+  items: [] as Array<{ description: string; quantity: number; amount: number }>,
 });
 
-const invoice = ref(null);
+const invoiceId = route.params.id as string;
 
-const fetchServices = async () => {
-    try {
-        const res = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/services`);
-        if (res.ok) {
-            availableServices.value = await res.json();
-        }
-    } catch (e) {
-        console.error('Failed to fetch services', e);
+// --- Computed Totals (Live Berechnung) ---
+const totals = computed(() => {
+  const net = form.value.items.reduce((sum, item) => {
+    return sum + (item.quantity || 0) * (item.amount || 0);
+  }, 0);
+  const tax = net * 0.19; // 19%
+  return {
+    net,
+    tax,
+    gross: net + tax,
+  };
+});
+
+// --- Data Loading ---
+const loadInvoice = async () => {
+  loading.value = true;
+  try {
+    const data = await api.sales.getOne(invoiceId);
+    if (data) {
+      invoice.value = data;
+
+      // Init Form Data
+      form.value.status = data.status;
+      form.value.notes = data.notes || "";
+      form.value.due_date = data.due_date
+        ? new Date(data.due_date).toISOString().split("T")[0]
+        : "";
+
+      // Map Items for Editing
+      if (data.InvoiceLineItems && Array.isArray(data.InvoiceLineItems)) {
+        form.value.items = data.InvoiceLineItems.map((i: any) => ({
+          description: i.description,
+          quantity: Number(i.quantity),
+          amount: Number(i.amount),
+        }));
+      } else {
+        form.value.items = [];
+      }
     }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
 };
 
-const fetchInvoice = async () => {
-    try {
-        const res = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/invoices/${route.params.id}`, {
-             headers: { 'Authorization': `Bearer ${localStorage.getItem('jwt')}` }
-        });
-        if (res.ok) {
-            const data = await res.json();
-            invoice.value = data;
-            
-            // Map data to form
-            form.value.invoiceNumber = data.invoiceNumber;
-            form.value.title = data.title || 'Rechnung';
-            form.value.introText = data.introText || form.value.introText;
-            form.value.outroText = data.outroText || form.value.outroText;
-            form.value.paymentTerms = data.paymentTerms || form.value.paymentTerms;
-            form.value.invoiceDate = data.invoiceDate ? data.invoiceDate.split('T')[0] : form.value.invoiceDate;
-            form.value.deliveryDateStart = data.deliveryDateStart ? data.deliveryDateStart.split('T')[0] : '';
-            form.value.deliveryDateEnd = data.deliveryDateEnd ? data.deliveryDateEnd.split('T')[0] : '';
-            
-            if (data.recipientData) {
-                const parsed = typeof data.recipientData === 'string' ? JSON.parse(data.recipientData) : data.recipientData;
-                form.value.recipientData = { ...form.value.recipientData, ...parsed };
-            }
+// --- Actions ---
 
-            form.value.items = data.items.map(i => ({
-                ...i,
-                discount: i.discount || 0,
-                unit: i.unit || 'Stk',
-                quantity: parseFloat(i.quantity),
-                unitPrice: parseFloat(i.unitPrice)
-            }));
-        }
-    } catch (e) {
-        console.error(e);
-        alert('Fehler beim Laden');
-    }
+const toggleEditMode = () => {
+  if (isEditing.value) {
+    // Cancel pressed -> Reload original data to reset form
+    loadInvoice();
+  }
+  isEditing.value = !isEditing.value;
 };
 
 const addItem = () => {
-    form.value.items.push({
-        title: '',
-        description: '',
-        quantity: 1,
-        unit: 'Stk',
-        unitPrice: 0,
-        discount: 0,
-        taxRate: 19
+  form.value.items.push({
+    description: "",
+    quantity: 1,
+    amount: 0,
+  });
+};
+
+const removeItem = (index: number) => {
+  form.value.items.splice(index, 1);
+};
+
+const saveInvoice = async () => {
+  saving.value = true;
+  try {
+    const res = await api.sales.update(Number(invoiceId), {
+      status: form.value.status,
+      notes: form.value.notes,
+      due_date: form.value.due_date,
+      items: form.value.items, // Senden des kompletten Arrays an das Backend
     });
-};
 
-const addServiceItem = () => {
-    if (!selectedService.value) return;
-    
-    const svc = availableServices.value.find(s => s.id == selectedService.value);
-    if (svc) {
-        form.value.items.push({
-            title: svc.name,
-            description: svc.description || '',
-            quantity: 1,
-            unit: 'Stk',
-            unitPrice: parseFloat(svc.price), // Prices are Netto
-            discount: 0,
-            taxRate: 19
-        });
+    if (res) {
+      invoice.value = res; // Update view with server response
+      // Wichtig: Auch Form Items updaten, falls Server Daten formatiert hat
+      if (res.InvoiceLineItems) {
+        form.value.items = res.InvoiceLineItems.map((i: any) => ({
+          description: i.description,
+          quantity: Number(i.quantity),
+          amount: Number(i.amount),
+        }));
+      }
+      isEditing.value = false;
     }
-    
-    selectedService.value = ''; // Reset dropdown
+  } finally {
+    saving.value = false;
+  }
 };
 
-const removeItem = (idx) => {
-    form.value.items.splice(idx, 1);
+const sendInvoiceEmail = async () => {
+  saving.value = true;
+  const res = await api.sales.sendEmail(invoiceId);
+  if (res) {
+    saving.value = false;
+  }
 };
 
-// Brutto/Netto Display Logic
-// All prices in DB are Netto. If isNetto=false (Brutto mode), display with +19%
-const getDisplayPrice = (nettoPrice) => {
-    if (isNetto.value) {
-        return nettoPrice;
-    } else {
-        return nettoPrice * 1.19;
-    }
+const handleDelete = async () => {
+  if (!confirm("Rechnung wirklich löschen?")) return;
+  await api.sales.delete(Number(invoiceId));
+  router.push("/booking-system/invoices");
 };
 
-// Calculations (always work with Netto internally)
-const calculateItemTotal = (item) => {
-    const qty = item.quantity || 0;
-    const price = item.unitPrice || 0; // Netto
-    const discount = item.discount || 0;
-    return qty * price * (1 - discount / 100);
+const handleDownload = async () => {
+  try {
+    const blob = await api.sales.downloadInvoice(invoiceId);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `Rechnung-${invoice.value.invoice_number}.pdf`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
+  }
 };
 
-const calculateNetTotal = () => {
-    return form.value.items.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+// --- Helpers ---
+const formatMoney = (val: number) => Number(val || 0).toFixed(2);
+const formatDate = (date: string) => {
+  if (!date) return "-";
+  return new Date(date).toLocaleDateString("de-DE");
+};
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case "PAID":
+      return "bg-green-100 text-green-700 border-green-200";
+    case "SENT":
+      return "bg-blue-100 text-blue-700 border-blue-200";
+    case "OVERDUE":
+      return "bg-red-100 text-red-700 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-700 border-gray-200";
+  }
+};
+const getStatusLabel = (status: string) => {
+  const map: Record<string, string> = {
+    PAID: "Bezahlt",
+    SENT: "Versendet",
+    DRAFT: "Entwurf",
+    OVERDUE: "Überfällig",
+  };
+  return map[status] || status;
 };
 
-const calculateGrandTotal = () => {
-    const net = calculateNetTotal();
-    return net * 1.19; // Always Brutto for saving
-};
-
-const saveChanges = async () => {
-    try {
-        const payload = {
-            ...form.value,
-            totalAmount: calculateGrandTotal(), // Brutto
-            taxAmount: calculateNetTotal() * 0.19
-        };
-        
-        const res = await fetch(`${import.meta.env.VITE_INTERNAL_API_URL}/invoices/${invoice.value.id}`, {
-            method: 'PUT',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('jwt')}` 
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (res.ok) {
-            alert('Gespeichert');
-            hasChanges.value = false;
-        } else {
-            alert('Fehler beim Speichern');
-        }
-    } catch (e) {
-        console.error(e);
-        alert('Fehler beim Speichern');
-    }
-};
-
-const formatDateInput = (dateStr) => {
-    if (!dateStr) return '';
-    return dateStr.split('T')[0];
-};
-
-onMounted(async () => {
-    await fetchServices();
-    await fetchInvoice();
-    nextTick(() => hasChanges.value = false);
+onMounted(() => {
+  loadInvoice();
 });
-
-watch(form, () => hasChanges.value = true, { deep: true });
 </script>
-
-<style scoped>
-/* Custom Switch Style */
-.dot {
-    transition: all 0.3s;
-}
-</style>

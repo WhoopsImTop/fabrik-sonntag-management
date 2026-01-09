@@ -12,11 +12,6 @@ const items = ref([
           to: "/booking-system",
         },
         {
-          label: "Buchungen",
-          icon: "i-lucide-calendar-check",
-          to: "/booking-system/bookings",
-        },
-        {
           label: "Kalender",
           icon: "i-lucide-calendar",
           to: "/booking-system/calendar",
@@ -47,9 +42,19 @@ const items = ref([
           icon: "i-lucide-coffee",
         },
         {
+          label: "Preise",
+          icon: "i-lucide-euro",
+          to: "/booking-system/pricing",
+        },
+        {
           label: "Rechnungen",
           icon: "i-lucide-file-text",
           to: "/booking-system/invoices",
+        },
+        {
+          label: "Einstellungen",
+          icon: "i-lucide-settings",
+          to: "/booking-system/settings",
         },
       ],
     },
