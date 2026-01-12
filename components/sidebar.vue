@@ -17,6 +17,16 @@ const items = ref([
           to: "/booking-system/calendar",
         },
         {
+          label: "Abonnements",
+          icon: "i-lucide-repeat",
+          to: "/booking-system/subscriptions",
+        },
+        {
+          label: "Rechnungen",
+          icon: "i-lucide-file-text",
+          to: "/booking-system/invoices",
+        },
+        {
           label: "Nutzer",
           icon: "i-lucide-users",
           to: "/booking-system/users",
@@ -45,11 +55,6 @@ const items = ref([
           label: "Preise",
           icon: "i-lucide-euro",
           to: "/booking-system/pricing",
-        },
-        {
-          label: "Rechnungen",
-          icon: "i-lucide-file-text",
-          to: "/booking-system/invoices",
         },
         {
           label: "Einstellungen",
@@ -82,11 +87,6 @@ const items = ref([
           ],
         },
       ],
-    },
-    {
-      label: "Einstellungen",
-      icon: "i-lucide-settings",
-      to: "/settings",
     },
     {
       label: "Mietpreisanalyse",

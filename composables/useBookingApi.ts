@@ -814,6 +814,59 @@ export const useBookingApi = () => {
     },
   };
 
+  const subscriptions = {
+    getAll: async () => {
+      return await apiCall(
+        () => $fetch(`${baseURL}/subscriptions`, { headers: getAuthHeaders() }),
+        "subs.getAll"
+      );
+    },
+
+    create: async (data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/subscriptions`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: data,
+          }),
+        "subs.create"
+      );
+      if (res) toast.add({ title: "Abo erstellt", color: "green" });
+      return res;
+    },
+
+    update: async (id: number, data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/subscriptions/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "subs.update"
+      );
+      if (res) toast.add({ title: "Abo aktualisiert", color: "green" });
+      return res;
+    },
+
+    delete: async (id: number) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/subscriptions/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "subs.delete"
+      );
+      if (res) toast.add({ title: "Abo gelöscht", color: "green" });
+      return res;
+    },
+  };
+
   return {
     users,
     resources,
@@ -824,5 +877,6 @@ export const useBookingApi = () => {
     sales,
     company,
     templates,
+    subscriptions,
   };
 };
