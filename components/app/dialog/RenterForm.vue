@@ -36,7 +36,7 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
           <div>
@@ -44,7 +44,7 @@
             <input
               v-model="form.operator"
               type="text"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
           <div>
@@ -52,7 +52,7 @@
             <textarea
               v-model="form.address"
               rows="2"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             ></textarea>
           </div>
           <div class="grid grid-cols-2 gap-4">
@@ -61,7 +61,7 @@
               <input
                 v-model="form.phone"
                 type="tel"
-                class="w-full p-2 border rounded-md"
+                class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
               />
             </div>
             <div>
@@ -69,7 +69,7 @@
               <input
                 v-model="form.email"
                 type="email"
-                class="w-full p-2 border rounded-md"
+                class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
               />
             </div>
           </div>
@@ -78,7 +78,7 @@
             <input
               v-model="form.website"
               type="url"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
           <div>
@@ -87,7 +87,7 @@
               rows="3"
               v-model="form.description"
               type="url"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
 
@@ -96,7 +96,7 @@
             <select
               @change="updateAreaPoiRelation(form.area.id, selectedHouseId)"
               v-model="selectedHouseId"
-              class="w-full p-2 border rounded-md"
+              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             >
               <option
                 v-for="house in allHouses"
@@ -206,7 +206,7 @@
                   v-model.number="form.area.squaremeters"
                   type="number"
                   step="0.01"
-                  class="w-full p-2 border rounded-md"
+                  class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
                 />
               </div>
               <div>
@@ -215,7 +215,7 @@
                   v-model.number="form.area.costs"
                   type="number"
                   step="0.01"
-                  class="w-full p-2 border rounded-md"
+                  class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@
                       v-model="floorForm.name"
                       type="text"
                       required
-                      class="w-full p-2 border rounded-md"
+                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
                       placeholder="z.B. Erdgeschoss"
                     />
                   </div>
@@ -332,7 +332,7 @@
                       v-model.number="floorForm.level"
                       type="number"
                       required
-                      class="w-full p-2 border rounded-md"
+                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
                       placeholder="z.B. 0 für EG, 1 für 1.OG, -1 für UG"
                     />
                   </div>
@@ -344,7 +344,7 @@
                     <textarea
                       v-model="floorForm.description"
                       rows="3"
-                      class="w-full p-2 border rounded-md"
+                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
                       placeholder="Optionale Beschreibung der Etage"
                     ></textarea>
                   </div>

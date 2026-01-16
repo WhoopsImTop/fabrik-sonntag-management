@@ -141,23 +141,58 @@
          <p class="text-neutral-500 mb-6 text-sm">Dies erstellt einen Rechnungsentwurf. Details können später bearbeitet werden.</p>
          
          <form @submit.prevent="createInvoice" class="space-y-4">
-           <div>
-             <label class="block text-sm font-medium text-neutral-700 mb-1">User ID (temporär)</label>
-             <input v-model="newInvoice.user_id" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" required placeholder="ID des Users eingeben">
-           </div>
+           
+           <div class="relative">
+              <label class="block text-sm font-medium text-neutral-700 mb-1">Kunde</label>
+              
+              <div v-if="newInvoice.user_preview" class="flex items-center justify-between p-2 border border-neutral-200 rounded-lg bg-neutral-50 mb-2">
+                  <div>
+                      <div class="text-sm font-medium">{{ newInvoice.user_preview.username }}</div>
+                      <div class="text-xs text-neutral-500">{{ newInvoice.user_preview.email }}</div>
+                  </div>
+                  <button type="button" @click="resetNewInvoiceUser" class="text-neutral-400 hover:text-red-500">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+              </div>
+
+              <div v-else>
+                  <input 
+                      v-model="userSearchQuery"
+                      @input="handleUserSearch"
+                      type="text" 
+                      class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-neutral-900 focus:border-neutral-900" 
+                      placeholder="Name oder E-Mail suchen..."
+                  >
+                   <div v-if="isSearchingUsers" class="absolute right-3 top-9">
+                       <svg class="animate-spin w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  </div>
+                  <div v-if="userSearchResults.length > 0" class="absolute z-20 w-full mt-1 bg-white border border-neutral-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                       <div 
+                          v-for="user in userSearchResults" 
+                          :key="user.id"
+                          @click="selectNewInvoiceUser(user)"
+                          class="px-3 py-2 hover:bg-neutral-50 cursor-pointer border-b border-neutral-50 last:border-0"
+                       >
+                          <div class="text-sm font-medium text-neutral-900">{{ user.username }}</div>
+                          <div class="text-xs text-neutral-500">{{ user.email }}</div>
+                       </div>
+                  </div>
+              </div>
+          </div>
+
            <div>
              <label class="block text-sm font-medium text-neutral-700 mb-1">Erste Position</label>
              <input v-model="newInvoice.description" type="text" class="w-full border rounded-lg px-3 py-2 text-sm" required placeholder="z.B. Beratungsleistung">
            </div>
            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Preis (Netto)</label>
-                <input v-model="newInvoice.price" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2 text-sm" required>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-neutral-700 mb-1">Menge</label>
-                <input v-model="newInvoice.quantity" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" required>
-              </div>
+             <div>
+               <label class="block text-sm font-medium text-neutral-700 mb-1">Preis (Netto)</label>
+               <input v-model="newInvoice.price" type="number" step="0.01" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+             </div>
+             <div>
+               <label class="block text-sm font-medium text-neutral-700 mb-1">Menge</label>
+               <input v-model="newInvoice.quantity" type="number" class="w-full border rounded-lg px-3 py-2 text-sm" required>
+             </div>
            </div>
 
            <div class="flex justify-end gap-3 mt-6">
@@ -171,6 +206,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 const router = useRouter()
 const api = useBookingApi()
 
@@ -182,6 +219,7 @@ const statusFilter = ref('all')
 const showCreateModal = ref(false)
 const newInvoice = ref({
   user_id: '',
+  user_preview: null as any,
   description: '',
   price: 0,
   quantity: 1
@@ -192,6 +230,12 @@ const stats = ref({
   pendingAmount: 0,
   overdueAmount: 0
 })
+
+// Search State
+const userSearchQuery = ref("");
+const userSearchResults = ref<any[]>([]);
+const isSearchingUsers = ref(false);
+let searchTimeout: any = null;
 
 // --- Computed & Helpers ---
 
@@ -248,7 +292,7 @@ const formatDate = (date: string) => {
 const loadInvoices = async () => {
   loading.value = true
   try {
-    const data = await api.sales.getAll() // Nutze existierende Methode aus composable
+    const data = await api.sales.getAll() 
     if (Array.isArray(data)) {
       invoices.value = data
       calculateStats(data)
@@ -268,8 +312,41 @@ const goToDetail = (id: number) => {
   router.push(`/booking-system/invoices/${id}`)
 }
 
+// User Search Logic
+const handleUserSearch = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    if (!userSearchQuery.value || userSearchQuery.value.length < 2) {
+        userSearchResults.value = [];
+        return;
+    }
+    isSearchingUsers.value = true;
+    searchTimeout = setTimeout(async () => {
+        try {
+            const users = await api.users.getAll();
+            const q = userSearchQuery.value.toLowerCase();
+            userSearchResults.value = users.filter((u: any) => 
+                u.username?.toLowerCase().includes(q) || 
+                u.email?.toLowerCase().includes(q)
+            ).slice(0, 5);
+        } finally {
+            isSearchingUsers.value = false;
+        }
+    }, 300);
+};
+
+const selectNewInvoiceUser = (user: any) => {
+    newInvoice.value.user_id = user.id;
+    newInvoice.value.user_preview = user;
+    userSearchQuery.value = "";
+    userSearchResults.value = [];
+};
+
+const resetNewInvoiceUser = () => {
+    newInvoice.value.user_id = '';
+    newInvoice.value.user_preview = null;
+};
+
 const createInvoice = async () => {
-  // Mapping für Backend createManual
   const payload = {
     user_id: newInvoice.value.user_id,
     items: [{
@@ -284,9 +361,9 @@ const createInvoice = async () => {
   if(res) {
     showCreateModal.value = false
     // Reset Form
-    newInvoice.value = { user_id: '', description: '', price: 0, quantity: 1 }
+    newInvoice.value = { user_id: '', user_preview: null, description: '', price: 0, quantity: 1 }
+    userSearchQuery.value = ""
     await loadInvoices()
-    // Optional: Direkt zur neuen Rechnung springen
     if(res.invoice?.id) goToDetail(res.invoice.id)
   }
 }

@@ -76,7 +76,7 @@
             <select
               id="poiType"
               v-model="formData.poiType"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             >
               <option value="BUILDING">Gebäude</option>
               <option value="AREA">Fläche</option>
@@ -94,7 +94,7 @@
               v-model.trim="formData.name"
               required
               placeholder="Name des Ortes"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
 
@@ -107,7 +107,7 @@
               type="text"
               v-model.trim="formData.address"
               placeholder="Vollständige Adresse"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
 
@@ -122,7 +122,7 @@
               type="text"
               v-model.trim="formData.shortName"
               placeholder="z.B. Hausnummer, Symbol"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
           </div>
 
@@ -137,7 +137,7 @@
               rows="4"
               v-model="formData.directionDescription"
               placeholder="Zusätzliche Informationen oder Hinweise zum Ort"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             ></textarea>
           </div>
 
@@ -148,7 +148,7 @@
             <select
               id="iconId"
               v-model="formData.iconId"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500"
+              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             >
               <option :value="null">Kein Icon</option>
               <option value="icon-pin">Pin</option>

@@ -4,7 +4,3 @@
 .btn {
   @apply text-xs font-bold px-2 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-700 text-neutral-200 shadow-sm;
 }
-
-input, select, textarea {
-  @apply border border-neutral-900/10 rounded-md p-2 text-xs shadow-xs
-}

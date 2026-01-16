@@ -128,7 +128,7 @@ const calendarDays = computed(() => {
 
     const dayBookings = props.bookings.filter(b => {
       const bStart = new Date(b.start_at)
-      const bEnd = b.end_at ? new Date(b.end_at) : new Date('9999-01-01');
+      const bEnd = b.end_at ? new Date(b.end_at) : ''
       return bStart <= dayEnd && bEnd >= dayStart
     })
 
