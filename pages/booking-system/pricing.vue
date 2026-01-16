@@ -74,14 +74,22 @@
                 €{{ Number(plan.price).toFixed(2) }}
               </td>
               <td class="px-6 py-4">
-                <span 
-                  :class="[
-                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border',
-                    getIntervalBadgeClass(plan.billing_interval)
-                  ]"
-                >
-                  {{ getBillingInterval(plan.billing_interval) }}
-                </span>
+                <div class="flex flex-col gap-1">
+                  <span 
+                    :class="[
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border',
+                      getIntervalBadgeClass(plan.billing_interval)
+                    ]"
+                  >
+                    {{ getBillingInterval(plan.billing_interval) }}
+                  </span>
+                  <span 
+                    v-if="plan.quota_amount && plan.quota_amount > 0"
+                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200"
+                  >
+                    {{ plan.quota_amount }}x {{ plan.quota_unit === 'BOOKINGS' ? 'Buchungen' : plan.quota_unit === 'HOURS' ? 'Stunden' : 'Tage' }}
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4 text-slate-600">
                 <div class="flex items-center gap-2">
@@ -182,6 +190,60 @@
               </select>
             </div>
           </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <div class="flex items-center gap-2 mb-3">
+              <input
+                v-model="planForm.isQuotaPackage"
+                type="checkbox"
+                id="isQuotaPackage"
+                class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+              <label for="isQuotaPackage" class="text-sm font-medium text-slate-700">
+                Kontingent-Paket
+              </label>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">
+              Wenn aktiviert, wird beim Kauf dieses Plans ein Kontingent erstellt, das der Nutzer später verwenden kann.
+            </p>
+
+            <div v-if="planForm.isQuotaPackage" class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Kontingent-Menge</label>
+                  <input
+                    v-model.number="planForm.quota_amount"
+                    type="number"
+                    min="1"
+                    placeholder="z.B. 12"
+                    class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-1.5">Einheit</label>
+                  <select
+                    v-model="planForm.quota_unit"
+                    class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                  >
+                    <option value="BOOKINGS">Buchungen</option>
+                    <option value="HOURS">Stunden</option>
+                    <option value="DAYS">Tage</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1.5">Gültigkeitsdauer (Tage, optional)</label>
+                <input
+                  v-model.number="planForm.quota_validity_days"
+                  type="number"
+                  min="1"
+                  placeholder="Leer = unbegrenzt"
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                />
+                <p class="mt-1 text-xs text-slate-500">Lassen Sie das Feld leer für unbegrenzte Gültigkeit.</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
@@ -222,7 +284,11 @@ const planForm = ref<any>({
   name: '',
   price: 0,
   billing_interval: 'HOUR',
-  resource_id: null
+  resource_id: null,
+  isQuotaPackage: false,
+  quota_amount: null,
+  quota_unit: 'BOOKINGS',
+  quota_validity_days: null
 })
 
 // --- Computed ---
@@ -280,7 +346,11 @@ const openAddDialog = () => {
     name: '',
     price: 0,
     billing_interval: 'HOUR',
-    resource_id: resourceFilter.value !== 'all' ? resourceFilter.value : null
+    resource_id: resourceFilter.value !== 'all' ? resourceFilter.value : null,
+    isQuotaPackage: false,
+    quota_amount: null,
+    quota_unit: 'BOOKINGS',
+    quota_validity_days: null
   }
   showDialog.value = true
 }
@@ -288,12 +358,17 @@ const openAddDialog = () => {
 const editPlan = (plan: any) => {
   editingPlan.value = true
   // Clone data
+  const hasQuota = !!(plan.quota_amount && Number(plan.quota_amount) > 0)
   planForm.value = { 
     id: plan.id,
-    name: plan.name,
-    price: plan.price,
-    billing_interval: plan.billing_interval,
-    resource_id: plan.resource_id
+    name: plan.name || '',
+    price: Number(plan.price) || 0,
+    billing_interval: plan.billing_interval || 'HOUR',
+    resource_id: plan.resource_id || null,
+    isQuotaPackage: hasQuota,
+    quota_amount: hasQuota ? Number(plan.quota_amount) : null,
+    quota_unit: hasQuota ? (plan.quota_unit || 'BOOKINGS') : 'BOOKINGS',
+    quota_validity_days: hasQuota ? (plan.quota_validity_days ? Number(plan.quota_validity_days) : null) : null
   }
   showDialog.value = true
 }
@@ -301,13 +376,41 @@ const editPlan = (plan: any) => {
 const savePlan = async () => {
   if(!planForm.value.name || !planForm.value.resource_id) return
   
+  // Validierung: Wenn Kontingent-Paket aktiviert, muss quota_amount gesetzt sein
+  if (planForm.value.isQuotaPackage && (!planForm.value.quota_amount || planForm.value.quota_amount < 1)) {
+    alert('Bitte geben Sie eine Kontingent-Menge an (mindestens 1)')
+    return
+  }
+  
   saving.value = true
   try {
+    // Bereite Daten vor: Entferne isQuotaPackage Flag, setze quota Felder nur wenn aktiviert
+    const submitData: any = {
+      name: planForm.value.name,
+      price: Number(planForm.value.price),
+      billing_interval: planForm.value.billing_interval,
+      resource_id: Number(planForm.value.resource_id)
+    }
+
+    // Kontingent-Felder immer explizit setzen
+    if (planForm.value.isQuotaPackage && planForm.value.quota_amount) {
+      submitData.quota_amount = Number(planForm.value.quota_amount)
+      submitData.quota_unit = planForm.value.quota_unit || 'BOOKINGS'
+      submitData.quota_validity_days = planForm.value.quota_validity_days ? Number(planForm.value.quota_validity_days) : null
+    } else {
+      // Wenn nicht aktiviert, setze auf null um zu löschen
+      submitData.quota_amount = null
+      submitData.quota_unit = null
+      submitData.quota_validity_days = null
+    }
+
+    console.log('Sending pricing plan data:', JSON.stringify(submitData, null, 2))
+
     let result
     if (editingPlan.value) {
-      result = await api.pricing.update(planForm.value.id, planForm.value)
+      result = await api.pricing.update(planForm.value.id, submitData)
     } else {
-      result = await api.pricing.create(planForm.value)
+      result = await api.pricing.create(submitData)
     }
     
     if (result) {
@@ -315,7 +418,8 @@ const savePlan = async () => {
       showDialog.value = false
     }
   } catch(e) {
-    console.error(e)
+    console.error('Error saving plan:', e)
+    alert('Fehler beim Speichern: ' + (e as any)?.message || 'Unbekannter Fehler')
   } finally {
     saving.value = false
   }

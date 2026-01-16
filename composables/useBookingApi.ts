@@ -359,7 +359,10 @@ export const useBookingApi = () => {
         () =>
           $fetch(`${baseURL}/pricing`, {
             method: "POST",
-            headers: getAuthHeaders(),
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
             body: data,
           }),
         "createPricing"
@@ -402,7 +405,87 @@ export const useBookingApi = () => {
     },
   };
 
-  // 5. Memberships
+  // 5. Quotas
+  const quotas = {
+    getAll: async (userId?: number, resourceId?: number) => {
+      const params = new URLSearchParams();
+      if (userId) params.append("user_id", userId.toString());
+      if (resourceId) params.append("resource_id", resourceId.toString());
+      const query = params.toString() ? `?${params.toString()}` : "";
+      return await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas${query}`, { headers: getAuthHeaders() }),
+        "getAllQuotas"
+      );
+    },
+
+    check: async (userId: number, resourceId: number) => {
+      return await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas/check?user_id=${userId}&resource_id=${resourceId}`, {
+            headers: getAuthHeaders(),
+          }),
+        "checkAvailableQuota"
+      );
+    },
+
+    getMy: async () => {
+      return await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas/my`, { headers: getAuthHeaders() }),
+        "getMyQuotas"
+      );
+    },
+
+    create: async (data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: data,
+          }),
+        "createQuota"
+      );
+      if (result)
+        toast.add({ title: "Kontingent erstellt", color: "green" });
+      return result;
+    },
+
+    update: async (id: number, data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "updateQuota"
+      );
+      if (result)
+        toast.add({ title: "Kontingent aktualisiert", color: "green" });
+      return result;
+    },
+
+    delete: async (id: number) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "deleteQuota"
+      );
+      if (result)
+        toast.add({ title: "Kontingent gelöscht", color: "green" });
+      return result;
+    },
+  };
+
+  // 6. Memberships
   const memberships = {
     getTypes: async () => {
       return await apiCall(
@@ -819,6 +902,7 @@ export const useBookingApi = () => {
     resources,
     services,
     pricing,
+    quotas,
     memberships,
     bookings,
     sales,
