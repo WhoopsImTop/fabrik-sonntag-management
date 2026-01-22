@@ -45,6 +45,12 @@
         >
           Anmelden
         </button>
+        <NuxtLink
+          to="/request-password-reset"
+          class="text-xs text-neutral-500 hover:text-neutral-700"
+        >
+          Passwort vergessen?
+        </NuxtLink>
         <p v-if="error" class="text-red-500 text-xs">{{ error }}</p>
       </form>
     </div>

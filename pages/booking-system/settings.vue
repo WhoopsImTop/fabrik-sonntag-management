@@ -71,7 +71,7 @@
         <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
            <label class="block text-sm font-medium text-slate-700 mb-1">Nächste Rechnungsnummer (Zähler)</label>
            <div class="flex items-center gap-3">
-             <input v-model="form.invoice_number_counter" type="number" class="w-32 border-slate-300 rounded-md shadow-sm p-2 border" />
+             <input v-model="form.invoice_number_counter" type="number" min="1" step="1" class="w-32 border-slate-300 rounded-md shadow-sm p-2 border" />
              <span class="text-sm text-slate-500">
                Vorschau: RE-IL-FS-{{ new Date().getFullYear().toString().slice(-2) }}-{{ form.invoice_number_counter }}
              </span>
@@ -205,6 +205,12 @@ onMounted(async () => {
 const save = async () => {
   loading.value = true;
   try {
+    const counter = Number(form.value.invoice_number_counter)
+    if (!Number.isInteger(counter) || counter < 1) {
+      alert("Die Rechnungsnummer muss eine ganze Zahl ab 1 sein.")
+      loading.value = false
+      return
+    }
     await api.company.update(form.value);
     alert("Gespeichert");
   } catch (e) {

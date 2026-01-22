@@ -606,11 +606,28 @@ export const useBookingApi = () => {
 
   // 6. Bookings
   const bookings = {
-    getAll: async (start?: string, end?: string, resourceId?: number) => {
+    getAll: async (
+      startOrParams?:
+        | string
+        | { start?: string; end?: string; resource_id?: number | string },
+      end?: string,
+      resourceId?: number
+    ) => {
       const params = new URLSearchParams();
-      if (start) params.append("start", start);
-      if (end) params.append("end", end);
-      if (resourceId) params.append("resource_id", resourceId.toString());
+      if (
+        startOrParams &&
+        typeof startOrParams === "object" &&
+        !Array.isArray(startOrParams)
+      ) {
+        if (startOrParams.start) params.append("start", startOrParams.start);
+        if (startOrParams.end) params.append("end", startOrParams.end);
+        if (startOrParams.resource_id)
+          params.append("resource_id", String(startOrParams.resource_id));
+      } else {
+        if (startOrParams) params.append("start", String(startOrParams));
+        if (end) params.append("end", end);
+        if (resourceId) params.append("resource_id", resourceId.toString());
+      }
 
       const data = await apiCall(
         () =>
@@ -878,7 +895,24 @@ export const useBookingApi = () => {
       );
     },
 
-    update: async (id, data: any) => {
+    create: async (data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/templates`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "template.create"
+      );
+      if (res) toast.add({ title: "Vorlage erstellt", color: "green" });
+      return res;
+    },
+
+    update: async (id: number | string, data: any) => {
       const res = await apiCall(
         () =>
           $fetch(`${baseURL}/templates/${id}`, {

@@ -90,6 +90,7 @@
           @select="selectBooking"
           @create="openCreateModal"
           @drop-booking="handleDrop"
+          @drag-start="handleDragStart"
         />
         
         <BookingList
@@ -125,6 +126,7 @@
     <BookingFormModal
       :isOpen="isModalOpen"
       :editData="editingBooking"
+      :initialDate="createDate"
       @close="closeModal"
       @saved="refreshData"
     />
@@ -148,6 +150,8 @@ const bookings = ref([]);
 const resources = ref([]); 
 const selectedResourceId = ref("all");
 const selectedBooking = ref(null);
+const draggedBooking = ref<any | null>(null);
+const createDate = ref<Date | null>(null);
 
 // Modal State
 const isModalOpen = ref(false);
@@ -218,6 +222,7 @@ const selectBooking = (b: any) => (selectedBooking.value = b);
 
 const openCreateModal = (date?: Date) => {
   editingBooking.value = null;
+  createDate.value = date || null;
   isModalOpen.value = true;
 };
 
@@ -229,6 +234,7 @@ const openEditModal = (b: any) => {
 const closeModal = () => {
   isModalOpen.value = false;
   editingBooking.value = null;
+  createDate.value = null;
 };
 
 const refreshData = async () => {
@@ -249,8 +255,33 @@ const handleCancel = async (b: any) => {
 };
 
 const handleDrop = async ({ date, event }: any) => {
-  // Drag logic handling
-  refreshData();
+  if (!draggedBooking.value || !date) return;
+  const originalStart = new Date(draggedBooking.value.start_at);
+  const originalEnd = draggedBooking.value.end_at
+    ? new Date(draggedBooking.value.end_at)
+    : new Date(draggedBooking.value.start_at);
+  const durationMs = originalEnd.getTime() - originalStart.getTime();
+  const newStart = new Date(date);
+  newStart.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
+  const newEnd = new Date(newStart.getTime() + Math.max(durationMs, 60 * 60 * 1000));
+  try {
+    await api.bookings.update(draggedBooking.value.id, {
+      start_at: formatDatetime(newStart),
+      end_at: formatDatetime(newEnd)
+    });
+    await refreshData();
+  } finally {
+    draggedBooking.value = null;
+  }
+};
+
+const handleDragStart = ({ booking }: any) => {
+  draggedBooking.value = booking;
+};
+
+const formatDatetime = (d: Date) => {
+  const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 onMounted(() => loadBookings());

@@ -337,7 +337,6 @@ const stats = ref({
 });
 
 const recentBookings = ref<any[]>([]);
-const topResources = ref<any[]>([]);
 
 const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString("de-DE", {
@@ -374,17 +373,17 @@ const getStatusLabel = (status: string) => {
   return map[status] || status;
 };
 
-const getUtilizationColor = (percent: number) => {
-  if (percent > 80) return "bg-red-500";
-  if (percent > 50) return "bg-blue-500";
-  return "bg-emerald-500";
-};
-
 const loadDashboardData = async () => {
   loading.value = true;
   try {
     // 1. Bookings
-    const bookingsData = await api.bookings.getAll();
+    const rangeEnd = new Date();
+    const rangeStart = new Date();
+    rangeStart.setDate(rangeStart.getDate() - 30);
+    const bookingsData = await api.bookings.getAll({
+      start: rangeStart.toISOString(),
+      end: rangeEnd.toISOString(),
+    });
     if (bookingsData && Array.isArray(bookingsData)) {
       // Sort by date desc
       const sorted = [...bookingsData].sort(
@@ -395,15 +394,21 @@ const loadDashboardData = async () => {
 
       recentBookings.value = sorted.slice(0, 5).map((b: any) => ({
         ...b,
-        duration: `${Math.round(
-          (new Date(b.end_at).getTime() - new Date(b.start_at).getTime()) /
-            3600000
-        )}h`,
+        duration: (() => {
+          const start = new Date(b.start_at);
+          const end = b.end_at ? new Date(b.end_at) : new Date(b.start_at);
+          const hours = Math.max(1, Math.round((end.getTime() - start.getTime()) / 3600000));
+          return `${hours}h`;
+        })(),
       }));
 
       // Active = End date in future & not cancelled
       stats.value.activeBookings = bookingsData.filter(
-        (b: any) => new Date(b.end_at) > new Date() && b.status !== "CANCELLED"
+        (b: any) => {
+          const start = new Date(b.start_at);
+          const end = b.end_at ? new Date(b.end_at) : new Date(start.getTime() + 3600000);
+          return end > new Date() && b.status !== "CANCELLED";
+        }
       ).length;
     }
 
@@ -414,12 +419,6 @@ const loadDashboardData = async () => {
         (r: any) => r.is_available
       ).length;
 
-      // Mock Utilization calculation (in real app, calculate based on bookings vs total time)
-      topResources.value = resourcesData.slice(0, 3).map((r: any) => ({
-        id: r.id,
-        name: r.name,
-        utilization: Math.floor(Math.random() * 80) + 10, // Mock
-      }));
     }
 
     // 3. Invoices (Fixed API Call)

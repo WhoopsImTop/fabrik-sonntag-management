@@ -468,8 +468,8 @@ const form = ref({
   notes: "",
   due_date: "",
   user_id: null as number | null,
-  user_preview: null as any, 
-  items: [] as Array<{ description: string; quantity: number; amount: number }>,
+  user_preview: null as any,
+  items: [] as Array<{ description: string; quantity: number; amount: number; vat_rate?: number }>,
 });
 
 const invoiceId = route.params.id as string;
@@ -485,7 +485,10 @@ const totals = computed(() => {
   const net = form.value.items.reduce((sum, item) => {
     return sum + (item.quantity || 0) * (item.amount || 0);
   }, 0);
-  const tax = net * 0.19; // 19%
+  const tax = form.value.items.reduce((sum, item) => {
+    const rate = typeof item.vat_rate === 'number' ? item.vat_rate : 0.19;
+    return sum + (item.quantity || 0) * (item.amount || 0) * rate;
+  }, 0);
   return {
     net,
     tax,
@@ -517,6 +520,7 @@ const loadInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
+          vat_rate: typeof i.vat_rate === 'number' ? Number(i.vat_rate) : 0.19
         }));
       } else {
         form.value.items = [];
@@ -581,6 +585,7 @@ const addItem = () => {
     description: "",
     quantity: 1,
     amount: 0,
+    vat_rate: 0.19
   });
 };
 
@@ -591,6 +596,11 @@ const removeItem = (index: number) => {
 const saveInvoice = async () => {
   saving.value = true;
   try {
+    if (!form.value.items.length) {
+      alert("Bitte mindestens eine Position anlegen.");
+      saving.value = false;
+      return;
+    }
     const res = await api.sales.update(Number(invoiceId), {
       status: form.value.status,
       notes: form.value.notes,
@@ -607,6 +617,7 @@ const saveInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
+          vat_rate: typeof i.vat_rate === 'number' ? Number(i.vat_rate) : 0.19
         }));
       }
       form.value.user_preview = res.User;

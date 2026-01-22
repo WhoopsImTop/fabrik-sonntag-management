@@ -389,7 +389,8 @@ const newMembership = ref({
 const totalRevenue = computed(() => {
   if (!user.value?.Invoices) return "0.00";
   const sum = user.value.Invoices.reduce(
-    (acc: number, inv: any) => acc + parseFloat(inv.total_amount || 0),
+    (acc: number, inv: any) =>
+      acc + (inv.status === "PAID" ? parseFloat(inv.total_amount || 0) : 0),
     0
   );
   return sum.toFixed(2);

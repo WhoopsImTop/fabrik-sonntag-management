@@ -25,12 +25,35 @@
       </div>
     </div>
 
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="relative flex-1">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </span>
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Abos suchen..."
+          class="w-full pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+        />
+      </div>
+      <select
+        v-model="statusFilter"
+        class="px-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900"
+      >
+        <option value="all">Alle Status</option>
+        <option value="ACTIVE">Aktiv</option>
+        <option value="PAUSED">Pausiert</option>
+        <option value="CANCELLED">Beendet</option>
+      </select>
+    </div>
+
     <div class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
       <div v-if="loading" class="p-12 flex justify-center">
         <svg class="animate-spin w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </div>
 
-      <div v-else-if="subscriptions.length === 0" class="p-12 text-center">
+      <div v-else-if="filteredSubscriptions.length === 0" class="p-12 text-center">
         <h3 class="text-lg font-medium text-neutral-900">Keine Abonnements vorhanden</h3>
         <p class="text-neutral-500 mt-1">Erstellen Sie das erste Abo für wiederkehrende Zahlungen.</p>
       </div>
@@ -47,7 +70,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 bg-white">
-          <tr v-for="sub in subscriptions" :key="sub.id" class="hover:bg-neutral-50">
+          <tr v-for="sub in filteredSubscriptions" :key="sub.id" class="hover:bg-neutral-50">
             <td class="px-6 py-4 text-sm font-medium text-neutral-900">
               {{ sub.description || 'Ohne Titel' }}
               <div class="text-xs text-neutral-500 font-normal mt-0.5" v-if="sub.LineItems?.length">
@@ -103,9 +126,26 @@ const api = useBookingApi()
 // State
 const loading = ref(true)
 const subscriptions = ref<any[]>([])
+const searchQuery = ref('')
+const statusFilter = ref('all')
 
 // --- Computed ---
 const activeCount = computed(() => subscriptions.value.filter(s => s.status === 'ACTIVE').length)
+const filteredSubscriptions = computed(() => {
+  let list = subscriptions.value
+  if (statusFilter.value !== 'all') {
+    list = list.filter(s => s.status === statusFilter.value)
+  }
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(s =>
+      s.description?.toLowerCase().includes(q) ||
+      s.User?.username?.toLowerCase().includes(q) ||
+      s.User?.email?.toLowerCase().includes(q)
+    )
+  }
+  return list
+})
 
 const monthlyVolume = computed(() => {
   return subscriptions.value

@@ -70,6 +70,7 @@
       >
         <option value="all">Alle Status</option>
         <option value="DRAFT">Entwurf</option>
+        <option value="PENDING">Ausstehend</option>
         <option value="SENT">Versendet</option>
         <option value="PAID">Bezahlt</option>
         <option value="OVERDUE">Überfällig</option>
@@ -215,6 +216,7 @@ const loading = ref(true)
 const invoices = ref<any[]>([])
 const searchQuery = ref('')
 const statusFilter = ref('all')
+const usersCache = ref<any[]>([])
 
 const showCreateModal = ref(false)
 const newInvoice = ref({
@@ -322,7 +324,7 @@ const handleUserSearch = () => {
     isSearchingUsers.value = true;
     searchTimeout = setTimeout(async () => {
         try {
-            const users = await api.users.getAll();
+            const users = usersCache.value.length ? usersCache.value : await api.users.getAll();
             const q = userSearchQuery.value.toLowerCase();
             userSearchResults.value = users.filter((u: any) => 
                 u.username?.toLowerCase().includes(q) || 
@@ -347,6 +349,18 @@ const resetNewInvoiceUser = () => {
 };
 
 const createInvoice = async () => {
+  if (!newInvoice.value.user_id) {
+    alert('Bitte einen Kunden auswählen.')
+    return
+  }
+  if (!newInvoice.value.description?.trim()) {
+    alert('Bitte eine Beschreibung für die Position angeben.')
+    return
+  }
+  if (Number(newInvoice.value.price) <= 0 || Number(newInvoice.value.quantity) <= 0) {
+    alert('Bitte gültige Preis- und Mengenangaben verwenden.')
+    return
+  }
   const payload = {
     user_id: newInvoice.value.user_id,
     items: [{
@@ -369,6 +383,9 @@ const createInvoice = async () => {
 }
 
 onMounted(() => {
+  api.users.getAll().then((data: any) => {
+    usersCache.value = Array.isArray(data) ? data : []
+  })
   loadInvoices()
 })
 </script>

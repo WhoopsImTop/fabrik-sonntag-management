@@ -2,8 +2,9 @@ export default defineNuxtRouteMiddleware((to, from) => {
   // Nur im Browser ausführen, nicht beim Server-Side Rendering
   if (process.server) return
 
-  // Login-Seite ist immer erlaubt
-  if (to.path === '/login') return
+  // Oeffentliche Seiten sind immer erlaubt
+  const publicPaths = ['/login', '/request-password-reset', '/reset-password']
+  if (publicPaths.includes(to.path)) return
 
   // Prüfe ob JWT Token vorhanden ist
   const token = localStorage.getItem('jwt')

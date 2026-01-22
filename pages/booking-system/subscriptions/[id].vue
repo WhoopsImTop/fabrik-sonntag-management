@@ -364,7 +364,10 @@ const suggestions = computed(() => {
 
 const totals = computed(() => {
   const net = form.value.items.reduce((sum, item) => sum + (Number(item.amount||0) * Number(item.quantity||1)), 0)
-  const tax = net * 0.19
+  const tax = form.value.items.reduce((sum, item) => {
+    const rate = typeof item.vat_rate === 'number' ? Number(item.vat_rate) : 0.19
+    return sum + (Number(item.amount||0) * Number(item.quantity||1) * rate)
+  }, 0)
   return { net, tax, gross: net + tax }
 })
 
@@ -462,6 +465,11 @@ const save = async () => {
   saving.value = true
   try {
     let finalUserId = form.value.user_id
+    if (!form.value.next_billing_date) {
+      alert('Bitte ein nächstes Abrechnungsdatum angeben.')
+      saving.value = false
+      return
+    }
     
     if (!finalUserId) {
        if (!customerForm.value.first_name || !customerForm.value.email) {

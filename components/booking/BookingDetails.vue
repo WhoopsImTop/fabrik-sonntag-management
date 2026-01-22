@@ -194,7 +194,6 @@ const statusStyles: any = {
 const updateStatus = async (newStatus: string) => {
   try {
     await api.bookings.update(props.booking.id, { status: newStatus })
-    props.booking.status = newStatus // Optimistic Update
     emit('update-status')
   } catch (e) {
     alert('Fehler beim Status-Update')

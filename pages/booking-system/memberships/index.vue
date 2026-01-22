@@ -319,6 +319,15 @@ const openRuleModal = (type: any) => {
 
 const createRule = async () => {
   if(!newRule.value.target_resource_category_id) return
+  const percent = typeof newRule.value.discount_percent === 'number' ? newRule.value.discount_percent : null
+  const fixed = typeof newRule.value.discount_fixed === 'number' ? newRule.value.discount_fixed : null
+  if (percent && fixed) {
+    alert('Bitte entweder Prozent oder Fixbetrag setzen, nicht beides.')
+    return
+  }
+  if (percent != null) {
+    newRule.value.discount_percent = Math.max(0, Math.min(1, percent))
+  }
   const result = await api.memberships.createRule(newRule.value)
   if (result) {
     showRuleModal.value = false

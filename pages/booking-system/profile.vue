@@ -167,7 +167,7 @@
                   </div>
                 </div>
                 <span class="px-3 py-1 bg-purple-200 text-purple-800 text-sm font-semibold rounded-full">
-                  {{ membership.discount_percent }}% Rabatt
+                  {{ formatDiscount(membership.discount_percent) }}% Rabatt
                 </span>
               </div>
               <div class="grid grid-cols-2 gap-4 text-sm">
@@ -239,6 +239,12 @@ const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('de-DE')
 }
 
+const formatDiscount = (value: number) => {
+  if (typeof value !== 'number') return 0
+  const normalized = value <= 1 ? value * 100 : value
+  return Math.round(normalized * 100) / 100
+}
+
 const loadProfile = async () => {
   loading.value = true
   try {
@@ -258,9 +264,18 @@ const loadProfile = async () => {
     }
 
     // Load recent bookings
-    const bookings = await api.bookings.getAll()
+    const rangeEnd = new Date()
+    const rangeStart = new Date()
+    rangeStart.setDate(rangeStart.getDate() - 90)
+    const bookings = await api.bookings.getAll({
+      start: rangeStart.toISOString(),
+      end: rangeEnd.toISOString(),
+    })
     if (bookings && Array.isArray(bookings)) {
-      recentBookings.value = bookings.slice(0, 3)
+      const filtered = bookings.filter((b: any) =>
+        b.user_id === profile.value.id || b.User?.id === profile.value.id
+      )
+      recentBookings.value = filtered.slice(0, 3)
     }
   } finally {
     loading.value = false

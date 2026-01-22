@@ -5,6 +5,13 @@
         <h1 class="text-3xl font-bold text-slate-900">E-Mail Vorlagen</h1>
         <p class="text-slate-600 mt-1">Verwalten Sie die automatischen System-Nachrichten.</p>
       </div>
+      <button
+        @click="openEditor()"
+        class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Neue Vorlage
+      </button>
     </div>
 
     <div v-if="loading" class="flex justify-center py-12">
@@ -63,7 +70,7 @@
       </div>
     </div>
 
-    <div v-if="showDialog && editingTemplate" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div v-if="showDialog" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="closeDialog" aria-hidden="true"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -71,10 +78,31 @@
         <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
           <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-6 border-b pb-2">
-              Vorlage bearbeiten: <span class="text-blue-600">{{ editingTemplate.name }}</span>
+              {{ isNewTemplate ? 'Neue Vorlage' : 'Vorlage bearbeiten:' }}
+              <span class="text-blue-600" v-if="!isNewTemplate">{{ editingTemplate.name }}</span>
             </h3>
             
             <div class="grid grid-cols-1 gap-6">
+              <div v-if="isNewTemplate" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    v-model="form.name"
+                    type="text"
+                    placeholder="z.B. Passwort Reset"
+                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2.5 border"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Key</label>
+                  <input
+                    v-model="form.key"
+                    type="text"
+                    placeholder="PASSWORD_RESET"
+                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2.5 border"
+                  />
+                </div>
+              </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Betreff der E-Mail</label>
                 <input 
@@ -100,13 +128,28 @@
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail Inhalt (HTML)</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-sm font-medium text-gray-700">E-Mail Inhalt (HTML)</label>
+                  <button
+                    type="button"
+                    @click="showPreview = !showPreview"
+                    class="text-xs font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    {{ showPreview ? 'Editor anzeigen' : 'Vorschau' }}
+                  </button>
+                </div>
                 <textarea 
+                  v-if="!showPreview"
                   id="templateBody"
                   v-model="form.body" 
                   rows="12" 
                   class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md font-mono p-3 border text-gray-800 leading-relaxed"
                 ></textarea>
+                <div
+                  v-else
+                  class="border border-gray-200 rounded-md p-4 text-sm text-gray-700 bg-gray-50 min-h-[200px]"
+                  v-html="form.body"
+                ></div>
                 <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                    Tipp: Nutzen Sie HTML Tags wie <code>&lt;br&gt;</code>, <code>&lt;p&gt;</code> oder <code>&lt;b&gt;</code> zur Formatierung.
@@ -146,6 +189,9 @@
               Abbrechen
             </button>
           </div>
+          <p v-if="formError" class="mt-3 text-xs text-red-600 text-center">
+            {{ formError }}
+          </p>
         </div>
       </div>
     </div>
@@ -161,9 +207,14 @@ const saving = ref(false)
 const templatesList = ref<any[]>([])
 const showDialog = ref(false)
 const editingTemplate = ref<any>(null)
+const showPreview = ref(false)
+const isNewTemplate = ref(false)
+const formError = ref('')
 
 // Form State
 const form = ref({
+  name: '',
+  key: '',
   subject: '',
   body: '',
   is_active: true
@@ -184,31 +235,79 @@ onMounted(() => {
   loadTemplates()
 })
 
-const openEditor = (template: any) => {
-  editingTemplate.value = template
-  form.value = {
-    subject: template.subject,
-    body: template.body,
-    is_active: template.is_active
+const openEditor = (template?: any) => {
+  formError.value = ''
+  if (template) {
+    isNewTemplate.value = false
+    editingTemplate.value = template
+    form.value = {
+      name: template.name,
+      key: template.key,
+      subject: template.subject,
+      body: template.body,
+      is_active: template.is_active
+    }
+  } else {
+    isNewTemplate.value = true
+    editingTemplate.value = null
+    form.value = {
+      name: '',
+      key: '',
+      subject: '',
+      body: '',
+      is_active: true
+    }
   }
+  showPreview.value = false
   showDialog.value = true
 }
 
 const closeDialog = () => {
   showDialog.value = false
   editingTemplate.value = null
+  showPreview.value = false
+  isNewTemplate.value = false
+  formError.value = ''
 }
 
 const save = async () => {
-  if (!editingTemplate.value) return
+  formError.value = ''
+  if (!form.value.subject?.trim() || !form.value.body?.trim()) {
+    formError.value = 'Bitte Betreff und Inhalt ausfuellen.'
+    return
+  }
   saving.value = true
   try {
-    const updated = await api.templates.update(editingTemplate.value.id, form.value)
-    if (updated) {
-       // Liste aktualisieren, ohne kompletten Reload
-       const idx = templatesList.value.findIndex(t => t.id === updated.id)
-       if (idx !== -1) templatesList.value[idx] = updated
-       closeDialog()
+    if (isNewTemplate.value) {
+      if (!form.value.name?.trim() || !form.value.key?.trim()) {
+        formError.value = 'Bitte Name und Key angeben.'
+        saving.value = false
+        return
+      }
+      const payload = {
+        ...form.value,
+        name: form.value.name.trim(),
+        key: form.value.key.trim().toUpperCase(),
+        subject: form.value.subject.trim(),
+        body: form.value.body
+      }
+      const created = await api.templates.create(payload)
+      if (created) {
+        templatesList.value = [created, ...templatesList.value]
+        closeDialog()
+      }
+    } else if (editingTemplate.value) {
+      const payload = {
+        ...form.value,
+        subject: form.value.subject.trim(),
+        body: form.value.body
+      }
+      const updated = await api.templates.update(editingTemplate.value.id, payload)
+      if (updated) {
+         const idx = templatesList.value.findIndex(t => t.id === updated.id)
+         if (idx !== -1) templatesList.value[idx] = updated
+         closeDialog()
+      }
     }
   } finally {
     saving.value = false

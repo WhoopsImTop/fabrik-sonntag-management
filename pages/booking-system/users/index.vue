@@ -89,7 +89,7 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
                <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 capitalize">
-                {{ user.role }}
+                {{ getRoleLabel(user.role) }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
@@ -232,6 +232,14 @@ const filteredUsers = computed(() => {
 
 const getInitials = (firstName: string, lastName?: string) => {
   return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
+}
+
+const getRoleLabel = (role: string) => {
+  const map: Record<string, string> = {
+    admin: 'Admin',
+    user: 'User'
+  }
+  return map[role] || role
 }
 
 const loadUsers = async () => {

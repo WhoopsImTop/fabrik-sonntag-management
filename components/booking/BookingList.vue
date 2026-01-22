@@ -114,13 +114,15 @@ const filteredAndSortedBookings = computed(() => {
 
   // 2. Date Filter
   if (dateFilter.value) {
-    const filterDateStr = new Date(dateFilter.value).toDateString();
+    const filterDate = new Date(dateFilter.value);
+    const filterStart = new Date(filterDate);
+    filterStart.setHours(0, 0, 0, 0);
+    const filterEnd = new Date(filterDate);
+    filterEnd.setHours(23, 59, 59, 999);
     list = list.filter((b) => {
-      const bookingStart = new Date(b.start_at).toDateString();
-      const bookingEnd = new Date(b.end_at).toDateString();
-      // Einfache Logik: Zeige Buchung, wenn Startdatum übereinstimmt 
-      // (Erweiterbar auf: liegt im Zeitraum)
-      return bookingStart === filterDateStr || bookingEnd === filterDateStr;
+      const bookingStart = new Date(b.start_at);
+      const bookingEnd = b.end_at ? new Date(b.end_at) : new Date(b.start_at);
+      return bookingStart <= filterEnd && bookingEnd >= filterStart;
     });
   }
 
