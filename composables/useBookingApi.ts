@@ -675,7 +675,7 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(
-            `${baseURL}/bookings/price?resource_id=${resourceId}&pricing_plan_id=${pricingPlanId}&start=${start}&end=${end}`,
+            `${baseURL}/bookings/price?resourceId=${resourceId}&pricingPlanId=${pricingPlanId}&start=${start}&end=${end}`,
             {
               headers: getAuthHeaders(),
             }
