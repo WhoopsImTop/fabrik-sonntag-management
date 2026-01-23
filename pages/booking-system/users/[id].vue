@@ -73,6 +73,12 @@
               </p>
             </div>
           </div>
+          <button
+            class="border border-slate-200 bg-white shadow-sm px-4 py-2 rounded-lg text-xs text-red-800 hover:bg-red-50 hover:cursor-pointer"
+            @click="handleDeleteUser()"
+          >
+            Benutzer Löschen
+          </button>
         </div>
 
         <div class="lg:col-span-2 space-y-6">
@@ -80,7 +86,12 @@
             class="inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500 w-full"
           >
             <button
-              v-for="tab in ['bookings', 'invoices', 'memberships']"
+              v-for="tab in [
+                'bookings',
+                'invoices',
+                'memberships',
+                'kontingente',
+              ]"
               :key="tab"
               @click="activeTab = tab"
               :class="[
@@ -94,8 +105,10 @@
                 tab === "memberships"
                   ? "Mitgliedschaften"
                   : tab === "bookings"
-                  ? "Buchungen"
-                  : "Rechnungen"
+                    ? "Buchungen"
+                    : tab === "kontingente"
+                      ? "Kontingente"
+                      : "Rechnungen"
               }}
             </button>
           </div>
@@ -219,6 +232,102 @@
 
                     <button
                       @click="removeMembership(ms.id)"
+                      class="text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
+                      title="Mitgliedschaft entfernen"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        <line x1="10" x2="10" y1="11" y2="17" />
+                        <line x1="14" x2="14" y1="11" y2="17" />
+                      </svg>
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div v-if="activeTab === 'kontingente'" class="p-6">
+              <div class="flex justify-between items-center mb-6">
+                <div>
+                  <h3
+                    class="text-lg font-semibold text-slate-900 tracking-tight"
+                  >
+                    Gebuchte Kontingente
+                  </h3>
+                  <p class="text-sm text-slate-500">
+                    Übersicht aller Kontingente.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                v-if="!user.UserQuota || user.UserQuota.length === 0"
+                class="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50"
+              >
+                <svg
+                  class="h-10 w-10 text-slate-400 mb-3"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
+                </svg>
+                <p class="text-sm text-slate-500 font-medium">
+                  Keine Kontingente vorhanden.
+                </p>
+                <p class="text-xs text-slate-400">
+                  Weisen Sie oben eine neue zu.
+                </p>
+              </div>
+
+              <ul
+                v-else
+                class="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden"
+              >
+                <li
+                  v-for="ms in user.UserQuota"
+                  :key="ms.id"
+                  class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition-colors group"
+                >
+                  <div>
+                    <p class="font-semibold text-slate-900">
+                      {{ ms.quota_amount - ms.used_amount }}x Buchungen
+                      verfügbar
+                    </p>
+                    <div
+                      class="flex items-center text-xs text-slate-500 mt-1 space-x-2"
+                    >
+                      <span v-if="ms.valid_until"
+                        >Gültig bis:
+                        {{
+                          new Date(ms.valid_until).toLocaleDateString("de-DE")
+                        }}</span
+                      >
+                      <span v-else>Unbegrenzt gültig</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-4">
+                    <button
+                      @click="deleteQuota(ms.id)"
                       class="text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
                       title="Mitgliedschaft entfernen"
                     >
@@ -391,7 +500,7 @@ const totalRevenue = computed(() => {
   const sum = user.value.Invoices.reduce(
     (acc: number, inv: any) =>
       acc + (inv.status === "PAID" ? parseFloat(inv.total_amount || 0) : 0),
-    0
+    0,
   );
   return sum.toFixed(2);
 });
@@ -465,6 +574,18 @@ const handleUpdateUser = async (updatedData: any) => {
   }
 };
 
+const handleDeleteUser = async () => {
+  try {
+    const userId = route.params.id;
+    await api.users.delete(userId);
+    await loadUser();
+  } catch (e) {
+    window.alert(
+      "Benutzer konnte nicht gelöscht werden. Es kann daran liegen, das es versendete Rechnungen gibt.",
+    );
+  }
+};
+
 const downloadInvoice = async (invoiceId: number) => {
   try {
     const blob = await api.sales.downloadInvoice(invoiceId);
@@ -478,6 +599,10 @@ const downloadInvoice = async (invoiceId: number) => {
   } catch (e) {
     // Error handled by composable
   }
+};
+
+const deleteQuota = async (id: number) => {
+  window.alert("Muss programmiert werden");
 };
 
 onMounted(() => {

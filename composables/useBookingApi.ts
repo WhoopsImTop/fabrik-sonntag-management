@@ -64,7 +64,7 @@ export const useBookingApi = () => {
   // Wrapper for API calls with error handling
   const apiCall = async <T>(
     fn: () => Promise<T>,
-    context: string
+    context: string,
   ): Promise<T | null> => {
     try {
       return await fn();
@@ -79,7 +79,7 @@ export const useBookingApi = () => {
     getProfile: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/users/profile`, { headers: getAuthHeaders() }),
-        "getProfile"
+        "getProfile",
       );
     },
 
@@ -94,7 +94,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updateProfile"
+        "updateProfile",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -104,7 +104,7 @@ export const useBookingApi = () => {
     getAll: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/users`, { headers: getAuthHeaders() }),
-        "getUsers"
+        "getUsers",
       );
     },
     // NEU: User erstellen
@@ -119,7 +119,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "users.create"
+        "users.create",
       );
       if (result) toast.add({ title: "Benutzer erstellt", color: "green" });
       return result;
@@ -136,7 +136,7 @@ export const useBookingApi = () => {
             },
             body: { status },
           }),
-        "updateUserStatus"
+        "updateUserStatus",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -161,6 +161,17 @@ export const useBookingApi = () => {
       });
       return await res.json();
     },
+
+    delete: async (id: string | number) => {
+      const res = await fetch(`${baseURL}/users/${id}`, {
+        method: "DELETE",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+      });
+      return await res.json();
+    },
   };
 
   // 2. Resources
@@ -168,7 +179,7 @@ export const useBookingApi = () => {
     getAll: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/resources`, { headers: getAuthHeaders() }),
-        "getResources"
+        "getResources",
       );
     },
 
@@ -178,7 +189,7 @@ export const useBookingApi = () => {
           $fetch(`${baseURL}/resources/categories`, {
             headers: getAuthHeaders(),
           }),
-        "getCategories"
+        "getCategories",
       );
     },
 
@@ -190,7 +201,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createResource"
+        "createResource",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -208,7 +219,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updateResource"
+        "updateResource",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -222,7 +233,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "deleteResource"
+        "deleteResource",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -237,7 +248,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createCategory"
+        "createCategory",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -250,7 +261,7 @@ export const useBookingApi = () => {
     getAll: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/services`, { headers: getAuthHeaders() }),
-        "getServices"
+        "getServices",
       );
     },
 
@@ -262,7 +273,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createService"
+        "createService",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -280,7 +291,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updateService"
+        "updateService",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -294,7 +305,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "deleteService"
+        "deleteService",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -309,7 +320,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: { resourceId, serviceId },
           }),
-        "attachService"
+        "attachService",
       );
     },
 
@@ -320,13 +331,13 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "detachService"
+        "detachService",
       );
     },
 
     updateResourceServices: async (
       resourceId: number,
-      serviceIds: number[]
+      serviceIds: number[],
     ) => {
       return await apiCall(
         () =>
@@ -338,7 +349,7 @@ export const useBookingApi = () => {
             },
             body: { service_ids: serviceIds },
           }),
-        "updateResourceServices"
+        "updateResourceServices",
       );
     },
   };
@@ -350,7 +361,7 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(`${baseURL}/pricing${query}`, { headers: getAuthHeaders() }),
-        "getPricing"
+        "getPricing",
       );
     },
 
@@ -365,7 +376,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "createPricing"
+        "createPricing",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -383,7 +394,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updatePricing"
+        "updatePricing",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -397,7 +408,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "deletePricing"
+        "deletePricing",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -415,25 +426,27 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(`${baseURL}/quotas${query}`, { headers: getAuthHeaders() }),
-        "getAllQuotas"
+        "getAllQuotas",
       );
     },
 
     check: async (userId: number, resourceId: number) => {
       return await apiCall(
         () =>
-          $fetch(`${baseURL}/quotas/check?user_id=${userId}&resource_id=${resourceId}`, {
-            headers: getAuthHeaders(),
-          }),
-        "checkAvailableQuota"
+          $fetch(
+            `${baseURL}/quotas/check?user_id=${userId}&resource_id=${resourceId}`,
+            {
+              headers: getAuthHeaders(),
+            },
+          ),
+        "checkAvailableQuota",
       );
     },
 
     getMy: async () => {
       return await apiCall(
-        () =>
-          $fetch(`${baseURL}/quotas/my`, { headers: getAuthHeaders() }),
-        "getMyQuotas"
+        () => $fetch(`${baseURL}/quotas/my`, { headers: getAuthHeaders() }),
+        "getMyQuotas",
       );
     },
 
@@ -445,10 +458,9 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createQuota"
+        "createQuota",
       );
-      if (result)
-        toast.add({ title: "Kontingent erstellt", color: "green" });
+      if (result) toast.add({ title: "Kontingent erstellt", color: "green" });
       return result;
     },
 
@@ -463,7 +475,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updateQuota"
+        "updateQuota",
       );
       if (result)
         toast.add({ title: "Kontingent aktualisiert", color: "green" });
@@ -477,10 +489,9 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "deleteQuota"
+        "deleteQuota",
       );
-      if (result)
-        toast.add({ title: "Kontingent gelöscht", color: "green" });
+      if (result) toast.add({ title: "Kontingent gelöscht", color: "green" });
       return result;
     },
   };
@@ -491,7 +502,7 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(`${baseURL}/memberships/types`, { headers: getAuthHeaders() }),
-        "getMembershipTypes"
+        "getMembershipTypes",
       );
     },
 
@@ -499,7 +510,7 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(`${baseURL}/memberships/my`, { headers: getAuthHeaders() }),
-        "getMyMembership"
+        "getMyMembership",
       );
     },
 
@@ -511,7 +522,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createMembershipType"
+        "createMembershipType",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -529,7 +540,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "mem.updateType"
+        "mem.updateType",
       );
       if (res)
         toast.add({ title: "Mitgliedschaft aktualisiert", color: "green" });
@@ -543,7 +554,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "mem.deleteType"
+        "mem.deleteType",
       );
       if (res) toast.add({ title: "Mitgliedschaft gelöscht", color: "green" });
       return res;
@@ -557,7 +568,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createMembershipRule"
+        "createMembershipRule",
       );
     },
 
@@ -568,7 +579,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "mem.deleteRule"
+        "mem.deleteRule",
       );
       if (res) toast.add({ title: "Regel entfernt", color: "green" });
       return res;
@@ -582,7 +593,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "assignMembership"
+        "assignMembership",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -596,7 +607,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "removeMembershipAssignment"
+        "removeMembershipAssignment",
       );
       if (result)
         toast.add({ title: "Mitgliedschaft entfernt", color: "green" });
@@ -611,7 +622,7 @@ export const useBookingApi = () => {
         | string
         | { start?: string; end?: string; resource_id?: number | string },
       end?: string,
-      resourceId?: number
+      resourceId?: number,
     ) => {
       const params = new URLSearchParams();
       if (
@@ -634,7 +645,7 @@ export const useBookingApi = () => {
           $fetch(`${baseURL}/bookings?${params.toString()}`, {
             headers: getAuthHeaders(),
           }),
-        "getBookings"
+        "getBookings",
       );
 
       // Flatten data for frontend
@@ -652,7 +663,7 @@ export const useBookingApi = () => {
     checkAvailability: async (
       resourceId: number,
       start: string,
-      end: string
+      end: string,
     ) => {
       return await apiCall(
         () =>
@@ -660,9 +671,9 @@ export const useBookingApi = () => {
             `${baseURL}/bookings/availabilities?resource_id=${resourceId}&start=${start}&end=${end}`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           ),
-        "checkAvailability"
+        "checkAvailability",
       );
     },
 
@@ -670,7 +681,7 @@ export const useBookingApi = () => {
       resourceId: number,
       pricingPlanId: number,
       start: string,
-      end: string
+      end: string,
     ) => {
       return await apiCall(
         () =>
@@ -678,9 +689,9 @@ export const useBookingApi = () => {
             `${baseURL}/bookings/price?resourceId=${resourceId}&pricingPlanId=${pricingPlanId}&start=${start}&end=${end}`,
             {
               headers: getAuthHeaders(),
-            }
+            },
           ),
-        "getBookingPrice"
+        "getBookingPrice",
       );
     },
 
@@ -692,7 +703,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "createBooking"
+        "createBooking",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -706,7 +717,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "deleteBooking"
+        "deleteBooking",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -724,7 +735,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "updateBooking"
+        "updateBooking",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -741,7 +752,7 @@ export const useBookingApi = () => {
               "Content-Type": "application/json",
             },
           }),
-        "cancelBooking"
+        "cancelBooking",
       );
       if (result)
         toast.add({ title: "Erfolg", description: "", color: "green" });
@@ -761,7 +772,7 @@ export const useBookingApi = () => {
           $fetch(`${baseURL}/sales/invoices${query}`, {
             headers: getAuthHeaders(),
           }),
-        "sales.getAll"
+        "sales.getAll",
       );
     },
 
@@ -771,7 +782,7 @@ export const useBookingApi = () => {
           $fetch(`${baseURL}/sales/invoices/${id}`, {
             headers: getAuthHeaders(),
           }),
-        "sales.getOne"
+        "sales.getOne",
       );
     },
 
@@ -784,7 +795,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "sales.create"
+        "sales.create",
       );
       if (res) toast.add({ title: "Rechnung erstellt", color: "green" });
       return res;
@@ -802,7 +813,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "sales.update"
+        "sales.update",
       );
       if (res) toast.add({ title: "Rechnung aktualisiert", color: "green" });
       return res;
@@ -816,7 +827,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "sales.delete"
+        "sales.delete",
       );
       if (res) toast.add({ title: "Rechnung gelöscht", color: "green" });
       return res;
@@ -830,7 +841,7 @@ export const useBookingApi = () => {
             method: "POST",
             headers: getAuthHeaders(),
           }),
-        "sales.sendEmail"
+        "sales.sendEmail",
       );
       if (res) toast.add({ title: "Email versendet", color: "green" });
       return res;
@@ -844,7 +855,7 @@ export const useBookingApi = () => {
           {
             method: "GET",
             headers: getAuthHeaders(),
-          }
+          },
         );
 
         if (!response.ok) throw new Error("Download fehlgeschlagen");
@@ -864,7 +875,7 @@ export const useBookingApi = () => {
       return await apiCall(
         () =>
           $fetch(`${baseURL}/settings/company`, { headers: getAuthHeaders() }),
-        "company.get"
+        "company.get",
       );
     },
 
@@ -879,7 +890,7 @@ export const useBookingApi = () => {
             },
             body: data, // Achtung: Prüfen ob Body direkt data ist oder { form: data }
           }),
-        "company.update"
+        "company.update",
       );
       if (res)
         toast.add({ title: "Einstellungen gespeichert", color: "green" });
@@ -891,7 +902,7 @@ export const useBookingApi = () => {
     getAll: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/templates`, { headers: getAuthHeaders() }),
-        "template.get"
+        "template.get",
       );
     },
 
@@ -906,7 +917,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "template.create"
+        "template.create",
       );
       if (res) toast.add({ title: "Vorlage erstellt", color: "green" });
       return res;
@@ -923,7 +934,7 @@ export const useBookingApi = () => {
             },
             body: data, // Achtung: Prüfen ob Body direkt data ist oder { form: data }
           }),
-        "template.update"
+        "template.update",
       );
       if (res)
         toast.add({ title: "Einstellungen gespeichert", color: "green" });
@@ -935,7 +946,7 @@ export const useBookingApi = () => {
     getAll: async () => {
       return await apiCall(
         () => $fetch(`${baseURL}/subscriptions`, { headers: getAuthHeaders() }),
-        "subs.getAll"
+        "subs.getAll",
       );
     },
 
@@ -947,7 +958,7 @@ export const useBookingApi = () => {
             headers: getAuthHeaders(),
             body: data,
           }),
-        "subs.create"
+        "subs.create",
       );
       if (res) toast.add({ title: "Abo erstellt", color: "green" });
       return res;
@@ -964,7 +975,7 @@ export const useBookingApi = () => {
             },
             body: data,
           }),
-        "subs.update"
+        "subs.update",
       );
       if (res) toast.add({ title: "Abo aktualisiert", color: "green" });
       return res;
@@ -977,7 +988,7 @@ export const useBookingApi = () => {
             method: "DELETE",
             headers: getAuthHeaders(),
           }),
-        "subs.delete"
+        "subs.delete",
       );
       if (res) toast.add({ title: "Abo gelöscht", color: "green" });
       return res;

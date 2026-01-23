@@ -12,7 +12,7 @@
         </div>
 
         <div class="h-8 w-px bg-slate-200 mx-2 hidden md:block"></div>
-        
+
         <select
           v-model="selectedResourceId"
           class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2 min-w-[180px]"
@@ -92,7 +92,7 @@
           @drop-booking="handleDrop"
           @drag-start="handleDragStart"
         />
-        
+
         <BookingList
           v-else
           :bookings="filteredBookings"
@@ -117,6 +117,7 @@
             @close="selectedBooking = null"
             @edit="openEditModal"
             @cancel="handleCancel"
+            @delete="handleDeletion"
             @update-status="refreshData"
           />
         </div>
@@ -147,7 +148,7 @@ const loading = ref(false);
 const currentView = ref("calendar");
 const currentDate = ref(new Date());
 const bookings = ref([]);
-const resources = ref([]); 
+const resources = ref([]);
 const selectedResourceId = ref("all");
 const selectedBooking = ref(null);
 const draggedBooking = ref<any | null>(null);
@@ -162,13 +163,13 @@ const currentMonthLabel = computed(() =>
   currentDate.value.toLocaleDateString("de-DE", {
     month: "long",
     year: "numeric",
-  })
+  }),
 );
 
 const filteredBookings = computed(() => {
   if (selectedResourceId.value === "all") return bookings.value;
   return bookings.value.filter(
-    (b: any) => b.resource_id == selectedResourceId.value
+    (b: any) => b.resource_id == selectedResourceId.value,
   );
 });
 
@@ -178,18 +179,15 @@ const loadBookings = async () => {
   try {
     let params: any = {};
 
-    // LOGIK-ÄNDERUNG:
-    // Wenn Listenansicht: Lade ALLE Buchungen (kein Start/Ende).
-    // Wenn Kalenderansicht: Lade Bereich +/- 2 Monate für Performance.
-    if (currentView.value === 'calendar') {
-        const start = new Date(currentDate.value);
-        start.setMonth(start.getMonth() - 2);
-        const end = new Date(currentDate.value);
-        end.setMonth(end.getMonth() + 2);
-        
-        params.start = start.toISOString();
-        params.end = end.toISOString();
-    } 
+    if (currentView.value === "calendar") {
+      const start = new Date(currentDate.value);
+      start.setMonth(start.getMonth() - 2);
+      const end = new Date(currentDate.value);
+      end.setMonth(end.getMonth() + 2);
+
+      params.start = start.toISOString();
+      params.end = end.toISOString();
+    }
     // else: params bleibt leer -> Backend liefert alles
 
     const [bookingsData, resourcesData] = await Promise.all([
@@ -206,15 +204,15 @@ const loadBookings = async () => {
 
 // Reload when view changes (to switch between partial load and full load)
 watch(currentView, () => {
-    loadBookings();
+  loadBookings();
 });
 
 const changeMonth = (delta: number) => {
   const d = new Date(currentDate.value);
   d.setMonth(d.getMonth() + delta);
   currentDate.value = d;
-  if (currentView.value === 'calendar') {
-      loadBookings();
+  if (currentView.value === "calendar") {
+    loadBookings();
   }
 };
 
@@ -241,7 +239,7 @@ const refreshData = async () => {
   await loadBookings();
   if (selectedBooking.value) {
     const updated = bookings.value.find(
-      (b: any) => b.id === selectedBooking.value.id
+      (b: any) => b.id === selectedBooking.value.id,
     );
     if (updated) selectedBooking.value = updated;
   }
@@ -250,6 +248,13 @@ const refreshData = async () => {
 const handleCancel = async (b: any) => {
   if (confirm("Wirklich stornieren?")) {
     await api.bookings.cancel(b.id);
+    refreshData();
+  }
+};
+
+const handleDeletion = async (b: any) => {
+  if (confirm("Wirklich löschen?")) {
+    await api.bookings.delete(b.id);
     refreshData();
   }
 };
@@ -263,11 +268,13 @@ const handleDrop = async ({ date, event }: any) => {
   const durationMs = originalEnd.getTime() - originalStart.getTime();
   const newStart = new Date(date);
   newStart.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
-  const newEnd = new Date(newStart.getTime() + Math.max(durationMs, 60 * 60 * 1000));
+  const newEnd = new Date(
+    newStart.getTime() + Math.max(durationMs, 60 * 60 * 1000),
+  );
   try {
     await api.bookings.update(draggedBooking.value.id, {
       start_at: formatDatetime(newStart),
-      end_at: formatDatetime(newEnd)
+      end_at: formatDatetime(newEnd),
     });
     await refreshData();
   } finally {

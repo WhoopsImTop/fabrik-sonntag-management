@@ -175,9 +175,10 @@
               class="bg-neutral-50 text-neutral-500 font-medium border-b border-neutral-100"
             >
               <tr>
-                <th class="px-6 py-3 w-[45%]">Beschreibung</th>
-                <th class="px-4 py-3 text-right w-[15%]">Menge</th>
-                <th class="px-4 py-3 text-right w-[20%]">Preis (€)</th>
+                <th class="px-6 py-3 w-[35%]">Beschreibung</th>
+                <th class="px-4 py-3 text-right w-[12%]">Menge</th>
+                <th class="px-4 py-3 text-right w-[15%]">Preis (€)</th>
+                <th class="px-4 py-3 text-right w-[12%]">MwSt.</th>
                 <th class="px-6 py-3 text-right w-[15%]">Gesamt</th>
                 <th v-if="isEditing" class="w-[5%]"></th>
               </tr>
@@ -189,13 +190,45 @@
                 class="group hover:bg-neutral-50/50"
               >
                 <td class="px-6 py-3">
-                  <input
-                    v-if="isEditing"
-                    type="text"
-                    v-model="item.description"
-                    class="w-full bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm placeholder-neutral-300"
-                    placeholder="Beschreibung..."
-                  />
+                  <div v-if="isEditing" class="relative">
+                    <input
+                      type="text"
+                      v-model="item.description"
+                      @focus="focusRow(index)"
+                      @blur="blurRow(index)"
+                      class="w-full bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm placeholder-neutral-300"
+                      placeholder="Beschreibung..."
+                    />
+
+                    <div
+                      v-if="focusedRowIndex === index && suggestions.length > 0"
+                      class="absolute z-50 left-0 top-full mt-1 w-full min-w-[300px] bg-white rounded-lg shadow-xl border border-neutral-100 max-h-60 overflow-y-auto"
+                      @mousedown.prevent
+                    >
+                      <div
+                        v-for="sugg in suggestions"
+                        :key="sugg.id"
+                        @click="applySuggestion(index, sugg)"
+                        class="px-3 py-2.5 hover:bg-neutral-50 cursor-pointer border-b border-neutral-50 last:border-0 flex justify-between items-center group/item"
+                      >
+                        <div>
+                          <div class="text-sm font-medium text-neutral-900">
+                            {{ sugg.label }}
+                          </div>
+                          <div
+                            class="text-[10px] uppercase tracking-wider text-neutral-400 font-semibold"
+                          >
+                            {{ sugg.type }}
+                          </div>
+                        </div>
+                        <div
+                          class="text-xs font-bold text-neutral-700 bg-neutral-100 px-2 py-1 rounded group-hover/item:bg-white"
+                        >
+                          {{ formatMoney(sugg.price) }} €
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   <span v-else class="font-medium text-neutral-900">{{
                     item.description
                   }}</span>
@@ -224,6 +257,21 @@
                     class="w-full text-right bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
                   />
                   <span v-else>€{{ formatMoney(item.amount) }}</span>
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  <select
+                    v-if="isEditing"
+                    v-model="item.vat_rate"
+                    class="w-full text-right bg-transparent border border-neutral-200 rounded focus:border-neutral-400 focus:ring-0 px-2 py-1 text-sm"
+                  >
+                    <option :value="0">0%</option>
+                    <option :value="0.07">7%</option>
+                    <option :value="0.19">19%</option>
+                  </select>
+                  <span v-else class="text-neutral-600"
+                    >{{ Math.round((item.vat_rate || 0.19) * 100) }}%</span
+                  >
                 </td>
 
                 <td class="px-6 py-3 text-right font-medium text-neutral-900">
@@ -271,7 +319,7 @@
 
             <tfoot class="bg-neutral-50 border-t border-neutral-200">
               <tr>
-                <td colspan="3" class="px-6 py-3 text-right text-neutral-600">
+                <td colspan="4" class="px-6 py-3 text-right text-neutral-600">
                   Netto
                 </td>
                 <td class="px-6 py-3 text-right text-neutral-900">
@@ -280,7 +328,7 @@
                 <td v-if="isEditing"></td>
               </tr>
               <tr>
-                <td colspan="3" class="px-6 py-1 text-right text-neutral-600">
+                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">
                   USt (19%)
                 </td>
                 <td class="px-6 py-1 text-right text-neutral-900">
@@ -290,7 +338,7 @@
               </tr>
               <tr>
                 <td
-                  colspan="3"
+                  colspan="4"
                   class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
                 >
                   Gesamtbetrag
@@ -304,23 +352,6 @@
               </tr>
             </tfoot>
           </table>
-        </div>
-
-        <div
-          class="bg-white border border-neutral-200 rounded-xl shadow-sm p-6"
-        >
-          <label class="block text-sm font-medium text-neutral-700 mb-2"
-            >Anmerkungen</label
-          >
-          <textarea
-            v-if="isEditing"
-            v-model="form.notes"
-            rows="4"
-            class="w-full border-gray-300 rounded-lg shadow-sm focus:border-neutral-900 focus:ring-neutral-900 text-sm"
-          ></textarea>
-          <p v-else class="text-neutral-600 text-sm whitespace-pre-wrap">
-            {{ invoice.notes || "Keine Anmerkungen." }}
-          </p>
         </div>
       </div>
 
@@ -380,68 +411,121 @@
                 class="block text-xs font-medium text-neutral-500 uppercase"
                 >Kunde</label
               >
-              
+
               <div v-if="isEditing" class="mt-2 space-y-2">
-                <div v-if="form.user_id" class="flex items-center justify-between p-2 border border-neutral-200 rounded-md bg-neutral-50">
-                   <div class="flex items-center gap-2 overflow-hidden">
-                      <div class="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs font-bold">
-                         User
-                      </div>
-                      <div class="truncate text-sm">
-                         <span class="font-medium text-neutral-900">{{ form.user_preview?.username || 'User ID: ' + form.user_id }}</span>
-                         <span class="text-xs text-neutral-500 ml-1">({{ form.user_preview?.email || '...' }})</span>
-                      </div>
-                   </div>
-                   <button @click="removeUser" class="text-red-500 hover:text-red-700 p-1">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                   </button>
+                <div
+                  v-if="form.user_id"
+                  class="flex items-center justify-between p-2 border border-neutral-200 rounded-md bg-neutral-50"
+                >
+                  <div class="flex items-center gap-2 overflow-hidden">
+                    <div
+                      class="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs font-bold"
+                    >
+                      User
+                    </div>
+                    <div class="truncate text-sm">
+                      <span class="font-medium text-neutral-900">{{
+                        form.user_preview?.username ||
+                        "User ID: " + form.user_id
+                      }}</span>
+                      <span class="text-xs text-neutral-500 ml-1"
+                        >({{ form.user_preview?.email || "..." }})</span
+                      >
+                    </div>
+                  </div>
+                  <button
+                    @click="removeUser"
+                    class="text-red-500 hover:text-red-700 p-1"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
 
                 <div v-else class="relative">
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     v-model="userSearchQuery"
                     @input="handleUserSearch"
                     placeholder="Name oder E-Mail suchen..."
                     class="block w-full text-sm border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900"
                   />
-                  <div v-if="userSearchResults.length > 0" class="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                     <div 
-                        v-for="user in userSearchResults" 
-                        :key="user.id"
-                        @click="selectUser(user)"
-                        class="px-3 py-2 hover:bg-neutral-50 cursor-pointer flex flex-col border-b border-neutral-50 last:border-0"
-                     >
-                        <span class="text-sm font-medium text-neutral-900">{{ user.username }}</span>
-                        <span class="text-xs text-neutral-500">{{ user.email }}</span>
-                     </div>
+                  <div
+                    v-if="userSearchResults.length > 0"
+                    class="absolute z-10 w-full mt-1 bg-white border border-neutral-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                  >
+                    <div
+                      v-for="user in userSearchResults"
+                      :key="user.id"
+                      @click="selectUser(user)"
+                      class="px-3 py-2 hover:bg-neutral-50 cursor-pointer flex flex-col border-b border-neutral-50 last:border-0"
+                    >
+                      <span class="text-sm font-medium text-neutral-900">{{
+                        user.username
+                      }}</span>
+                      <span class="text-xs text-neutral-500">{{
+                        user.email
+                      }}</span>
+                    </div>
                   </div>
                   <div v-if="isSearchingUsers" class="absolute right-3 top-2.5">
-                     <svg class="animate-spin w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg
+                      class="animate-spin w-4 h-4 text-neutral-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
                   </div>
                 </div>
-                <p class="text-xs text-neutral-400">Lassen Sie das Feld leer für "Gast / Manuell".</p>
+                <p class="text-xs text-neutral-400">
+                  Lassen Sie das Feld leer für "Gast / Manuell".
+                </p>
               </div>
 
               <div v-else>
-                 <div v-if="invoice.User" class="mt-2 flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-600">
-                       {{ invoice.User.username?.substring(0, 2).toUpperCase() }}
-                    </div>
-                    <div class="overflow-hidden">
-                       <p class="text-sm font-medium text-neutral-900 truncate">
-                          {{ invoice.User.username }}
-                       </p>
-                       <p class="text-xs text-neutral-500 truncate">
-                          {{ invoice.User.email }}
-                       </p>
-                    </div>
-                 </div>
-                 <p v-else class="mt-1 text-sm text-neutral-500 italic">
-                    Gast / Manuell
-                 </p>
+                <div v-if="invoice.User" class="mt-2 flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-600"
+                  >
+                    {{ invoice.User.username?.substring(0, 2).toUpperCase() }}
+                  </div>
+                  <div class="overflow-hidden">
+                    <p class="text-sm font-medium text-neutral-900 truncate">
+                      {{ invoice.User.username }}
+                    </p>
+                    <p class="text-xs text-neutral-500 truncate">
+                      {{ invoice.User.email }}
+                    </p>
+                  </div>
+                </div>
+                <p v-else class="mt-1 text-sm text-neutral-500 italic">
+                  Gast / Manuell
+                </p>
               </div>
-
             </div>
           </div>
         </div>
@@ -451,8 +535,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 const route = useRoute();
 const router = useRouter();
 const api = useBookingApi();
@@ -469,10 +553,23 @@ const form = ref({
   due_date: "",
   user_id: null as number | null,
   user_preview: null as any,
-  items: [] as Array<{ description: string; quantity: number; amount: number; vat_rate?: number }>,
+  items: [] as Array<{
+    description: string;
+    quantity: number;
+    amount: number;
+    vat_rate?: number;
+  }>,
 });
 
 const invoiceId = route.params.id as string;
+
+// Data for autocomplete
+const resources = ref<any[]>([]);
+const services = ref<any[]>([]);
+const allPricing = ref<any[]>([]);
+
+// Autocomplete state
+const focusedRowIndex = ref<number | null>(null);
 
 // Search State
 const userSearchQuery = ref("");
@@ -480,13 +577,52 @@ const userSearchResults = ref<any[]>([]);
 const isSearchingUsers = ref(false);
 let searchTimeout: any = null;
 
+// --- Computed Products for Autocomplete ---
+const allProducts = computed(() => {
+  const list = [];
+  services.value.forEach((s) =>
+    list.push({
+      id: `svc-${s.id}`,
+      label: s.name,
+      price: s.price_per_unit,
+      type: "Service",
+    }),
+  );
+  resources.value.forEach((r) => {
+    const plans = allPricing.value.filter((p) => p.resource_id === r.id);
+    if (plans.length > 0) {
+      plans.forEach((plan) =>
+        list.push({
+          id: `res-${r.id}-p-${plan.id}`,
+          label: `${r.name} - ${plan.name}`,
+          price: plan.price,
+          type: "Raum",
+        }),
+      );
+    } else {
+      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum" });
+    }
+  });
+  return list;
+});
+
+const suggestions = computed(() => {
+  if (focusedRowIndex.value === null || !isEditing.value) return [];
+  const currentInput =
+    form.value.items[focusedRowIndex.value]?.description?.toLowerCase() || "";
+  if (!currentInput) return allProducts.value.slice(0, 5);
+  return allProducts.value
+    .filter((p) => p.label.toLowerCase().includes(currentInput))
+    .slice(0, 8);
+});
+
 // --- Computed Totals (Live Berechnung) ---
 const totals = computed(() => {
   const net = form.value.items.reduce((sum, item) => {
     return sum + (item.quantity || 0) * (item.amount || 0);
   }, 0);
   const tax = form.value.items.reduce((sum, item) => {
-    const rate = typeof item.vat_rate === 'number' ? item.vat_rate : 0.19;
+    const rate = typeof item.vat_rate === "number" ? item.vat_rate : 0.19;
     return sum + (item.quantity || 0) * (item.amount || 0) * rate;
   }, 0);
   return {
@@ -500,6 +636,16 @@ const totals = computed(() => {
 const loadInvoice = async () => {
   loading.value = true;
   try {
+    // Load resources, services, and pricing for autocomplete
+    const [r, s, p] = await Promise.all([
+      api.resources.getAll(),
+      api.services.getAll(),
+      api.pricing.getAll(),
+    ]);
+    resources.value = r || [];
+    services.value = s || [];
+    allPricing.value = p || [];
+
     const data = await api.sales.getOne(invoiceId);
     if (data) {
       invoice.value = data;
@@ -510,7 +656,7 @@ const loadInvoice = async () => {
       form.value.due_date = data.due_date
         ? new Date(data.due_date).toISOString().split("T")[0]
         : "";
-      
+
       form.value.user_id = data.user_id;
       form.value.user_preview = data.User;
 
@@ -520,7 +666,7 @@ const loadInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
-          vat_rate: typeof i.vat_rate === 'number' ? Number(i.vat_rate) : 0.19
+          vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       } else {
         form.value.items = [];
@@ -545,39 +691,59 @@ const toggleEditMode = () => {
 
 // User Search Logic
 const handleUserSearch = () => {
-    if (searchTimeout) clearTimeout(searchTimeout);
-    if (!userSearchQuery.value || userSearchQuery.value.length < 2) {
-        userSearchResults.value = [];
-        return;
+  if (searchTimeout) clearTimeout(searchTimeout);
+  if (!userSearchQuery.value || userSearchQuery.value.length < 2) {
+    userSearchResults.value = [];
+    return;
+  }
+
+  isSearchingUsers.value = true;
+  searchTimeout = setTimeout(async () => {
+    try {
+      const users = await api.users.getAll();
+      const q = userSearchQuery.value.toLowerCase();
+      userSearchResults.value = users
+        .filter(
+          (u: any) =>
+            u.username?.toLowerCase().includes(q) ||
+            u.email?.toLowerCase().includes(q),
+        )
+        .slice(0, 5);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      isSearchingUsers.value = false;
     }
-    
-    isSearchingUsers.value = true;
-    searchTimeout = setTimeout(async () => {
-        try {
-            const users = await api.users.getAll(); 
-            const q = userSearchQuery.value.toLowerCase();
-            userSearchResults.value = users.filter((u: any) => 
-                u.username?.toLowerCase().includes(q) || 
-                u.email?.toLowerCase().includes(q)
-            ).slice(0, 5); 
-        } catch(e) {
-            console.error(e);
-        } finally {
-            isSearchingUsers.value = false;
-        }
-    }, 300);
+  }, 300);
 };
 
 const selectUser = (user: any) => {
-    form.value.user_id = user.id;
-    form.value.user_preview = user;
-    userSearchQuery.value = "";
-    userSearchResults.value = [];
+  form.value.user_id = user.id;
+  form.value.user_preview = user;
+  userSearchQuery.value = "";
+  userSearchResults.value = [];
 };
 
 const removeUser = () => {
-    form.value.user_id = null;
-    form.value.user_preview = null;
+  form.value.user_id = null;
+  form.value.user_preview = null;
+};
+
+// Autocomplete functions
+const focusRow = (index: number) => {
+  focusedRowIndex.value = index;
+};
+const blurRow = (index: number) => {
+  setTimeout(() => {
+    if (focusedRowIndex.value === index) focusedRowIndex.value = null;
+  }, 200);
+};
+
+const applySuggestion = (index: number, suggestion: any) => {
+  const item = form.value.items[index];
+  item.description = suggestion.label;
+  item.amount = suggestion.price;
+  focusedRowIndex.value = null;
 };
 
 const addItem = () => {
@@ -585,7 +751,7 @@ const addItem = () => {
     description: "",
     quantity: 1,
     amount: 0,
-    vat_rate: 0.19
+    vat_rate: 0.19,
   });
 };
 
@@ -617,7 +783,7 @@ const saveInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
-          vat_rate: typeof i.vat_rate === 'number' ? Number(i.vat_rate) : 0.19
+          vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       }
       form.value.user_preview = res.User;
@@ -654,7 +820,7 @@ const handleDownload = async () => {
     link.href = url;
     link.setAttribute(
       "download",
-      `Rechnung-${invoice.value.invoice_number}.pdf`
+      `Rechnung-${invoice.value.invoice_number}.pdf`,
     );
     document.body.appendChild(link);
     link.click();
@@ -688,7 +854,7 @@ const getStatusLabel = (status: string) => {
     SENT: "Versendet",
     DRAFT: "Entwurf",
     OVERDUE: "Überfällig",
-    DELETED: "Storniert"
+    DELETED: "Storniert",
   };
   return map[status] || status;
 };

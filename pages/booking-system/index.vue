@@ -136,7 +136,7 @@
               Neueste Buchungen
             </h2>
             <NuxtLink
-              to="/booking-system/bookings"
+              to="/booking-system/calendar"
               class="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
             >
               Alle anzeigen

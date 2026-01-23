@@ -14,13 +14,8 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
         </button>
         <div>
-          <h1 class="text-2xl font-bold text-neutral-900 flex items-center gap-2">
-            {{ isNew ? 'Neues Abonnement' : 'Abonnement bearbeiten' }}
-            <span v-if="!isNew" :class="['px-2.5 py-0.5 rounded-full text-xs font-medium border', getStatusClass(form.status)]">
-              {{ getStatusLabel(form.status) }}
-            </span>
-          </h1>
-          <p class="text-sm text-neutral-500 mt-1" v-if="!isNew">ID #{{ route.params.id }}</p>
+          <h1 class="text-2xl font-bold text-neutral-900">Neue Rechnung erstellen</h1>
+          <p class="text-sm text-neutral-500 mt-1">Erstelle eine neue Rechnung mit Services, Resourcen oder Freitext</p>
         </div>
       </div>
 
@@ -38,13 +33,14 @@
           class="px-4 py-2 text-sm font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           <svg v-if="saving" class="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          {{ isNew ? 'Erstellen' : 'Speichern' }}
+          Erstellen
         </button>
       </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       
+      <!-- Kunde Auswahl -->
       <div class="lg:col-span-1 space-y-6">
         <div class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
           <div class="p-5 border-b border-neutral-100 bg-neutral-50/50 flex justify-between items-center">
@@ -53,7 +49,7 @@
               Kunde
             </h3>
             <span v-if="form.user_id" class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded-full">Ausgewählt</span>
-            <span v-else class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-[10px] font-bold uppercase rounded-full">Neu</span>
+            <span v-else class="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-[10px] font-bold uppercase rounded-full">Optional</span>
           </div>
 
           <div class="p-5 space-y-5">
@@ -65,8 +61,8 @@
                   v-model="userSearchQuery"
                   @focus="showUserDropdown = true"
                   class="w-full pl-9 pr-8 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm text-neutral-900 focus:bg-white focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-all placeholder:text-neutral-400"
-                  placeholder="Name oder Firma..."
-                />
+                  placeholder="Name oder E-Mail..."
+                >
                 <div class="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
@@ -141,49 +137,35 @@
         </div>
       </div>
 
+      <!-- Positionen & Einstellungen -->
       <div class="lg:col-span-2 space-y-6">
         
+        <!-- Einstellungen -->
         <div class="bg-white border border-neutral-200 rounded-xl shadow-sm p-6">
           <h3 class="font-semibold text-neutral-900 mb-4">Einstellungen</h3>
           
           <div class="space-y-4">
-             <div>
-                <label class="block text-xs font-medium text-neutral-500 uppercase mb-1">Titel / Referenz</label>
-                <input 
-                  v-model="form.description" 
-                  type="text" 
-                  class="w-full text-base font-medium text-neutral-900 placeholder-neutral-300 border border-neutral-200 rounded-lg focus:border-neutral-900 focus:ring-neutral-900 px-3 py-2"
-                  placeholder="z.B. Miete Büro 101 - Jahr 2026"
-                />
-             </div>
-
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-               <div>
-                  <label class="block text-xs font-medium text-neutral-500 uppercase mb-1">Intervall</label>
-                  <select v-model="form.interval" class="block w-full pl-3 pr-10 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900 bg-white">
-                    <option value="MONTHLY">Monatlich</option>
-                    <option value="YEARLY">Jährlich</option>
-                  </select>
-               </div>
-
-               <div>
-                  <label class="block text-xs font-medium text-neutral-500 uppercase mb-1">Nächste Fälligkeit</label>
-                  <input type="date" v-model="form.next_billing_date" class="p-2 block w-full text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900" />
-               </div>
-
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div>
                   <label class="block text-xs font-medium text-neutral-500 uppercase mb-1">Status</label>
-                  <select v-model="form.status" class="block w-full pl-3 pr-10 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900">
-                    <option value="ACTIVE">Aktiv</option>
-                    <option value="PAUSED">Pausiert</option>
-                    <option value="CANCELLED">Beendet</option>
+                  <select v-model="form.status" class="block w-full pl-3 pr-10 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900 bg-white">
+                    <option value="DRAFT">Entwurf</option>
+                    <option value="SENT">Versendet</option>
+                    <option value="PAID">Bezahlt</option>
+                    <option value="OVERDUE">Überfällig</option>
                   </select>
+               </div>
+
+               <div>
+                  <label class="block text-xs font-medium text-neutral-500 uppercase mb-1">Fälligkeitsdatum</label>
+                  <input type="date" v-model="form.due_date" class="block py-2 px-2 w-full text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900" />
                </div>
              </div>
           </div>
         </div>
 
-        <div class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <!-- Positionen Tabelle -->
+        <div class="bg-white border border-neutral-200 rounded-xl shadow-sm flex flex-col">
            <div class="p-6 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/30">
              <h3 class="font-semibold text-neutral-900">Positionen</h3>
              <button @click="addItem" class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
@@ -217,7 +199,7 @@
                       @focus="focusRow(index)"
                       @blur="blurRow(index)"
                       class="w-full bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm placeholder-neutral-300"
-                      placeholder="Leistung eingeben..."
+                      placeholder="Leistung eingeben oder suchen..."
                     />
                     
                     <div v-if="focusedRowIndex === index && suggestions.length > 0" 
@@ -277,7 +259,7 @@
                 <td></td>
               </tr>
               <tr>
-                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">USt (19%)</td>
+                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">USt (dynamisch)</td>
                 <td class="px-6 py-1 text-right text-neutral-900">€{{ formatMoney(totals.tax) }}</td>
                 <td></td>
               </tr>
@@ -295,14 +277,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
-const route = useRoute()
 const router = useRouter()
 const api = useBookingApi()
 
 // --- STATE ---
-const isNew = computed(() => route.params.id === 'new')
 const loading = ref(true)
 const saving = ref(false)
 
@@ -316,17 +296,16 @@ const allPricing = ref<any[]>([])
 const userSearchQuery = ref('')
 const showUserDropdown = ref(false)
 
-// Formular für das Abo
+// Formular für die Rechnung
 const form = ref({
   user_id: '' as string | number,
-  description: '',
-  interval: 'MONTHLY',
-  status: 'ACTIVE',
-  next_billing_date: new Date().toISOString().split('T')[0],
+  status: 'DRAFT',
+  due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 14 Tage
+  notes: '',
   items: [{ description: '', quantity: 1, amount: 0, vat_rate: 0.19 }]
 })
 
-// Formular für den Kunden
+// Formular für neuen Kunden
 const customerForm = ref({
   first_name: '',
   last_name: '',
@@ -394,34 +373,17 @@ const totals = computed(() => {
 // --- METHODS ---
 
 const formatMoney = (val: any) => Number(val || 0).toFixed(2)
-const getStatusLabel = (s: string) => ({'ACTIVE': 'Aktiv', 'PAUSED': 'Pausiert', 'CANCELLED': 'Beendet'}[s] || s)
-const getStatusClass = (s: string) => ({
-  'ACTIVE': 'bg-green-100 text-green-700 border-green-200',
-  'PAUSED': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  'CANCELLED': 'bg-gray-100 text-gray-700 border-gray-200'
-}[s] || 'bg-gray-100 text-gray-700 border-gray-200')
 
 // User Handling
 const selectUser = (user: any) => {
   form.value.user_id = user.id
   userSearchQuery.value = user.details?.company || user.username
   showUserDropdown.value = false
-  
-  customerForm.value = {
-    first_name: user.details?.first_name || '',
-    last_name: user.details?.last_name || '',
-    company: user.details?.company || '',
-    email: user.email || '',
-    street: user.details?.street || '',
-    zip_code: user.details?.zip_code || '',
-    city: user.details?.city || ''
-  }
 }
 
 const clearUserSelection = () => {
   form.value.user_id = ''
   userSearchQuery.value = ''
-  customerForm.value = { first_name: '', last_name: '', company: '', email: '', street: '', zip_code: '', city: '' }
 }
 
 // Table Handling
@@ -455,28 +417,6 @@ const loadData = async () => {
     resources.value = r || []
     services.value = s || []
     allPricing.value = p || []
-
-    if (!isNew.value) {
-      const allSubs = await api.subscriptions.getAll()
-      const sub = allSubs?.find((s:any) => s.id == route.params.id)
-      if (sub) {
-        form.value = {
-          user_id: sub.user_id,
-          description: sub.description,
-          interval: sub.interval,
-          status: sub.status,
-          next_billing_date: sub.next_billing_date,
-          items: sub.LineItems?.map((li: any) => ({
-            description: li.description,
-            quantity: li.quantity,
-            amount: li.amount,
-            vat_rate: li.vat_rate || 0.19
-          })) || []
-        }
-        const linkedUser = users.value.find(u => u.id === sub.user_id)
-        if (linkedUser) selectUser(linkedUser)
-      }
-    }
   } catch (e) { console.error(e) } 
   finally { loading.value = false }
 }
@@ -485,33 +425,23 @@ const save = async () => {
   saving.value = true
   try {
     let finalUserId = form.value.user_id
-    if (!form.value.next_billing_date) {
-      alert('Bitte ein nächstes Abrechnungsdatum angeben.')
-      saving.value = false
-      return
-    }
-    
+
+    // Create new customer if no user selected but form filled
     if (!finalUserId) {
-       if (!customerForm.value.first_name || !customerForm.value.email) {
-         alert("Bitte wähle einen Kunden aus oder fülle mindestens Name und E-Mail aus, um einen neuen anzulegen.")
-         saving.value = false
-         return
-       }
-
-       const userPayload = {
-         username: `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim() || customerForm.value.company,
-         email: customerForm.value.email,
-         password: Math.random().toString(36).slice(-10),
-         role: 'USER',
-         details: { ...customerForm.value }
-       }
-
-       const newUser = await api.users.create(userPayload)
-       if(newUser && newUser.id) {
-         finalUserId = newUser.id
-       } else {
-         throw new Error("Fehler beim Erstellen des Kunden.")
-       }
+      if (customerForm.value.first_name || customerForm.value.email) {
+        const userPayload = {
+          username: `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim() || customerForm.value.company,
+          email: customerForm.value.email,
+          password: Math.random().toString(36).slice(-10),
+          role: 'USER',
+          details: { ...customerForm.value }
+        }
+        
+        const newUser = await api.users.create(userPayload)
+        if (newUser && newUser.id) {
+          finalUserId = newUser.id
+        }
+      }
     }
 
     const cleanItems = form.value.items.filter(i => i.description.trim() !== '' || i.amount > 0)
@@ -521,14 +451,26 @@ const save = async () => {
       return
     }
 
-    const payload = { ...form.value, user_id: finalUserId, items: cleanItems }
+    const payload = { 
+      user_id: finalUserId || null,
+      status: form.value.status,
+      due_date: form.value.due_date,
+      notes: form.value.notes,
+      items: cleanItems 
+    }
 
-    if (isNew.value) await api.subscriptions.create(payload)
-    else await api.subscriptions.update(Number(route.params.id), payload)
+    const result = await api.sales.create(payload)
     
-    router.push('/booking-system/subscriptions')
+    if (result && result.invoice?.id) {
+      router.push(`/booking-system/invoices/${result.invoice.id}`)
+    } else {
+      router.push('/booking-system/invoices')
+    }
 
-  } catch (e) { console.error(e) } 
+  } catch (e) { 
+    console.error(e)
+    alert('Fehler beim Erstellen der Rechnung')
+  } 
   finally { saving.value = false }
 }
 
