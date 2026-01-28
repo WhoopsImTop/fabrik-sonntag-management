@@ -136,6 +136,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import { useRoute } from "vue-router";
 import BookingCalendar from "@/components/booking/BookingCalendar.vue";
 import BookingList from "@/components/booking/BookingList.vue";
 import BookingDetails from "@/components/booking/BookingDetails.vue";
@@ -153,6 +154,7 @@ const selectedResourceId = ref("all");
 const selectedBooking = ref(null);
 const draggedBooking = ref<any | null>(null);
 const createDate = ref<Date | null>(null);
+const route = useRoute();
 
 // Modal State
 const isModalOpen = ref(false);
@@ -291,5 +293,24 @@ const formatDatetime = (d: Date) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-onMounted(() => loadBookings());
+onMounted(async () => {
+  await loadBookings();
+
+  const rawId = route.query.id;
+  const id = rawId !== undefined ? Number(rawId) : null;
+
+  if (!id || Number.isNaN(id)) {
+    console.warn("Ungültige Booking-ID:", rawId);
+    return;
+  }
+
+  const foundBooking = bookings.value.find((booking) => booking.id === id);
+
+  if (!foundBooking) {
+    console.warn("Keine Buchung mit dieser ID gefunden:", id);
+    return;
+  }
+
+  selectedBooking.value = foundBooking;
+});
 </script>
