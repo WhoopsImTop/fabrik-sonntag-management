@@ -255,6 +255,20 @@
     </div>
 
     <div class="p-4 border-t border-slate-100 bg-white space-y-3 shrink-0">
+      <div class="mb-4">
+        <input
+          type="checkbox"
+          id="sendMail"
+          v-model="shouldSendEmail"
+          class="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+        />
+        <label
+          for="sendMail"
+          class="text-xs text-slate-600 font-medium cursor-pointer"
+        >
+          Kunden per E-Mail benachrichtigen
+        </label>
+      </div>
       <div v-if="booking.status === 'PENDING'" class="grid grid-cols-2 gap-3">
         <button
           @click="updateStatus('CONFIRMED')"
@@ -276,7 +290,7 @@
           Bestätigen
         </button>
         <button
-          @click="handleCancel"
+          @click="handleReject"
           class="col-span-1 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-all"
         >
           Ablehnen
@@ -348,6 +362,8 @@
 <script setup lang="ts">
 import { ref, h } from "vue";
 const api = useBookingApi();
+
+const shouldSendEmail = ref(true);
 
 const props = defineProps<{ booking: any }>();
 const emit = defineEmits([
@@ -443,15 +459,33 @@ const statusStyles: any = {
 
 const updateStatus = async (newStatus: string) => {
   try {
-    await api.bookings.update(props.booking.id, { status: newStatus });
+    await api.bookings.update(
+      props.booking.id,
+      { status: newStatus },
+      shouldSendEmail.value,
+    );
     emit("update-status");
   } catch (e) {
     alert("Fehler beim Status-Update");
   }
 };
 
-const handleCancel = () => {
+const handleReject = async () => {
+  try {
+    await api.bookings.update(
+      props.booking.id,
+      { status: "CANCELLED" },
+      shouldSendEmail.value,
+    );
+    emit("update-status");
+  } catch (e) {
+    alert("Fehler beim Status-Update");
+  }
+};
+
+const handleCancel = async () => {
   if (confirm("Möchten Sie diese Buchung wirklich stornieren?")) {
+    await api.bookings.cancel(props.booking.id, shouldSendEmail.value);
     emit("cancel", props.booking);
   }
 };

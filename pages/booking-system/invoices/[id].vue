@@ -459,7 +459,7 @@
                     v-model="userSearchQuery"
                     @input="handleUserSearch"
                     placeholder="Name oder E-Mail suchen..."
-                    class="block w-full text-sm border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900"
+                    class="block w-full text-sm border border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900 py-2 px-3"
                   />
                   <div
                     v-if="userSearchResults.length > 0"

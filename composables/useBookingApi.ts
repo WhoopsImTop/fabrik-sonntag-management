@@ -698,7 +698,7 @@ export const useBookingApi = () => {
     create: async (data: any) => {
       const result = await apiCall(
         () =>
-          $fetch(`${baseURL}/bookings/createBooking`, {
+          $fetch(`${baseURL}/bookings/createBooking?sendNotificationEmail=false`, {
             method: "POST",
             headers: getAuthHeaders(),
             body: data,
@@ -724,7 +724,11 @@ export const useBookingApi = () => {
       return result;
     },
 
-    update: async (id: number, data: any) => {
+    update: async (
+      id: number,
+      data: any,
+      sendNotificationEmail: boolean = true,
+    ): Promise<any> => {
       const result = await apiCall(
         () =>
           $fetch(`${baseURL}/bookings/${id}`, {
@@ -733,6 +737,8 @@ export const useBookingApi = () => {
               ...getAuthHeaders(),
               "Content-Type": "application/json",
             },
+            // Query Params an die URL hängen
+            params: { sendNotificationEmail },
             body: data,
           }),
         "updateBooking",
@@ -742,7 +748,10 @@ export const useBookingApi = () => {
       return result;
     },
 
-    cancel: async (id: number, data: any) => {
+    cancel: async (
+      id: number,
+      sendNotificationEmail: boolean = true,
+    ): Promise<any> => {
       const result = await apiCall(
         () =>
           $fetch(`${baseURL}/bookings/cancel/${id}`, {
@@ -751,6 +760,8 @@ export const useBookingApi = () => {
               ...getAuthHeaders(),
               "Content-Type": "application/json",
             },
+            // Auch hier als Query Param
+            params: { sendNotificationEmail },
           }),
         "cancelBooking",
       );

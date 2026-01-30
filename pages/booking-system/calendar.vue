@@ -227,6 +227,7 @@ const openCreateModal = (date?: Date) => {
 };
 
 const openEditModal = (b: any) => {
+  console.log(b)
   editingBooking.value = b;
   isModalOpen.value = true;
 };
@@ -248,10 +249,7 @@ const refreshData = async () => {
 };
 
 const handleCancel = async (b: any) => {
-  if (confirm("Wirklich stornieren?")) {
-    await api.bookings.cancel(b.id);
     refreshData();
-  }
 };
 
 const handleDeletion = async (b: any) => {

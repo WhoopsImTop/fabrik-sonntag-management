@@ -63,7 +63,9 @@
                 <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
                   {{ booking.user_name?.substring(0,1).toUpperCase() }}
                 </div>
-                {{ booking.user_name }}
+                {{ booking.User?.details?.company ||
+                  `${booking.User?.details?.first_name ?? ""} ${booking.User?.details?.last_name ?? ""}`.trim() ||
+                  "Unbekannt" }}
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
