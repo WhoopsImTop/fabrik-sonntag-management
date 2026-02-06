@@ -227,7 +227,7 @@ const openCreateModal = (date?: Date) => {
 };
 
 const openEditModal = (b: any) => {
-  console.log(b)
+  console.log(b);
   editingBooking.value = b;
   isModalOpen.value = true;
 };
@@ -249,7 +249,7 @@ const refreshData = async () => {
 };
 
 const handleCancel = async (b: any) => {
-    refreshData();
+  refreshData();
 };
 
 const handleDeletion = async (b: any) => {

@@ -273,7 +273,7 @@
                   >Vorname</label
                 >
                 <input
-                  v-model="newUser.first_name"
+                  v-model="newUser.details.first_name"
                   type="text"
                   required
                   class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
@@ -284,7 +284,7 @@
                   >Nachname</label
                 >
                 <input
-                  v-model="newUser.last_name"
+                  v-model="newUser.details.last_name"
                   type="text"
                   required
                   class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
@@ -310,18 +310,6 @@
                 v-model="newUser.email"
                 type="email"
                 required
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
-              />
-            </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Passwort</label
-              >
-              <input
-                v-model="newUser.password"
-                type="password"
-                required
-                placeholder="Initiales Passwort"
                 class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
               />
             </div>
@@ -400,12 +388,14 @@ const statusFilter = ref("all");
 const showAddModal = ref(false);
 const createLoading = ref(false);
 const newUser = ref({
-  first_name: "",
-  last_name: "",
   username: "",
   email: "",
   password: "",
   role: "user",
+  details: {
+    first_name: "",
+    last_name: "",
+  },
 });
 
 const statusOptions = [
@@ -462,21 +452,37 @@ const loadUsers = async () => {
   }
 };
 
+const lettersAndNumbers = "1234567890abcdefghijklmnopqrstuvwxyz!&%$?)(][";
+
+function generatePassword(length = 10) {
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    const index = Math.floor(Math.random() * lettersAndNumbers.length);
+    password += lettersAndNumbers[index];
+  }
+
+  return password;
+}
+
 const createUser = async () => {
   createLoading.value = true;
   try {
     // Nutzung des neuen Composable-Aufrufs
+    newUser.value.password = await generatePassword(10);
     const success = await api.users.create(newUser.value);
 
     if (success) {
       showAddModal.value = false;
       newUser.value = {
-        first_name: "",
-        last_name: "",
         username: "",
         email: "",
         password: "",
         role: "user",
+        details: {
+          first_name: "",
+          last_name: "",
+        },
       };
       await loadUsers();
     }

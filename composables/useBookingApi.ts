@@ -698,11 +698,14 @@ export const useBookingApi = () => {
     create: async (data: any) => {
       const result = await apiCall(
         () =>
-          $fetch(`${baseURL}/bookings/createBooking?sendNotificationEmail=false`, {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: data,
-          }),
+          $fetch(
+            `${baseURL}/bookings/createBooking?sendNotificationEmail=false`,
+            {
+              method: "POST",
+              headers: getAuthHeaders(),
+              body: data,
+            },
+          ),
         "createBooking",
       );
       if (result)

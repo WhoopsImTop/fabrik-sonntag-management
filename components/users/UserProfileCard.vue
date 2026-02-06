@@ -150,6 +150,16 @@
             <option value="admin">Admin</option>
           </select>
         </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700"
+            >Debitoren Nummer</label
+          >
+          <input
+            v-model="form.debitor_number"
+            type="text"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
+        </div>
         <div class="pt-4 flex justify-end">
           <button
             type="submit"
@@ -182,6 +192,7 @@ const form = ref({
   city: "",
   email: "",
   role: "",
+  debitor_number: "",
 });
 
 // Init Form
@@ -200,9 +211,10 @@ watch(
         city: u?.details?.city ?? "",
         email: u.email,
         role: u.role,
+        debitor_number: u?.details?.debitor_number ?? "",
       };
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const getInitials = (n: string) => (n ? n.substring(0, 2).toUpperCase() : "?");
