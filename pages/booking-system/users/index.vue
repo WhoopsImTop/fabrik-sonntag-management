@@ -425,6 +425,10 @@ const filteredUsers = computed(() => {
     );
   }
 
+  filtered.sort((a, b) =>
+    a.details?.first_name.localeCompare(b.details?.first_name),
+  );
+
   return filtered;
 });
 

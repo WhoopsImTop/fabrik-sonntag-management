@@ -175,8 +175,9 @@
               class="bg-neutral-50 text-neutral-500 font-medium border-b border-neutral-100"
             >
               <tr>
-                <th class="px-6 py-3 w-[35%]">Beschreibung</th>
-                <th class="px-4 py-3 text-right w-[12%]">Menge</th>
+                <th class="px-6 py-3 w-[30%]">Beschreibung</th>
+                <th class="px-4 py-3 text-right w-[10%]">Menge</th>
+                <th class="px-4 py-3 w-[10%]">Einheit</th>
                 <th class="px-4 py-3 text-right w-[15%]">Preis (€)</th>
                 <th class="px-4 py-3 text-right w-[12%]">MwSt.</th>
                 <th class="px-6 py-3 text-right w-[15%]">Gesamt</th>
@@ -248,6 +249,19 @@
                   }}</span>
                 </td>
 
+                <td class="px-4 py-3">
+                  <input
+                    v-if="isEditing"
+                    type="text"
+                    v-model="item.unit"
+                    class="w-full bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
+                    placeholder="pauschal"
+                  />
+                  <span v-else class="text-neutral-600 text-sm">{{
+                    item.unit || '-'
+                  }}</span>
+                </td>
+
                 <td class="px-4 py-3 text-right">
                   <input
                     v-if="isEditing"
@@ -303,7 +317,7 @@
 
               <tr v-if="isEditing && form.items.length === 0">
                 <td
-                  colspan="5"
+                  colspan="6"
                   class="px-6 py-8 text-center text-neutral-400 border-dashed border-2 border-neutral-100 m-4 rounded-lg"
                 >
                   <p class="text-sm">Keine Positionen vorhanden.</p>
@@ -319,7 +333,7 @@
 
             <tfoot class="bg-neutral-50 border-t border-neutral-200">
               <tr>
-                <td colspan="4" class="px-6 py-3 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-3 text-right text-neutral-600">
                   Netto
                 </td>
                 <td class="px-6 py-3 text-right text-neutral-900">
@@ -328,7 +342,7 @@
                 <td v-if="isEditing"></td>
               </tr>
               <tr>
-                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-1 text-right text-neutral-600">
                   USt (19%)
                 </td>
                 <td class="px-6 py-1 text-right text-neutral-900">
@@ -338,7 +352,7 @@
               </tr>
               <tr>
                 <td
-                  colspan="4"
+                  colspan="5"
                   class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
                 >
                   Gesamtbetrag
@@ -556,6 +570,7 @@ const form = ref({
   items: [] as Array<{
     description: string;
     quantity: number;
+    unit: string;
     amount: number;
     vat_rate?: number;
   }>,
@@ -585,6 +600,7 @@ const allProducts = computed(() => {
       id: `svc-${s.id}`,
       label: s.name,
       price: s.price_per_unit,
+      unit: s.pricing_unit,
       type: "Service",
     }),
   );
@@ -666,6 +682,7 @@ const loadInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
+          unit: i.unit || 'pauschal',
           vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       } else {
@@ -743,6 +760,7 @@ const applySuggestion = (index: number, suggestion: any) => {
   const item = form.value.items[index];
   item.description = suggestion.label;
   item.amount = suggestion.price;
+  if (suggestion.unit) item.unit = suggestion.unit;
   focusedRowIndex.value = null;
 };
 
@@ -750,6 +768,7 @@ const addItem = () => {
   form.value.items.push({
     description: "",
     quantity: 1,
+    unit: 'Stück',
     amount: 0,
     vat_rate: 0.19,
   });
@@ -783,6 +802,7 @@ const saveInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
+          unit: i.unit || 'pauschal',
           vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       }
