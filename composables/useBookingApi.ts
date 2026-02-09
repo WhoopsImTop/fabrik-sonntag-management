@@ -879,6 +879,27 @@ export const useBookingApi = () => {
         throw error;
       }
     },
+
+    handleAccountingExport: async (
+      startDate: Date | string,
+      endDate: Date | string,
+    ) => {
+      try {
+        const response = await fetch(
+          `${baseURL}/sales/accounting/export?startDate=${startDate}&endDate=${endDate}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+
+        if (!response.ok) throw new Error("Download fehlgeschlagen");
+        return await response.blob();
+      } catch (error) {
+        handleError(error, "sales.downloadInvoice");
+        throw error;
+      }
+    },
   };
 
   /**

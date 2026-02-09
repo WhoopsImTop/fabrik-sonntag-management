@@ -46,7 +46,7 @@
           <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-xs font-medium">
             <tr>
               <th class="px-6 py-3 w-[40%]">Service</th>
-              <th class="px-6 py-3 w-[20%]">Preis</th>
+              <th class="px-6 py-3 w-[20%]">Preis (Netto)</th>
               <th class="px-6 py-3 w-[25%]">Einheit</th>
               <th class="px-6 py-3 w-[15%] text-right">Aktion</th>
             </tr>
@@ -130,7 +130,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Preis (€)</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Preis (Netto)</label>
             <input
               v-model.number="serviceForm.price_per_unit"
               type="number"

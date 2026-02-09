@@ -22,7 +22,11 @@
           </div>
           <div>
             <h2 class="text-xl font-bold text-slate-900">
-              {{ user.username }}
+              {{
+                user.details.company
+                  ? user.details.company
+                  : user.details.first_name + " " + user.details.last_name
+              }}
             </h2>
             <span
               class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 uppercase tracking-wide"
@@ -52,6 +56,14 @@
                 />
               </svg>
               {{ user.email }}
+            </p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Mobilnummer</label
+            >
+            <p class="text-slate-900 font-medium flex items-center gap-2">
+              {{ user.details.mobile_number || "" }}
             </p>
           </div>
           <div>

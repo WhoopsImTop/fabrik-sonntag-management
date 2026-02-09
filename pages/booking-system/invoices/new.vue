@@ -327,7 +327,7 @@
           <h3 class="font-semibold text-neutral-900 mb-4">Einstellungen</h3>
 
           <div class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label
                   class="block text-xs font-medium text-neutral-500 uppercase mb-1"
@@ -352,6 +352,17 @@
                 <input
                   type="date"
                   v-model="form.due_date"
+                  class="block py-2 px-2 w-full text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-medium text-neutral-500 uppercase mb-1"
+                  >Zahlbar in X Tagen</label
+                >
+                <input
+                  type="number"
+                  v-model="form.days_to_pay"
                   class="block py-2 px-2 w-full text-sm border border-neutral-200 rounded-lg focus:ring-neutral-900 focus:border-neutral-900"
                 />
               </div>
@@ -395,6 +406,7 @@
               <tr>
                 <th class="px-6 py-3 w-[35%]">Beschreibung</th>
                 <th class="px-4 py-3 text-right w-[12%]">Menge</th>
+                <th class="px-4 py-3 w-[10%]">Einheit</th>
                 <th class="px-4 py-3 text-right w-[15%]">Preis (€)</th>
                 <th class="px-4 py-3 text-right w-[12%]">MwSt.</th>
                 <th class="px-6 py-3 text-right w-[15%]">Gesamt</th>
@@ -461,6 +473,16 @@
 
                 <td class="px-4 py-3 text-right">
                   <input
+                    type="text"
+                    v-model="item.unit"
+                    min="Einheit"
+                    class="w-full text-right bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
+                    placeholder="1"
+                  />
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  <input
                     type="number"
                     v-model="item.amount"
                     step="0.01"
@@ -510,7 +532,7 @@
 
             <tfoot class="bg-neutral-50 border-t border-neutral-200">
               <tr>
-                <td colspan="4" class="px-6 py-3 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-3 text-right text-neutral-600">
                   Netto
                 </td>
                 <td class="px-6 py-3 text-right text-neutral-900">
@@ -519,7 +541,7 @@
                 <td></td>
               </tr>
               <tr>
-                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-1 text-right text-neutral-600">
                   USt (dynamisch)
                 </td>
                 <td class="px-6 py-1 text-right text-neutral-900">
@@ -529,7 +551,7 @@
               </tr>
               <tr>
                 <td
-                  colspan="4"
+                  colspan="5"
                   class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
                 >
                   Gesamtbetrag
@@ -576,8 +598,17 @@ const form = ref({
   due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0], // 14 Tage
+  days_to_pay: 7,
   notes: "",
-  items: [{ description: "", quantity: 1, amount: 0, vat_rate: 0.19 }],
+  items: [
+    {
+      description: "",
+      quantity: 1,
+      unit: "pauschal",
+      amount: 0,
+      vat_rate: 0.19,
+    },
+  ],
 });
 
 // Formular für neuen Kunden
@@ -706,6 +737,7 @@ const addItem = () =>
   form.value.items.push({
     description: "",
     quantity: 1,
+    unit: "pauschal",
     amount: 0,
     vat_rate: 0.19,
   });
@@ -715,6 +747,7 @@ const removeItem = (index: number) => {
     form.value.items[0] = {
       description: "",
       quantity: 1,
+      unit: "pauschal",
       amount: 0,
       vat_rate: 0.19,
     };
@@ -778,6 +811,7 @@ const save = async () => {
       user_id: finalUserId || null,
       status: form.value.status,
       due_date: form.value.due_date,
+      days_to_pay: form.value.days_to_pay,
       notes: form.value.notes,
       items: cleanItems,
     };

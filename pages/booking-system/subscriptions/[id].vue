@@ -294,7 +294,7 @@
                     >Nr.</label
                   >
                   <input
-                    v-model="customerForm.houseNumber"
+                    v-model="customerForm.house_number"
                     class="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:ring-1 focus:ring-neutral-900 focus:border-neutral-900 placeholder:text-neutral-300"
                     placeholder="1"
                   />
@@ -428,6 +428,7 @@
               <tr>
                 <th class="px-6 py-3 w-[35%]">Beschreibung</th>
                 <th class="px-4 py-3 text-right w-[12%]">Menge</th>
+                <th class="px-4 py-3 text-right w-[12%]">Einheit</th>
                 <th class="px-4 py-3 text-right w-[15%]">Preis (€)</th>
                 <th class="px-4 py-3 text-right w-[12%]">MwSt.</th>
                 <th class="px-6 py-3 text-right w-[15%]">Gesamt</th>
@@ -494,6 +495,15 @@
 
                 <td class="px-4 py-3 text-right">
                   <input
+                    type="text"
+                    v-model="item.unit"
+                    class="w-full text-right bg-transparent border-0 border-b border-transparent focus:border-neutral-400 focus:ring-0 p-0 text-sm"
+                    placeholder="Psch."
+                  />
+                </td>
+
+                <td class="px-4 py-3 text-right">
+                  <input
                     type="number"
                     v-model="item.amount"
                     step="0.01"
@@ -543,7 +553,7 @@
 
             <tfoot class="bg-neutral-50 border-t border-neutral-200">
               <tr>
-                <td colspan="4" class="px-6 py-3 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-3 text-right text-neutral-600">
                   Netto
                 </td>
                 <td class="px-6 py-3 text-right text-neutral-900">
@@ -552,7 +562,7 @@
                 <td></td>
               </tr>
               <tr>
-                <td colspan="4" class="px-6 py-1 text-right text-neutral-600">
+                <td colspan="5" class="px-6 py-1 text-right text-neutral-600">
                   USt (19%)
                 </td>
                 <td class="px-6 py-1 text-right text-neutral-900">
@@ -562,7 +572,7 @@
               </tr>
               <tr>
                 <td
-                  colspan="4"
+                  colspan="5"
                   class="px-6 py-4 text-right font-bold text-lg text-neutral-900"
                 >
                   Gesamtbetrag
@@ -611,7 +621,9 @@ const form = ref({
   interval: "MONTHLY",
   status: "ACTIVE",
   next_billing_date: new Date().toISOString().split("T")[0],
-  items: [{ description: "", quantity: 1, amount: 0, vat_rate: 0.19 }],
+  items: [
+    { description: "", quantity: 1, unit: "psch.", amount: 0, vat_rate: 0.19 },
+  ],
 });
 
 // Formular für den Kunden
@@ -621,7 +633,7 @@ const customerForm = ref({
   company: "",
   email: "",
   street: "",
-  houseNumber: "",
+  house_number: "",
   phone: "",
   zip_code: "",
   city: "",
@@ -723,7 +735,9 @@ const selectUser = (user: any) => {
     last_name: user.details?.last_name || "",
     company: user.details?.company || "",
     email: user.email || "",
+    phone: user.details?.mobile_number || "",
     street: user.details?.street || "",
+    house_number: user.details?.house_number || "",
     zip_code: user.details?.zip_code || "",
     city: user.details?.city || "",
   };
@@ -737,7 +751,9 @@ const clearUserSelection = () => {
     last_name: "",
     company: "",
     email: "",
+    phone: "",
     street: "",
+    house_number: "",
     zip_code: "",
     city: "",
   };
@@ -767,6 +783,7 @@ const addItem = () =>
   form.value.items.push({
     description: "",
     quantity: 1,
+    unit: "psch.",
     amount: 0,
     vat_rate: 0.19,
   });
@@ -776,6 +793,7 @@ const removeItem = (index: number) => {
     form.value.items[0] = {
       description: "",
       quantity: 1,
+      unit: "psch.",
       amount: 0,
       vat_rate: 0.19,
     };
@@ -809,6 +827,7 @@ const loadData = async () => {
             sub.LineItems?.map((li: any) => ({
               description: li.description,
               quantity: li.quantity,
+              unit: li.unit,
               amount: li.amount,
               vat_rate: li.vat_rate || 0.19,
             })) || [],
@@ -886,9 +905,9 @@ const save = async () => {
 
 const closeUserDropdown = () => {
   setTimeout(() => {
-    showUserDropdown.value = false
-  }, 200)
-}
+    showUserDropdown.value = false;
+  }, 200);
+};
 
 onMounted(() => {
   loadData();

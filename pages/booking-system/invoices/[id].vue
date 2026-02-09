@@ -258,7 +258,7 @@
                     placeholder="pauschal"
                   />
                   <span v-else class="text-neutral-600 text-sm">{{
-                    item.unit || '-'
+                    item.unit || "-"
                   }}</span>
                 </td>
 
@@ -384,7 +384,7 @@
               <select
                 v-if="isEditing"
                 v-model="form.status"
-                class="mt-1 block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-neutral-900 focus:border-neutral-900 sm:text-sm rounded-md"
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-sm border border-gray-300 focus:outline-none focus:ring-neutral-900 focus:border-neutral-900 sm:text-sm rounded-md"
               >
                 <option value="DELETED">Storniert</option>
                 <option value="DRAFT">Entwurf</option>
@@ -413,7 +413,7 @@
                 v-if="isEditing"
                 type="date"
                 v-model="form.due_date"
-                class="mt-1 block w-full text-sm border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900"
+                class="mt-1 block w-full text-sm border border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900 py-2 px-3"
               />
               <p v-else class="mt-1 text-sm text-neutral-900">
                 {{ formatDate(invoice.due_date) }}
@@ -432,11 +432,6 @@
                   class="flex items-center justify-between p-2 border border-neutral-200 rounded-md bg-neutral-50"
                 >
                   <div class="flex items-center gap-2 overflow-hidden">
-                    <div
-                      class="w-6 h-6 rounded-full bg-neutral-200 flex items-center justify-center text-xs font-bold"
-                    >
-                      User
-                    </div>
                     <div class="truncate text-sm">
                       <span class="font-medium text-neutral-900">{{
                         form.user_preview?.username ||
@@ -682,7 +677,7 @@ const loadInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
-          unit: i.unit || 'pauschal',
+          unit: i.unit || "pauschal",
           vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       } else {
@@ -768,7 +763,7 @@ const addItem = () => {
   form.value.items.push({
     description: "",
     quantity: 1,
-    unit: 'Stück',
+    unit: "Stück",
     amount: 0,
     vat_rate: 0.19,
   });
@@ -802,7 +797,7 @@ const saveInvoice = async () => {
           description: i.description,
           quantity: Number(i.quantity),
           amount: Number(i.amount),
-          unit: i.unit || 'pauschal',
+          unit: i.unit || "pauschal",
           vat_rate: typeof i.vat_rate === "number" ? Number(i.vat_rate) : 0.19,
         }));
       }

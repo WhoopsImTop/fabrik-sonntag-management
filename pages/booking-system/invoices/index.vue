@@ -3,6 +3,43 @@
     <div
       class="flex flex-col md:flex-row md:items-center justify-between gap-4"
     >
+      <div
+        v-if="exportForAccounting"
+        class="bg-black/30 fixed top-0 bottom-0 left-0 right-0 z-90 flex items-center justify-center"
+      >
+        <div class="bg-white rounded-xl shadow-sm">
+          <div
+            class="flex items-center gap-16 justify-between px-3 pt-3 border-b border-neutral-200 pb-3"
+          >
+            <span class="font-bold">Buchhaltungsexport</span>
+            <img
+              src="../../../public/close.svg"
+              class="w-6 h-6"
+              @click="exportForAccounting = false"
+            />
+          </div>
+          <div class="pb-3 px-3 pt-3">
+            <div class="grid grid-cols-2 gap-4">
+              <input
+                type="date"
+                class="border border-neutral-200 rounded-md p-1"
+                v-model="exportStartDate"
+              />
+              <input
+                type="date"
+                class="border border-neutral-200 rounded-md p-1"
+                v-model="exportEndDate"
+              />
+            </div>
+            <button
+              @click="exportAccountingData"
+              class="bg-neutral-900 text-white rounded-lg w-full p-2 mt-4 font-bold text-sm cursor-pointer"
+            >
+              Daten Exportieren
+            </button>
+          </div>
+        </div>
+      </div>
       <div>
         <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
           Rechnungen
@@ -12,6 +49,12 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
+        <button
+          @click="exportForAccounting = true"
+          class="inline-flex items-center justify-center px-4 py-2 text-neutral-900 border text-sm font-medium rounded-lg shadow-sm hover:cursor-pointer hover:bg-neutral-200"
+        >
+          Export
+        </button>
         <button
           @click="router.push('/booking-system/invoices/new')"
           class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm"
@@ -313,6 +356,10 @@ const invoices = ref<any[]>([]);
 const searchQuery = ref("");
 const statusFilter = ref("all");
 
+const exportStartDate = ref(null);
+const exportEndDate = ref(null);
+const exportForAccounting = ref(false);
+
 const stats = ref({
   totalRevenue: 0,
   pendingAmount: 0,
@@ -386,6 +433,24 @@ const loadInvoices = async () => {
     }
   } finally {
     loading.value = false;
+  }
+};
+
+const exportAccountingData = async () => {
+  try {
+    const blob = await api.sales.handleAccountingExport(
+      exportStartDate.value,
+      exportEndDate.value,
+    );
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (e) {
+    console.error(e);
   }
 };
 
