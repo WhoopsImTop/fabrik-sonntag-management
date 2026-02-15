@@ -1,5 +1,6 @@
 <template>
   <div class="h-[calc(100vh-4rem)] flex flex-col bg-slate-50 font-sans">
+    <BookingVoucherModal v-if="showVoucherModal" @close="showVoucherModal=false"/>
     <header
       class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between flex-shrink-0 z-20 gap-4"
     >
@@ -119,6 +120,7 @@
             @cancel="handleCancel"
             @delete="handleDeletion"
             @update-status="refreshData"
+            @welcome-email="showVoucherModal = true"
           />
         </div>
       </transition>
@@ -155,6 +157,7 @@ const selectedBooking = ref(null);
 const draggedBooking = ref<any | null>(null);
 const createDate = ref<Date | null>(null);
 const route = useRoute();
+const showVoucherModal = ref(false);
 
 // Modal State
 const isModalOpen = ref(false);

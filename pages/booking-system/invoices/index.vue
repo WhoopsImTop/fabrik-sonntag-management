@@ -5,38 +5,102 @@
     >
       <div
         v-if="exportForAccounting"
-        class="bg-black/30 fixed top-0 bottom-0 left-0 right-0 z-90 flex items-center justify-center"
+        class="bg-black/30 fixed top-0 bottom-0 left-0 right-0 z-[100] flex items-center justify-center p-4"
       >
-        <div class="bg-white rounded-xl shadow-sm">
+        <div
+          class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col"
+        >
           <div
-            class="flex items-center gap-16 justify-between px-3 pt-3 border-b border-neutral-200 pb-3"
+            class="flex items-center justify-between px-4 py-3 border-b border-neutral-200"
           >
-            <span class="font-bold">Buchhaltungsexport</span>
-            <img
-              src="../../../public/close.svg"
-              class="w-6 h-6"
-              @click="exportForAccounting = false"
-            />
-          </div>
-          <div class="pb-3 px-3 pt-3">
-            <div class="grid grid-cols-2 gap-4">
-              <input
-                type="date"
-                class="border border-neutral-200 rounded-md p-1"
-                v-model="exportStartDate"
-              />
-              <input
-                type="date"
-                class="border border-neutral-200 rounded-md p-1"
-                v-model="exportEndDate"
-              />
-            </div>
+            <span class="font-bold text-lg">Buchhaltungsexport</span>
             <button
-              @click="exportAccountingData"
-              class="bg-neutral-900 text-white rounded-lg w-full p-2 mt-4 font-bold text-sm cursor-pointer"
+              @click="closeExportModal"
+              class="p-1 hover:bg-neutral-100 rounded-full transition-colors"
             >
-              Daten Exportieren
+              <img src="../../../public/close.svg" class="w-6 h-6" />
             </button>
+          </div>
+
+          <div class="p-4 overflow-y-auto">
+            <div v-if="validationErrors.length > 0" class="space-y-4">
+              <div
+                class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 text-sm"
+              >
+                <p class="font-semibold">Aktion erforderlich:</p>
+                <p>
+                  Die folgenden Nutzer haben noch keine Debitorennummer. Bitte
+                  ergänzen Sie diese, um den Export fortzusetzen.
+                </p>
+              </div>
+
+              <div class="space-y-3">
+                <div
+                  v-for="user in validationErrors"
+                  :key="user.id"
+                  class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border border-neutral-100 rounded-lg bg-neutral-50"
+                >
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-neutral-900">
+                      {{ user.details?.first_name }}
+                      {{ user.details?.last_name }}
+                    </p>
+                    <p class="text-xs text-neutral-500">{{ user.email }}</p>
+                  </div>
+                  <div class="sm:w-48">
+                    <input
+                      v-model="user.new_debitor_number"
+                      placeholder="Debitoren-Nr."
+                      class="w-full border border-neutral-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-neutral-900 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                @click="patchUsersAndRetry"
+                :disabled="isPatching"
+                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm disabled:opacity-50"
+              >
+                {{
+                  isPatching
+                    ? "Speichere Daten..."
+                    : "Speichern & Erneut versuchen"
+                }}
+              </button>
+            </div>
+
+            <div v-else class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-neutral-500"
+                    >Von</label
+                  >
+                  <input
+                    type="date"
+                    class="border border-neutral-200 rounded-md p-2"
+                    v-model="exportStartDate"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-neutral-500"
+                    >Bis</label
+                  >
+                  <input
+                    type="date"
+                    class="border border-neutral-200 rounded-md p-2"
+                    v-model="exportEndDate"
+                  />
+                </div>
+              </div>
+              <button
+                @click="exportAccountingData"
+                :disabled="!exportStartDate || !exportEndDate"
+                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm hover:bg-neutral-800 disabled:opacity-50 transition-colors"
+              >
+                Daten Exportieren
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -436,21 +500,80 @@ const loadInvoices = async () => {
   }
 };
 
+const validationErrors = ref<any[]>([]);
+const isPatching = ref(false);
+
+const closeExportModal = () => {
+  exportForAccounting.value = false;
+  validationErrors.value = []; // Reset errors
+};
+
 const exportAccountingData = async () => {
   try {
-    const blob = await api.sales.handleAccountingExport(
+    const response = await api.sales.handleAccountingExport(
       exportStartDate.value,
       exportEndDate.value,
     );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      
+      // Hier mappen wir auf "missing" statt "missingUsers"
+      if (errorData.missing) {
+        validationErrors.value = errorData.missing.map((u: any) => ({
+          ...u,
+          // Wir erstellen ein flaches Objekt für das Interface
+          // Falls 'name' mitkommt, splitten wir ihn optional für die Anzeige
+          details: { first_name: u.name, last_name: '' }, 
+          new_debitor_number: "",
+        }));
+        return;
+      }
+      throw new Error(errorData.error || "Export fehlgeschlagen");
+    }
+
+    // Erfolg: Download-Logik
+    const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Export.csv`);
+    link.setAttribute("download", `Export_${exportStartDate.value}.csv`);
     document.body.appendChild(link);
     link.click();
     link.remove();
+    window.URL.revokeObjectURL(url);
+
+    exportForAccounting.value = false;
   } catch (e) {
-    console.error(e);
+    console.error("Export Error:", e);
+  }
+};
+
+const patchUsersAndRetry = async () => {
+  const invalid = validationErrors.value.some((u) => !u.new_debitor_number);
+  if (invalid) {
+    alert("Bitte alle Debitorennummern ausfüllen.");
+    return;
+  }
+
+  isPatching.value = true;
+  try {
+    await Promise.all(
+      validationErrors.value.map((user) =>
+        // Wir senden NUR die debitor_number in den details. 
+        // WICHTIG: Prüfe, ob dein Backend das details-Objekt mergt oder überschreibt!
+        api.users.update(user.id, {
+          details: { debitor_number: user.new_debitor_number },
+        }),
+      ),
+    );
+
+    validationErrors.value = [];
+    await exportAccountingData();
+  } catch (e) {
+    console.error("Patch Error:", e);
+  } finally {
+    isPatching.value = false;
   }
 };
 

@@ -615,6 +615,62 @@ export const useBookingApi = () => {
     },
   };
 
+  const wifiToken = {
+    getAll: async () => {
+      const data = await apiCall(
+        () =>
+          $fetch(`${baseURL}/welcome/list-vouchers`, {
+            headers: getAuthHeaders(),
+          }),
+        "listVouchers",
+      );
+      return data.data;
+    },
+
+    createToken: async (data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/welcome/create-vouchers`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: data,
+          }),
+        "createVoucher",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "", color: "green" });
+      return result;
+    },
+  };
+
+  const emailService = {
+    getAll: async () => {
+      const data = await apiCall(
+        () =>
+          $fetch(`${baseURL}/welcome/get-templates`, {
+            headers: getAuthHeaders(),
+          }),
+        "getTemplates",
+      );
+      return data.data;
+    },
+
+    sendCustomEmail: async (data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/welcome/send-welcome-email`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: data,
+          }),
+        "sendCustomEmail",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "", color: "green" });
+      return result;
+    },
+  };
+
   // 6. Bookings
   const bookings = {
     getAll: async (
@@ -884,21 +940,16 @@ export const useBookingApi = () => {
       startDate: Date | string,
       endDate: Date | string,
     ) => {
-      try {
-        const response = await fetch(
-          `${baseURL}/sales/accounting/export?startDate=${startDate}&endDate=${endDate}`,
-          {
-            method: "GET",
-            headers: getAuthHeaders(),
-          },
-        );
+      const response = await fetch(
+        `${baseURL}/sales/accounting/export?startDate=${startDate}&endDate=${endDate}`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        },
+      );
 
-        if (!response.ok) throw new Error("Download fehlgeschlagen");
-        return await response.blob();
-      } catch (error) {
-        handleError(error, "sales.downloadInvoice");
-        throw error;
-      }
+      if (!response.ok) throw new Error("Download fehlgeschlagen");
+      return await response;
     },
   };
 
@@ -1042,5 +1093,7 @@ export const useBookingApi = () => {
     company,
     templates,
     subscriptions,
+    wifiToken,
+    emailService,
   };
 };
