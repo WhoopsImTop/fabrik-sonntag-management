@@ -446,10 +446,11 @@ const allProducts = computed(() => {
           label: `${r.name} - ${plan.name}`,
           price: plan.price,
           type: "Raum",
+          unit: plan.billing_interval,
         }),
       );
     } else {
-      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum" });
+      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum", unit: "Stunde" });
     }
   });
   return list;
@@ -459,7 +460,7 @@ const suggestions = computed(() => {
   if (focusedRowIndex.value === null || !isEditing.value) return [];
   const itemDesc = form.value.items[focusedRowIndex.value]?.description;
   const currentInput = itemDesc ? String(itemDesc).toLowerCase() : "";
-  if (!currentInput) return allProducts.value.slice(0, 5);
+  if (!currentInput) return allProducts.value;
   return allProducts.value
     .filter((p) => String(p.label).toLowerCase().includes(currentInput))
     .slice(0, 8);
@@ -599,10 +600,44 @@ const applySuggestion = (index: number, suggestion: any) => {
   if (item) {
     item.description = suggestion.label;
     item.amount = suggestion.price;
-    item.unit = suggestion.unit;
-    if (suggestion.unit) item.unit = suggestion.unit;
+    if (suggestion.unit) item.unit = translateUnit(suggestion.unit);
   }
   focusedRowIndex.value = null;
+};
+
+
+
+const translateUnit = (unit: string) => {
+  switch (unit) {
+    case "PER_HOUR":
+      return "Stunde";
+    case "HOUR":
+      return "Stunde";
+    case "DAY":
+      return "Tag";
+    case "WEEK":
+      return "Woche";
+    case "MONTH":
+      return "Monat";
+    case "YEAR":
+      return "Jahr";
+    case "ONE_OFF":
+      return "Einmalig";
+    case "LIFETIME":
+      return "Lebenslang";
+    case "PER_BOOKING":
+      return "Pro Buchung";
+    case "PER_DAY":
+      return "Pro Tag";
+    case "PER_WEEK":
+      return "Pro Woche";
+    case "PER_MONTH":
+      return "Pro Monat";
+    case "PER_YEAR":
+      return "Pro Jahr";
+    default:
+      return unit;
+  }
 };
 
 const addItem = () => {

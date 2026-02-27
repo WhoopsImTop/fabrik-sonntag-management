@@ -270,18 +270,12 @@
             <td class="px-6 py-4 text-right text-sm font-medium">
               <div class="flex items-center justify-end gap-2">
                 <!-- Bezahlt / Offen Toggle -->
-                <button @click.stop="togglePaidStatus(invoice)" :class="[
+                <button v-if="invoice.status === 'SENT'" @click.stop="togglePaidStatus(invoice)" :class="[
                   'p-2 rounded-full transition-colors',
                   invoice.status === 'PAID' ? 'text-green-600 hover:bg-green-50' : 'text-neutral-400 hover:text-green-600 hover:bg-green-50'
                 ]" :title="invoice.status === 'PAID' ? 'Als offen markieren' : 'Als bezahlt markieren'">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path v-if="invoice.status === 'PAID'" stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <img src="../../../public/check.svg" class="w-5 h-5" />
                 </button>
-                <!-- Detail Ansicht -->
                 <button
                   class="text-neutral-400 hover:text-neutral-900 p-2 rounded-full hover:bg-neutral-100 transition-colors"
                   @click.stop="goToDetail(invoice.id)">

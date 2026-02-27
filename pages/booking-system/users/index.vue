@@ -188,12 +188,12 @@
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Vorname</label>
-                <input v-model="newUser.details.first_name" type="text"
+                <input v-model="newUser.details.first_name" type="text" :required="newUser.details.user_type === 'PERSON'"
                   class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Nachname</label>
-                <input v-model="newUser.details.last_name" type="text"
+                <input v-model="newUser.details.last_name" type="text" :required="newUser.details.user_type === 'PERSON'"
                   class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
               </div>
             </div>

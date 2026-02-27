@@ -250,12 +250,12 @@
             <table class="w-full caption-bottom text-sm">
               <thead class="[&_tr]:border-b border-slate-200">
                 <tr class="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[35%]">Beschreibung</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[10%]">Einheit</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
+                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[200px]">Beschreibung</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[50px]">Menge</th>
+                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[100px]">Einheit</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[75px]">Preis (€)</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[100px]">MwSt.</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[100px]">Gesamt</th>
                   <th class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
               </thead>
@@ -266,7 +266,7 @@
                     <div class="relative">
                       <input v-model="item.description" @input="handleInput(index)" @focus="focusRow(index)"
                         @blur="blurRow(index)"
-                        class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        class="border border-slate-200 flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="Leistung eingeben..." />
 
                       <div v-if="focusedRowIndex === index && suggestions.length > 0"
@@ -289,18 +289,24 @@
 
                   <td class="p-4 align-middle text-right">
                     <input type="number" v-model="item.quantity" min="1"
-                      class="flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
+                      class="border border-slate-200 flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
                   </td>
 
                   <td class="p-4 align-middle text-left">
                     <input type="text" v-model="item.unit"
-                      class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
-                      placeholder="Einheit" />
+                      class="border border-slate-200 flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                      placeholder="Einheit" name="suggestions" list="suggestions" />
+                    <datalist id="suggestions">
+                      <option value="Stunde"></option>
+                      <option value="Tag"></option>
+                      <option value="Monat"></option>
+                      <option value="psch."></option>
+                    </datalist>
                   </td>
 
                   <td class="p-4 align-middle text-right">
                     <input type="number" v-model="item.amount" step="0.01"
-                      class="flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                      class="border border-slate-200 flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                       placeholder="0.00" />
                   </td>
 
@@ -357,7 +363,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 const route = useRoute();
 const router = useRouter();
 const api = useBookingApi();
@@ -412,6 +418,16 @@ const customerForm = ref({
   user_type: "PERSON" as "PERSON" | "COMPANY",
 });
 
+watch(
+  () => [form.value.invoice_date, form.value.days_to_pay],
+  ([newInvoiceDate, newDays]) => {
+    if (!newInvoiceDate) return;
+    const dueDate = new Date(newInvoiceDate as string);
+    dueDate.setDate(dueDate.getDate() + Number(newDays || 0));
+    form.value.due_date = dueDate.toISOString().split("T")[0];
+  }
+);
+
 // AUTOCOMPLETE
 const focusedRowIndex = ref<number | null>(null);
 
@@ -439,6 +455,7 @@ const allProducts = computed(() => {
       id: `svc-${s.id}`,
       label: s.name,
       price: s.price_per_unit,
+      unit: s.pricing_unit,
       type: "Service",
     }),
   );
@@ -451,10 +468,11 @@ const allProducts = computed(() => {
           label: `${r.name} - ${plan.name}`,
           price: plan.price,
           type: "Raum",
+          unit: plan.billing_interval,
         }),
       );
     } else {
-      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum" });
+      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum", unit: "Stunde" });
     }
   });
   return list;
@@ -464,7 +482,7 @@ const suggestions = computed(() => {
   if (focusedRowIndex.value === null) return [];
   const currentInput =
     form.value.items[focusedRowIndex.value].description.toLowerCase();
-  if (!currentInput) return allProducts.value.slice(0, 5);
+  if (!currentInput) return allProducts.value;
   return allProducts.value
     .filter((p) => p.label.toLowerCase().includes(currentInput))
     .slice(0, 8);
@@ -516,7 +534,41 @@ const applySuggestion = (index: number, suggestion: any) => {
   const item = form.value.items[index];
   item.description = suggestion.label;
   item.amount = suggestion.price;
+  item.unit = translateUnit(suggestion.unit);
   focusedRowIndex.value = null;
+};
+
+const translateUnit = (unit: string) => {
+  switch (unit) {
+    case "PER_HOUR":
+      return "Stunde";
+    case "HOUR":
+      return "Stunde";
+    case "DAY":
+      return "Tag";
+    case "WEEK":
+      return "Woche";
+    case "MONTH":
+      return "Monat";
+    case "YEAR":
+      return "Jahr";
+    case "ONE_OFF":
+      return "Einmalig";
+    case "LIFETIME":
+      return "Lebenslang";
+    case "PER_BOOKING":
+      return "Pro Buchung";
+    case "PER_DAY":
+      return "Pro Tag";
+    case "PER_WEEK":
+      return "Pro Woche";
+    case "PER_MONTH":
+      return "Pro Monat";
+    case "PER_YEAR":
+      return "Pro Jahr";
+    default:
+      return unit;
+  }
 };
 
 const addItem = () =>
@@ -589,37 +641,60 @@ const loadData = async () => {
 };
 
 const save = async () => {
+  // Validate Required Fields
+  if (!form.value.user_id) {
+    if (customerForm.value.user_type === 'COMPANY' && !customerForm.value.company.trim()) {
+      alert("Bitte geben Sie einen Firmennamen an.");
+      return;
+    }
+    if (customerForm.value.user_type === 'PERSON' && (!customerForm.value.first_name.trim() || !customerForm.value.last_name.trim())) {
+      alert("Bitte geben Sie Vor- und Nachnamen an.");
+      return;
+    }
+    if (!customerForm.value.street.trim() || !customerForm.value.zip_code.trim() || !customerForm.value.city.trim()) {
+      alert("Bitte geben Sie die vollständige Adresse (Straße, PLZ, Ort) an.");
+      return;
+    }
+  }
+
+  if (!form.value.invoice_date) {
+    alert("Bitte geben Sie ein Rechnungsdatum an.");
+    return;
+  }
+
+  if (form.value.days_to_pay === null || form.value.days_to_pay === undefined || form.value.days_to_pay === "" as any) {
+    alert("Bitte geben Sie das Zahlungsziel in Tagen an.");
+    return;
+  }
+
+  const cleanItems = form.value.items.filter(
+    (i) => i.description.trim() !== "" || Number(i.amount) > 0,
+  );
+  if (cleanItems.length === 0) {
+    alert("Bitte mindestens eine Position hinzufügen.");
+    return;
+  }
+
   saving.value = true;
   try {
     let finalUserId = form.value.user_id;
 
-    // Create new customer if no user selected but form filled
+    // Create new customer if no user selected
     if (!finalUserId) {
-      if (customerForm.value.first_name || customerForm.value.email) {
-        const userPayload = {
-          username:
-            `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim() ||
-            customerForm.value.company,
-          email: customerForm.value.email,
-          password: Math.random().toString(36).slice(-10),
-          role: "USER",
-          details: { ...customerForm.value },
-        };
+      const userPayload = {
+        username: customerForm.value.user_type === 'COMPANY'
+          ? customerForm.value.company
+          : `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim(),
+        email: customerForm.value.email,
+        password: Math.random().toString(36).slice(-10),
+        role: "USER",
+        details: { ...customerForm.value },
+      };
 
-        const newUser: any = await api.users.create(userPayload as any);
-        if (newUser && newUser.id) {
-          finalUserId = newUser.id;
-        }
+      const newUser: any = await api.users.create(userPayload as any);
+      if (newUser && newUser.id) {
+        finalUserId = newUser.id;
       }
-    }
-
-    const cleanItems = form.value.items.filter(
-      (i) => i.description.trim() !== "" || i.amount > 0,
-    );
-    if (cleanItems.length === 0) {
-      alert("Bitte mindestens eine Position hinzufügen.");
-      saving.value = false;
-      return;
     }
 
     const payload = {
@@ -627,7 +702,7 @@ const save = async () => {
       status: form.value.status,
       invoice_date: form.value.invoice_date,
       due_date: form.value.due_date,
-      days_to_pay: form.value.days_to_pay,
+      days_to_pay: Number(form.value.days_to_pay),
       notes: form.value.notes,
       items: cleanItems,
     };
@@ -643,9 +718,10 @@ const save = async () => {
     } else {
       router.push("/booking-system/invoices");
     }
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    alert("Fehler beim Erstellen der Rechnung");
+    const msg = e?.data?.message || e?.message || "Unbekannter Fehler";
+    alert("Fehler beim Erstellen der Rechnung: " + msg);
   } finally {
     saving.value = false;
   }

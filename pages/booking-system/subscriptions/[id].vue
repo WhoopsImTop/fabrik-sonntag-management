@@ -572,6 +572,8 @@ const applySuggestion = (index: number, suggestion: any) => {
 
 const translateUnit = (unit: string) => {
   switch (unit) {
+    case "PER_HOUR":
+      return "Stunde";
     case "HOUR":
       return "Stunde";
     case "DAY":
@@ -588,6 +590,14 @@ const translateUnit = (unit: string) => {
       return "Lebenslang";
     case "PER_BOOKING":
       return "Pro Buchung";
+    case "PER_DAY":
+      return "Pro Tag";
+    case "PER_WEEK":
+      return "Pro Woche";
+    case "PER_MONTH":
+      return "Pro Monat";
+    case "PER_YEAR":
+      return "Pro Jahr";
     default:
       return unit;
   }
