@@ -948,8 +948,48 @@ export const useBookingApi = () => {
         },
       );
 
-      if (!response.ok) throw new Error("Download fehlgeschlagen");
-      return await response;
+      return response;
+    },
+
+    // Bulk download multiple invoices as ZIP
+    bulkDownload: async (ids: number[]) => {
+      try {
+        const response = await fetch(
+          `${baseURL}/sales/invoices/bulk-download`,
+          {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ids }),
+          },
+        );
+
+        if (!response.ok) throw new Error("Bulk Download fehlgeschlagen");
+        return await response.blob();
+      } catch (error) {
+        handleError(error, "sales.bulkDownload");
+        throw error;
+      }
+    },
+
+    // Update payment status
+    updatePaymentStatus: async (id: number, data: { paid_amount?: number; status?: string }) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/sales/invoices/${id}/payment`, {
+            method: "PATCH",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "sales.updatePaymentStatus",
+      );
+      if (res) toast.add({ title: "Zahlungsstatus aktualisiert", color: "green" });
+      return res;
     },
   };
 

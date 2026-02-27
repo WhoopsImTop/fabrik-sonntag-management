@@ -1,32 +1,19 @@
 <template>
   <div class="space-y-6">
-    <div
-      class="flex flex-col md:flex-row md:items-center justify-between gap-4"
-    >
-      <div
-        v-if="exportForAccounting"
-        class="bg-black/30 fixed top-0 bottom-0 left-0 right-0 z-[100] flex items-center justify-center p-4"
-      >
-        <div
-          class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col"
-        >
-          <div
-            class="flex items-center justify-between px-4 py-3 border-b border-neutral-200"
-          >
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div v-if="exportForAccounting"
+        class="bg-black/30 fixed top-0 bottom-0 left-0 right-0 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
             <span class="font-bold text-lg">Buchhaltungsexport</span>
-            <button
-              @click="closeExportModal"
-              class="p-1 hover:bg-neutral-100 rounded-full transition-colors"
-            >
+            <button @click="closeExportModal" class="p-1 hover:bg-neutral-100 rounded-full transition-colors">
               <img src="../../../public/close.svg" class="w-6 h-6" />
             </button>
           </div>
 
           <div class="p-4 overflow-y-auto">
             <div v-if="validationErrors.length > 0" class="space-y-4">
-              <div
-                class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 text-sm"
-              >
+              <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg text-amber-800 text-sm">
                 <p class="font-semibold">Aktion erforderlich:</p>
                 <p>
                   Die folgenden Nutzer haben noch keine Debitorennummer. Bitte
@@ -35,11 +22,8 @@
               </div>
 
               <div class="space-y-3">
-                <div
-                  v-for="user in validationErrors"
-                  :key="user.id"
-                  class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border border-neutral-100 rounded-lg bg-neutral-50"
-                >
+                <div v-for="user in validationErrors" :key="user.id"
+                  class="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border border-neutral-100 rounded-lg bg-neutral-50">
                   <div class="flex-1">
                     <p class="text-sm font-medium text-neutral-900">
                       {{ user.details?.first_name }}
@@ -48,20 +32,14 @@
                     <p class="text-xs text-neutral-500">{{ user.email }}</p>
                   </div>
                   <div class="sm:w-48">
-                    <input
-                      v-model="user.new_debitor_number"
-                      placeholder="Debitoren-Nr."
-                      class="w-full border border-neutral-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-neutral-900 outline-none"
-                    />
+                    <input v-model="user.new_debitor_number" placeholder="Debitoren-Nr."
+                      class="w-full border border-neutral-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-neutral-900 outline-none" />
                   </div>
                 </div>
               </div>
 
-              <button
-                @click="patchUsersAndRetry"
-                :disabled="isPatching"
-                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm disabled:opacity-50"
-              >
+              <button @click="patchUsersAndRetry" :disabled="isPatching"
+                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm disabled:opacity-50">
                 {{
                   isPatching
                     ? "Speichere Daten..."
@@ -73,31 +51,16 @@
             <div v-else class="space-y-4">
               <div class="grid grid-cols-2 gap-4">
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-neutral-500"
-                    >Von</label
-                  >
-                  <input
-                    type="date"
-                    class="border border-neutral-200 rounded-md p-2"
-                    v-model="exportStartDate"
-                  />
+                  <label class="text-xs font-semibold text-neutral-500">Von</label>
+                  <input type="date" class="border border-neutral-200 rounded-md p-2" v-model="exportStartDate" />
                 </div>
                 <div class="flex flex-col gap-1">
-                  <label class="text-xs font-semibold text-neutral-500"
-                    >Bis</label
-                  >
-                  <input
-                    type="date"
-                    class="border border-neutral-200 rounded-md p-2"
-                    v-model="exportEndDate"
-                  />
+                  <label class="text-xs font-semibold text-neutral-500">Bis</label>
+                  <input type="date" class="border border-neutral-200 rounded-md p-2" v-model="exportEndDate" />
                 </div>
               </div>
-              <button
-                @click="exportAccountingData"
-                :disabled="!exportStartDate || !exportEndDate"
-                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm hover:bg-neutral-800 disabled:opacity-50 transition-colors"
-              >
+              <button @click="exportAccountingData" :disabled="!exportStartDate || !exportEndDate"
+                class="bg-neutral-900 text-white rounded-lg w-full p-2.5 font-bold text-sm hover:bg-neutral-800 disabled:opacity-50 transition-colors">
                 Daten Exportieren
               </button>
             </div>
@@ -113,30 +76,30 @@
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <button
-          @click="exportForAccounting = true"
-          class="inline-flex items-center justify-center px-4 py-2 text-neutral-900 border text-sm font-medium rounded-lg shadow-sm hover:cursor-pointer hover:bg-neutral-200"
-        >
+        <button @click="exportForAccounting = true"
+          class="inline-flex items-center justify-center px-4 py-2 text-neutral-900 border text-sm font-medium rounded-lg shadow-sm hover:cursor-pointer hover:bg-neutral-200">
           Export
         </button>
-        <button
-          @click="router.push('/booking-system/invoices/new')"
-          class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm"
-        >
-          <svg
-            class="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 4v16m8-8H4"
-            />
+        <button @click="router.push('/booking-system/invoices/new')"
+          class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm">
+          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Erstellen
+        </button>
+        <button v-if="selectedInvoices.length > 0" @click="handleBulkDownload" :disabled="bulkDownloading"
+          class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50">
+          <svg v-if="bulkDownloading" class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <svg v-else class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          {{ selectedInvoices.length }} herunterladen
         </button>
       </div>
     </div>
@@ -151,18 +114,9 @@
             </h3>
           </div>
           <div class="p-3 bg-green-50 rounded-lg">
-            <svg
-              class="w-6 h-6 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
         </div>
@@ -176,18 +130,9 @@
             </h3>
           </div>
           <div class="p-3 bg-yellow-50 rounded-lg">
-            <svg
-              class="w-6 h-6 text-yellow-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
+            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
         </div>
@@ -201,18 +146,9 @@
             </h3>
           </div>
           <div class="p-3 bg-red-50 rounded-lg">
-            <svg
-              class="w-6 h-6 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
         </div>
@@ -221,34 +157,17 @@
 
     <div class="flex flex-col sm:flex-row gap-4">
       <div class="relative flex-1">
-        <span
-          class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400"
-        >
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-400">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </span>
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Suchen nach Nummer, Kunde..."
-          class="w-full pl-10 pr-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow"
-        />
+        <input v-model="searchQuery" type="text" placeholder="Suchen nach Nummer, Kunde..."
+          class="w-full pl-10 pr-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow" />
       </div>
-      <select
-        v-model="statusFilter"
-        class="px-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900"
-      >
+      <select v-model="statusFilter"
+        class="px-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900">
         <option value="all">Alle Status</option>
         <option value="DRAFT">Entwurf</option>
         <option value="PENDING">Ausstehend</option>
@@ -258,47 +177,21 @@
       </select>
     </div>
 
-    <div
-      class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden"
-    >
+    <div class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
       <div v-if="loading" class="p-12 flex justify-center">
-        <svg
-          class="animate-spin w-8 h-8 text-neutral-400"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
+        <svg class="animate-spin w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
         </svg>
       </div>
 
       <div v-else-if="filteredInvoices.length === 0" class="p-12 text-center">
-        <div
-          class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-100 mb-4"
-        >
-          <svg
-            class="w-6 h-6 text-neutral-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-neutral-100 mb-4">
+          <svg class="w-6 h-6 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
         <h3 class="text-lg font-medium text-neutral-900">
@@ -313,40 +206,34 @@
       <table v-else class="min-w-full divide-y divide-neutral-200">
         <thead class="bg-neutral-50/50">
           <tr>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider"
-            >
+            <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider w-10">
+              <input type="checkbox" :checked="allSelected" @change="toggleSelectAll"
+                class="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900" />
+            </th>
+            <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
               Nr. / Datum
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider"
-            >
+            <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
               Kunde
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider"
-            >
+            <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
               Betrag
             </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider"
-            >
+            <th class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase tracking-wider">
               Status
             </th>
-            <th
-              class="px-6 py-3 text-right text-xs font-semibold text-neutral-500 uppercase tracking-wider"
-            >
+            <th class="px-6 py-3 text-right text-xs font-semibold text-neutral-500 uppercase tracking-wider">
               Aktion
             </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-neutral-200 bg-white">
-          <tr
-            v-for="invoice in filteredInvoices"
-            :key="invoice.id"
-            class="hover:bg-neutral-50 transition-colors cursor-pointer group"
-            @click="goToDetail(invoice.id)"
-          >
+          <tr v-for="invoice in filteredInvoices" :key="invoice.id"
+            class="hover:bg-neutral-50 transition-colors cursor-pointer group" @click="goToDetail(invoice.id)">
+            <td class="px-6 py-4" @click.stop>
+              <input type="checkbox" :value="invoice.id" v-model="selectedInvoices"
+                class="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900" />
+            </td>
             <td class="px-6 py-4">
               <div class="text-sm font-medium text-neutral-900">
                 {{ invoice.invoice_number }}
@@ -373,34 +260,36 @@
               </div>
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
-              <span
-                :class="[
-                  'px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusClass(invoice.status),
-                ]"
-              >
+              <span :class="[
+                'px-2.5 py-0.5 rounded-full text-xs font-medium border',
+                getStatusClass(invoice.status),
+              ]">
                 {{ getStatusLabel(invoice.status) }}
               </span>
             </td>
             <td class="px-6 py-4 text-right text-sm font-medium">
-              <button
-                class="text-neutral-400 hover:text-neutral-900 p-2 rounded-full hover:bg-neutral-100 transition-colors"
-                @click.stop="goToDetail(invoice.id)"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+              <div class="flex items-center justify-end gap-2">
+                <!-- Bezahlt / Offen Toggle -->
+                <button @click.stop="togglePaidStatus(invoice)" :class="[
+                  'p-2 rounded-full transition-colors',
+                  invoice.status === 'PAID' ? 'text-green-600 hover:bg-green-50' : 'text-neutral-400 hover:text-green-600 hover:bg-green-50'
+                ]" :title="invoice.status === 'PAID' ? 'Als offen markieren' : 'Als bezahlt markieren'">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path v-if="invoice.status === 'PAID'" stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                <!-- Detail Ansicht -->
+                <button
+                  class="text-neutral-400 hover:text-neutral-900 p-2 rounded-full hover:bg-neutral-100 transition-colors"
+                  @click.stop="goToDetail(invoice.id)">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -420,8 +309,11 @@ const invoices = ref<any[]>([]);
 const searchQuery = ref("");
 const statusFilter = ref("all");
 
-const exportStartDate = ref(null);
-const exportEndDate = ref(null);
+const selectedInvoices = ref<number[]>([]);
+const bulkDownloading = ref(false);
+
+const exportStartDate = ref<string | null>(null);
+const exportEndDate = ref<string | null>(null);
 const exportForAccounting = ref(false);
 
 const stats = ref({
@@ -500,6 +392,20 @@ const loadInvoices = async () => {
   }
 };
 
+const togglePaidStatus = async (invoice: any) => {
+  try {
+    const newStatus = invoice.status === 'PAID' ? 'SENT' : 'PAID';
+    const updated = await api.sales.update(invoice.id, { status: newStatus });
+    if (updated) {
+      // Update local state directly
+      invoice.status = newStatus;
+      calculateStats(invoices.value);
+    }
+  } catch (e) {
+    console.error("Failed to toggle invoice status:", e);
+  }
+};
+
 const validationErrors = ref<any[]>([]);
 const isPatching = ref(false);
 
@@ -510,6 +416,11 @@ const closeExportModal = () => {
 
 const exportAccountingData = async () => {
   try {
+    if (!exportStartDate.value || !exportEndDate.value) {
+      alert("Bitte Start- und Enddatum eingeben.");
+      return;
+    }
+
     const response = await api.sales.handleAccountingExport(
       exportStartDate.value,
       exportEndDate.value,
@@ -517,14 +428,14 @@ const exportAccountingData = async () => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      
+
       // Hier mappen wir auf "missing" statt "missingUsers"
       if (errorData.missing) {
         validationErrors.value = errorData.missing.map((u: any) => ({
           ...u,
           // Wir erstellen ein flaches Objekt für das Interface
           // Falls 'name' mitkommt, splitten wir ihn optional für die Anzeige
-          details: { first_name: u.name, last_name: '' }, 
+          details: { first_name: u.name, last_name: '' },
           new_debitor_number: "",
         }));
         return;
@@ -560,10 +471,8 @@ const patchUsersAndRetry = async () => {
   try {
     await Promise.all(
       validationErrors.value.map((user) =>
-        // Wir senden NUR die debitor_number in den details. 
-        // WICHTIG: Prüfe, ob dein Backend das details-Objekt mergt oder überschreibt!
         api.users.update(user.id, {
-          details: { debitor_number: user.new_debitor_number },
+          debitor_number: user.new_debitor_number,
         }),
       ),
     );
@@ -582,7 +491,7 @@ const calculateStats = (data: any[]) => {
     .filter((i) => i.status === "PAID")
     .reduce((sum, i) => sum + Number(i.total_amount || 0), 0);
   stats.value.pendingAmount = data
-    .filter((i) => ["PENDING", "SENT", "DRAFT"].includes(i.status))
+    .filter((i) => ["PENDING", "SENT", "DRAFT", "PARTIALLY_PAID"].includes(i.status))
     .reduce((sum, i) => sum + Number(i.total_amount || 0), 0);
   stats.value.overdueAmount = data
     .filter((i) => i.status === "OVERDUE")
@@ -596,4 +505,38 @@ const goToDetail = (id: number) => {
 onMounted(() => {
   loadInvoices();
 });
+
+const allSelected = computed(() => {
+  if (filteredInvoices.value.length === 0) return false;
+  return filteredInvoices.value.every((inv) => selectedInvoices.value.includes(inv.id));
+});
+
+const toggleSelectAll = () => {
+  if (allSelected.value) {
+    selectedInvoices.value = [];
+  } else {
+    selectedInvoices.value = filteredInvoices.value.map((inv) => inv.id);
+  }
+};
+
+const handleBulkDownload = async () => {
+  if (selectedInvoices.value.length === 0) return;
+  bulkDownloading.value = true;
+  try {
+    const blob = await api.sales.bulkDownload(selectedInvoices.value);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `Rechnungen-${new Date().toISOString().split("T")[0]}.zip`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    selectedInvoices.value = [];
+  } catch (e) {
+    console.error("Bulk download error:", e);
+  } finally {
+    bulkDownloading.value = false;
+  }
+};
 </script>
