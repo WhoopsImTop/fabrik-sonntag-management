@@ -228,7 +228,7 @@
                 <tr class="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
                   <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[35%]">Beschreibung</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[10%]">Einheit</th>
+                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[15%]">Einheit</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
@@ -272,8 +272,14 @@
                   <td class="p-4 align-middle text-left">
                     <input v-if="isEditing" type="text" v-model="item.unit"
                       class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
-                      placeholder="Einheit" />
+                      placeholder="Einheit" name="suggestions" list="suggestions" />
                     <span v-else class="text-slate-500 block px-3 py-1">{{ item.unit || '-' }}</span>
+                    <datalist id="suggestions">
+                      <option value="Stunde"></option>
+                      <option value="Tag"></option>
+                      <option value="Monat"></option>
+                      <option value="psch."></option>
+                    </datalist>
                   </td>
 
                   <td class="p-4 align-middle text-right">
