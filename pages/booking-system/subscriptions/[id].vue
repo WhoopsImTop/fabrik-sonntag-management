@@ -277,80 +277,89 @@
                 </tr>
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
-                <tr v-for="(item, index) in form.items" :key="index"
-                  class="border-b border-slate-100 transition-colors hover:bg-slate-50/50 group">
-                  <td class="p-4 align-middle relative">
-                    <div class="relative">
-                      <input v-model="item.description" @input="handleInput(index)" @focus="focusRow(index)"
-                        @blur="blurRow(index)"
-                        class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
-                        placeholder="Leistung eingeben..." />
+                <template v-for="(item, index) in form.items" :key="index">
+                  <tr class="transition-colors hover:bg-slate-50/50 group">
+                    <td class="p-4 align-middle relative">
+                      <div class="relative">
+                        <input v-model="item.description" @input="handleInput(index)" @focus="focusRow(index)"
+                          @blur="blurRow(index)"
+                          class="flex h-9 w-full border border-neutral-200 rounded-md px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                          placeholder="Leistung eingeben..." />
 
-                      <div v-if="focusedRowIndex === index && suggestions.length > 0"
-                        class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-md border border-slate-200 bg-white shadow-md outline-none"
-                        @mousedown.prevent>
-                        <div class="p-1 max-h-60 overflow-y-auto">
-                          <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
-                            class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 hover:text-slate-900">
-                            <div class="flex flex-col">
-                              <span class="font-medium">{{ sugg.label }}</span>
-                              <span class="text-[10px] text-slate-500 uppercase">{{ sugg.type }}</span>
+                        <div v-if="focusedRowIndex === index && suggestions.length > 0"
+                          class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-md border border-slate-200 bg-white shadow-md outline-none"
+                          @mousedown.prevent>
+                          <div class="p-1 max-h-60 overflow-y-auto">
+                            <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
+                              class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 hover:text-slate-900">
+                              <div class="flex flex-col">
+                                <span class="font-medium">{{ sugg.label }}</span>
+                                <span class="text-[10px] text-slate-500 uppercase">{{ sugg.type }}</span>
+                              </div>
+                              <span class="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">{{
+                                formatMoney(sugg.price) }} €</span>
                             </div>
-                            <span class="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">{{
-                              formatMoney(sugg.price) }} €</span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td class="p-4 align-middle text-right">
-                    <input type="number" v-model="item.quantity" min="1"
-                      class="flex h-9 w-full border border-slate-200 text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
-                  </td>
+                    <td class="p-4 align-middle text-right">
+                      <input type="number" v-model="item.quantity" min="1"
+                        class="flex h-9 w-full border border-slate-200 text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
+                    </td>
 
-                  <td class="p-4 align-middle text-left">
-                    <input type="text" v-model="item.unit"
-                      class="flex h-9 w-full border border-slate-200 rounded-md border-transparent bg-transparent px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
-                      placeholder="Einheit" name="suggestions" list="suggestions" />
-                    <datalist id="suggestions">
-                      <option value="Stunde"></option>
-                      <option value="Tag"></option>
-                      <option value="Monat"></option>
-                      <option value="psch."></option>
-                    </datalist>
-                  </td>
+                    <td class="p-4 align-middle text-left">
+                      <input type="text" v-model="item.unit"
+                        class="flex h-9 w-full border border-slate-200 rounded-md px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        placeholder="Einheit" name="suggestions" list="suggestions" />
+                      <datalist id="suggestions">
+                        <option value="Stunde"></option>
+                        <option value="Tag"></option>
+                        <option value="Monat"></option>
+                        <option value="psch."></option>
+                      </datalist>
+                    </td>
 
-                  <td class="p-4 align-middle text-right">
-                    <input type="number" v-model="item.amount" step="0.01"
-                      class="flex h-9 w-full border border-slate-200 text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
-                      placeholder="0.00" />
-                  </td>
+                    <td class="p-4 align-middle text-right">
+                      <input type="number" v-model="item.amount" step="0.01"
+                        class="flex h-9 w-full border border-slate-200 text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        placeholder="0.00" />
+                    </td>
 
-                  <td class="p-4 align-middle text-right">
-                    <select v-model="item.vat_rate"
-                      class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
-                      <option :value="0">0%</option>
-                      <option :value="0.07">7%</option>
-                      <option :value="0.19">19%</option>
-                    </select>
-                  </td>
+                    <td class="p-4 align-middle text-right">
+                      <select v-model="item.vat_rate"
+                        class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
+                        <option :value="0">0%</option>
+                        <option :value="0.07">7%</option>
+                        <option :value="0.19">19%</option>
+                      </select>
+                    </td>
 
-                  <td class="p-4 align-middle text-right font-medium">
-                    {{ formatMoney(item.quantity * item.amount) }} €
-                  </td>
+                    <td class="p-4 align-middle text-right font-medium">
+                      {{ formatMoney(item.quantity * item.amount) }} €
+                    </td>
 
-                  <td class="p-4 align-middle text-center relative">
-                    <button @click="removeItem(index)"
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      title="Löschen">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </td>
-                </tr>
+                    <td class="p-4 align-middle text-center relative">
+                      <button @click="removeItem(index)"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Löschen">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+
+                  <tr class="border-b border-slate-100 hover:bg-slate-50/50">
+                    <td colspan="7" class="px-4 pb-4 pt-0">
+                      <textarea v-model="item.long_description" placeholder="Zusätzliche Beschreibung oder Details..."
+                        class="w-full rounded-md border border-slate-100 bg-transparent px-3 py-2 text-sm text-slate-500 transition-colors focus:bg-white focus:border-slate-300 focus-visible:outline-none"
+                        rows="2"></textarea>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>
@@ -409,7 +418,7 @@ const form = ref({
   status: "ACTIVE",
   next_billing_date: new Date().toISOString().split("T")[0],
   items: [
-    { description: "", quantity: 1, unit: "psch.", amount: 0, vat_rate: 0.19 },
+    { description: "", quantity: 1, unit: "psch.", amount: 0, vat_rate: 0.19, long_description: "" },
   ],
 });
 
@@ -610,6 +619,7 @@ const addItem = () =>
     unit: "psch.",
     amount: 0,
     vat_rate: 0.19,
+    long_description: ""
   });
 const removeItem = (index: number) => {
   if (form.value.items.length > 1) form.value.items.splice(index, 1);
@@ -620,6 +630,7 @@ const removeItem = (index: number) => {
       unit: "psch.",
       amount: 0,
       vat_rate: 0.19,
+      long_description: ""
     };
 };
 
