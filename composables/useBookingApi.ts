@@ -1032,6 +1032,19 @@ export const useBookingApi = () => {
       );
     },
 
+    uploadAttachments: async (formData: FormData) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/templates/upload-attachments`, {
+            method: "POST",
+            headers: getAuthHeaders(), // Let the browser set Content-Type for FormData
+            body: formData,
+          }),
+        "template.uploadAttachments",
+      );
+      return res;
+    },
+
     create: async (data: any) => {
       const res = await apiCall(
         () =>

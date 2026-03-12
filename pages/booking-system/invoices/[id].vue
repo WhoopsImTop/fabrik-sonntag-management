@@ -237,11 +237,11 @@
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
-                  <tr class="border-b border-slate-100 transition-colors hover:bg-slate-50/50 group">
+                  <tr class="transition-colors hover:bg-slate-50/50 group">
                     <td class="p-4 align-middle relative">
                       <div v-if="isEditing" class="relative">
                         <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
-                          class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                          class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                           placeholder="Leistung eingeben..." />
 
                         <div v-if="focusedRowIndex === index && suggestions.length > 0"
@@ -260,37 +260,37 @@
                           </div>
                         </div>
                       </div>
-                      <span v-else class="font-medium text-slate-900 block px-3 py-1">{{ item.description }}</span>
+                      <span v-else class="font-medium text-slate-900 block">{{ item.description }}</span>
                     </td>
 
                     <td class="p-4 align-middle text-right">
                       <input v-if="isEditing" type="number" v-model="item.quantity" min="1"
-                        class="flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
-                      <span v-else class="text-slate-600 block px-3 py-1">{{ item.quantity }}</span>
+                        class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
+                      <span v-else class="text-slate-600 block">{{ item.quantity }}</span>
                     </td>
 
                     <td class="p-4 align-middle text-left">
                       <input v-if="isEditing" type="text" v-model="item.unit"
-                        class="flex h-9 w-full rounded-md border-transparent bg-transparent px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
-                      <span v-else class="text-slate-500 block px-3 py-1">{{ item.unit || '-' }}</span>
+                      <span v-else class="text-slate-500 block">{{ item.unit || '-' }}</span>
                     </td>
 
                     <td class="p-4 align-middle text-right">
                       <input v-if="isEditing" type="number" v-model="item.amount" step="0.01"
-                        class="flex h-9 w-full text-right rounded-md border-transparent bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="0.00" />
-                      <span v-else class="text-slate-900 block px-3 py-1">{{ formatMoney(item.amount) }} €</span>
+                      <span v-else class="text-slate-900 block">{{ formatMoney(item.amount) }} €</span>
                     </td>
 
                     <td class="p-4 align-middle text-right">
                       <select v-if="isEditing" v-model="item.vat_rate"
-                        class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
+                        class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
                         <option :value="0">0%</option>
                         <option :value="0.07">7%</option>
                         <option :value="0.19">19%</option>
                       </select>
-                      <span v-else class="text-slate-600 block px-3 py-1">{{ Math.round((item.vat_rate || 0.19) * 100)
+                      <span v-else class="text-slate-600 block">{{ Math.round((item.vat_rate || 0.19) * 100)
                         }}%</span>
                     </td>
 
@@ -313,7 +313,7 @@
                   <tr v-if="isEditing || item.long_description"
                     class="border-b border-slate-100 transition-colors hover:bg-slate-50/50">
                     <td colspan="7" class="px-4 pb-4 pt-0">
-                      <div class="px-3">
+                      <div>
                         <textarea v-if="isEditing" v-model="item.long_description"
                           placeholder="Zusätzliche Beschreibung (optional)..."
                           class="w-full rounded-md border border-slate-200 bg-white/50 p-2 text-sm text-slate-600 focus-visible:outline-none focus:border-slate-300 focus:bg-white transition-all"

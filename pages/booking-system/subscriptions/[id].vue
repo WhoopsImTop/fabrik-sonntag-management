@@ -665,6 +665,7 @@ const loadData = async () => {
               unit: li.unit,
               amount: li.amount,
               vat_rate: li.vat_rate || 0.19,
+              long_description: li.long_description,
             })) || [],
         };
         const linkedUser = users.value.find((u) => u.id === sub.user_id);
