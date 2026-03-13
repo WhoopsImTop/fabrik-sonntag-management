@@ -89,6 +89,23 @@ const items = ref([
       ],
     },
     {
+      label: "Zählerverwaltung",
+      icon: "i-lucide-cable",
+      defaultOpen: false,
+      children: [
+        {
+          label: "Zähler (AES Keys)",
+          icon: "i-lucide-key",
+          to: "/meters",
+        },
+        {
+          label: "Zählerstände",
+          icon: "i-lucide-list",
+          to: "/meters/readings",
+        },
+      ],
+    },
+    {
       label: "Mietpreisanalyse",
       icon: "i-lucide-chart-candlestick",
       to: "/mietpreisanalyse",
