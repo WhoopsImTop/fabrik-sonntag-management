@@ -83,6 +83,10 @@ const deleteMeter = async (meter_id: string) => {
   }
 };
 
+const downloadCSV = async (meter_id: string) => {
+    await meterApi.downloadCSV(meter_id);
+};
+
 // Mass Import Modal
 const isImportModalOpen = ref(false);
 const importText = ref('');
@@ -177,6 +181,13 @@ const executeImport = async () => {
               icon="i-lucide-pencil"
               size="xs"
               @click="openEditModal(row.original)"
+            />
+            <UButton
+              color="neutral"
+              variant="ghost"
+              icon="i-lucide-download"
+              size="xs"
+              @click="downloadCSV(row.original.meter_id)"
             />
             <UButton
               color="error"

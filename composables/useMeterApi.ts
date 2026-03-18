@@ -25,8 +25,8 @@ export const useMeterApi = () => {
     if (error.status || error.statusCode) {
       const status = error.status || error.statusCode;
       let message = `Ein Fehler ist aufgetreten (${status}).`;
-      if (status === 409) message = 'Diese Meter ID existiert bereits.';
-      
+      if (status === 409) message = "Diese Meter ID existiert bereits.";
+
       toast.add({ title: "Fehler", description: message, color: "error" });
       return;
     }
@@ -111,35 +111,71 @@ export const useMeterApi = () => {
       }
       return res;
     },
-    
+
+    downloadCSV: async (meter_id: string) => {
+      try {
+        const response = await fetch(
+          `${baseURL}/mbus/export/csv/${meter_id}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Download fehlgeschlagen");
+        }
+
+        const blob = await response.blob();
+
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${meter_id}_ablesung.csv`;
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+
     massImportMeters: async (metersArray: any[]) => {
       let successCount = 0;
       let errorCount = 0;
-      
-      for(const meter of metersArray) {
-          try {
-              const res = await $fetch(`${baseURL}/meters`, {
-                  method: "POST",
-                  headers: {
-                      ...getAuthHeaders(),
-                      "Content-Type": "application/json",
-                  },
-                  body: meter,
-              });
-              if(res && (res as any).success) successCount++;
-              else errorCount++;
-          } catch(e) {
-              console.error("Mass import failed for meter", meter, e);
-              errorCount++;
-          }
+
+      for (const meter of metersArray) {
+        try {
+          const res = await $fetch(`${baseURL}/meters`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: meter,
+          });
+          if (res && (res as any).success) successCount++;
+          else errorCount++;
+        } catch (e) {
+          console.error("Mass import failed for meter", meter, e);
+          errorCount++;
+        }
       }
-      toast.add({ title: "Import beendet", description: `${successCount} erfolgreich, ${errorCount} fehlerhaft`, color: errorCount === 0 ? "primary" : "neutral" });
+      toast.add({
+        title: "Import beendet",
+        description: `${successCount} erfolgreich, ${errorCount} fehlerhaft`,
+        color: errorCount === 0 ? "primary" : "neutral",
+      });
       return { successCount, errorCount };
     },
 
     getAllReadings: async () => {
       const res = await apiCall(
-        () => $fetch(`${baseURL}/meters/readings`, { headers: getAuthHeaders() }),
+        () =>
+          $fetch(`${baseURL}/meters/readings`, { headers: getAuthHeaders() }),
         "getAllReadings",
       );
       return res?.data || [];
@@ -161,7 +197,7 @@ export const useMeterApi = () => {
     },
 
     deleteAllReadings: async () => {
-       const res = await apiCall(
+      const res = await apiCall(
         () =>
           $fetch(`${baseURL}/meters/readings`, {
             method: "DELETE",
@@ -173,6 +209,6 @@ export const useMeterApi = () => {
         toast.add({ title: "Alle Zählerstände gelöscht", color: "primary" });
       }
       return res;
-    }
+    },
   };
 };
