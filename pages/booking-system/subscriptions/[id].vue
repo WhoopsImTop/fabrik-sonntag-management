@@ -366,14 +366,16 @@
 
           <div class="bg-slate-50 border-t border-slate-200 p-4 pb-6 rounded-b-lg">
             <div class="flex justify-end pr-10">
-              <div class="w-64 space-y-2">
+              <div class="w-full max-w-md space-y-2">
                 <div class="flex justify-between text-sm text-slate-500">
                   <span>Netto</span>
                   <span class="font-medium text-slate-900">{{ formatMoney(totals.net) }} €</span>
                 </div>
-                <div class="flex justify-between text-sm text-slate-500">
-                  <span>USt (dynamisch)</span>
-                  <span class="font-medium text-slate-900">{{ formatMoney(totals.tax) }} €</span>
+                <div v-for="row in totals.taxByRate" :key="row.rate"
+                  class="flex justify-between gap-3 text-sm text-slate-500">
+                  <span class="text-left leading-snug">Umsatzsteuer {{ formatVatPercent(row.rate) }}% (aus {{
+                    formatMoney(row.net) }} € netto)</span>
+                  <span class="font-medium text-slate-900 shrink-0">{{ formatMoney(row.amount) }} €</span>
                 </div>
                 <div class="flex justify-between pt-2 border-t border-slate-200 mt-2 font-semibold text-base">
                   <span>Gesamtbetrag</span>
@@ -498,22 +500,42 @@ const suggestions = computed(() => {
     .slice(0, 8);
 });
 
+const parseVatRateFromApi = (v: unknown): number => {
+  if (v === null || v === undefined || v === "") return 0.19;
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? n : 0.19;
+};
+
 const totals = computed(() => {
-  const net = form.value.items.reduce(
-    (sum, item) => sum + Number(item.amount || 0) * Number(item.quantity || 1),
-    0,
-  );
-  const tax = form.value.items.reduce((sum, item) => {
-    const rate =
-      typeof item.vat_rate === "number" ? Number(item.vat_rate) : 0.19;
-    return sum + Number(item.amount || 0) * Number(item.quantity || 1) * rate;
-  }, 0);
-  return { net, tax, gross: net + tax };
+  const taxByRateMap = new Map<number, { net: number; tax: number }>();
+  let net = 0;
+  for (const item of form.value.items) {
+    const lineNet =
+      Number(item.amount || 0) * Number(item.quantity || 1);
+    net += lineNet;
+    const rate = parseVatRateFromApi(item.vat_rate);
+    const key = Math.round(rate * 10000) / 10000;
+    const prev = taxByRateMap.get(key) || { net: 0, tax: 0 };
+    taxByRateMap.set(key, {
+      net: prev.net + lineNet,
+      tax: prev.tax + lineNet * rate,
+    });
+  }
+  const taxByRate = [...taxByRateMap.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([rate, v]) => ({ rate, net: v.net, amount: v.tax }));
+  const tax = taxByRate.reduce((s, r) => s + r.amount, 0);
+  return { net, tax, taxByRate, gross: net + tax };
 });
 
 // --- METHODS ---
 
 const formatMoney = (val: any) => Number(val || 0).toFixed(2);
+
+const formatVatPercent = (rate: number) => {
+  const p = Math.round(rate * 10000) / 100;
+  return Number.isInteger(p) ? String(p) : String(p);
+};
 const getStatusLabel = (s: string) =>
   ({ ACTIVE: "Aktiv", PAUSED: "Pausiert", CANCELLED: "Beendet" })[s] || s;
 const getStatusClass = (s: string) =>
@@ -664,7 +686,7 @@ const loadData = async () => {
               quantity: li.quantity,
               unit: li.unit,
               amount: li.amount,
-              vat_rate: li.vat_rate || 0.19,
+              vat_rate: parseVatRateFromApi(li.vat_rate),
               long_description: li.long_description,
             })) || [],
         };
