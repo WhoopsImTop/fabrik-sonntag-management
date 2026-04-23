@@ -37,7 +37,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
-        <template v-if="isEditing">
+        <template v-if="isEditing && isDraft">
           <button @click="toggleEditMode"
             class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50">
             Abbrechen
@@ -62,15 +62,23 @@
             </svg>
             PDF Laden
           </button>
-          <button @click="sendInvoiceEmail"
+          <button v-if="!isStorno" @click="sendInvoiceEmail"
             class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950">
             Email senden
           </button>
-          <button @click="toggleEditMode"
+          <button v-if="isLockedAfterSend && invoice.status !== 'PAID'" @click="markInvoicePaid"
+            class="inline-flex h-9 items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500">
+            Als bezahlt markieren
+          </button>
+          <button v-if="isLockedAfterSend" @click="stornoInvoice"
+            class="inline-flex h-9 items-center justify-center rounded-md border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900 shadow-sm transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500">
+            Stornieren
+          </button>
+          <button v-if="isDraft" @click="toggleEditMode"
             class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950">
             Bearbeiten
           </button>
-          <button @click="handleDelete"
+          <button v-if="isDraft" @click="handleDelete"
             class="inline-flex h-9 items-center justify-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500">
             Löschen
           </button>
@@ -90,12 +98,12 @@
               / Manuell</span>
           </div>
           <p class="text-sm text-slate-500">
-            {{ isEditing ? 'Kundenkonto auswählen oder entfernen.' : 'Zugewiesener Kunde dieser Rechnung.' }}
+            {{ isEditing && isDraft ? 'Kundenkonto auswählen oder entfernen.' : 'Zugewiesener Kunde dieser Rechnung.' }}
           </p>
         </div>
 
         <div class="p-6 pt-0 space-y-4">
-          <template v-if="isEditing">
+          <template v-if="isEditing && isDraft">
             <div class="space-y-2">
               <label class="text-sm font-medium leading-none">
                 Kunden suchen
@@ -172,9 +180,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Status</label>
-                <select v-if="isEditing" v-model="form.status"
+                <select v-if="isEditing && isDraft" v-model="form.status"
                   class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="DELETED">Storniert</option>
                   <option value="DRAFT">Entwurf</option>
                   <option value="SENT">Versendet</option>
                   <option value="PAID">Bezahlt</option>
@@ -188,7 +195,7 @@
 
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Rechnungsdatum</label>
-                <input v-if="isEditing" type="date" v-model="form.invoice_date"
+                <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
                   class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
                 <div v-else
                   class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
@@ -198,7 +205,7 @@
 
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Fälligkeitsdatum</label>
-                <input v-if="isEditing" type="date" v-model="form.due_date"
+                <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
                   class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
                 <div v-else
                   class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
@@ -213,7 +220,7 @@
         <div class="border border-slate-200 bg-white text-slate-950 shadow-sm rounded-lg">
           <div class="flex items-center justify-between p-6 pb-4 border-b border-slate-100">
             <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
-            <button v-if="isEditing" @click="addItem"
+            <button v-if="isEditing && isDraft" @click="addItem"
               class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -232,14 +239,14 @@
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
-                  <th v-if="isEditing" class="h-10 px-2 align-middle w-[5%]"></th>
+                  <th v-if="isEditing && isDraft" class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
                   <tr class="transition-colors hover:bg-slate-50/50 group">
                     <td class="p-4 align-middle relative">
-                      <div v-if="isEditing" class="relative">
+                      <div v-if="isEditing && isDraft" class="relative">
                         <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
                           class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                           placeholder="Leistung eingeben..." />
@@ -264,27 +271,27 @@
                     </td>
 
                     <td class="p-4 align-middle text-right">
-                      <input v-if="isEditing" type="number" v-model="item.quantity" min="1"
+                      <input v-if="isEditing && isDraft" type="number" v-model="item.quantity" min="1"
                         class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
                       <span v-else class="text-slate-600 block">{{ item.quantity }}</span>
                     </td>
 
                     <td class="p-4 align-middle text-left">
-                      <input v-if="isEditing" type="text" v-model="item.unit"
+                      <input v-if="isEditing && isDraft" type="text" v-model="item.unit"
                         class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
                       <span v-else class="text-slate-500 block">{{ item.unit || '-' }}</span>
                     </td>
 
                     <td class="p-4 align-middle text-right">
-                      <input v-if="isEditing" type="number" v-model="item.amount" step="0.01"
+                      <input v-if="isEditing && isDraft" type="number" v-model="item.amount" step="0.01"
                         class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="0.00" />
                       <span v-else class="text-slate-900 block">{{ formatMoney(item.amount) }} €</span>
                     </td>
 
                     <td class="p-4 align-middle text-right">
-                      <select v-if="isEditing" v-model="item.vat_rate"
+                      <select v-if="isEditing && isDraft" v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
                         <option :value="0">0%</option>
                         <option :value="0.07">7%</option>
@@ -298,7 +305,7 @@
                       {{ formatMoney((Number(item.quantity) || 0) * (Number(item.amount) || 0)) }} €
                     </td>
 
-                    <td v-if="isEditing" class="p-4 align-middle text-center relative">
+                    <td v-if="isEditing && isDraft" class="p-4 align-middle text-center relative">
                       <button @click="removeItem(index)"
                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                         title="Löschen">
@@ -310,11 +317,11 @@
                     </td>
                   </tr>
 
-                  <tr v-if="isEditing || item.long_description"
+                  <tr v-if="(isEditing && isDraft) || item.long_description"
                     class="border-b border-slate-100 transition-colors hover:bg-slate-50/50">
-                    <td colspan="7" class="px-4 pb-4 pt-0">
+                    <td :colspan="(isEditing && isDraft) ? 7 : 6" class="px-4 pb-4 pt-0">
                       <div>
-                        <textarea v-if="isEditing" v-model="item.long_description"
+                        <textarea v-if="isEditing && isDraft" v-model="item.long_description"
                           placeholder="Zusätzliche Beschreibung (optional)..."
                           class="w-full rounded-md border border-slate-200 bg-white/50 p-2 text-sm text-slate-600 focus-visible:outline-none focus:border-slate-300 focus:bg-white transition-all"
                           rows="2"></textarea>
@@ -327,7 +334,7 @@
                   </tr>
                 </template>
 
-                <tr v-if="isEditing && form.items.length === 0">
+                <tr v-if="isEditing && isDraft && form.items.length === 0">
                   <td colspan="7" class="p-8 text-center text-sm text-slate-500">
                     Keine Positionen vorhanden. <button @click="addItem"
                       class="text-slate-900 font-medium hover:underline">Erste Zeile hinzufügen</button>
@@ -378,6 +385,12 @@ const loading = ref(true);
 const saving = ref(false);
 const isEditing = ref(false);
 const invoice = ref<any>(null);
+
+const isDraft = computed(() => invoice.value?.status === "DRAFT");
+const isStorno = computed(() => invoice.value?.status === "DELETED");
+const isLockedAfterSend = computed(() =>
+  ["SENT", "PAID", "OVERDUE"].includes(invoice.value?.status),
+);
 
 const form = ref({
   status: "DRAFT",
@@ -482,7 +495,7 @@ const allProducts = computed(() => {
 });
 
 const suggestions = computed(() => {
-  if (focusedRowIndex.value === null || !isEditing.value) return [];
+  if (focusedRowIndex.value === null || !isEditing.value || !isDraft.value) return [];
   const itemDesc = form.value.items[focusedRowIndex.value]?.description;
   const currentInput = itemDesc ? String(itemDesc).toLowerCase() : "";
   if (!currentInput) return allProducts.value;
@@ -577,8 +590,9 @@ const loadInvoice = async () => {
 
 const toggleEditMode = () => {
   if (isEditing.value) {
-    // Cancel pressed -> Reload original data to reset form
     loadInvoice();
+  } else {
+    if (!isDraft.value) return;
   }
   isEditing.value = !isEditing.value;
 };
@@ -778,6 +792,33 @@ const sendInvoiceEmail = async () => {
   } catch (e: any) {
     console.error(e);
     alert("Fehler beim Senden der E-Mail: " + (e.message || ""));
+  }
+};
+
+const markInvoicePaid = async () => {
+  try {
+    await api.sales.update(Number(invoiceId), { status: "PAID" });
+    await loadInvoice();
+  } catch (e: any) {
+    console.error(e);
+    alert("Fehler: " + (e?.message || "Status konnte nicht gesetzt werden."));
+  }
+};
+
+const stornoInvoice = async () => {
+  if (
+    !confirm(
+      "Diese Rechnung stornieren? Die Rechnungsnummer bleibt dauerhaft vergeben. Das archivierte PDF wird mit „STORNIERT“ gekennzeichnet.",
+    )
+  ) {
+    return;
+  }
+  try {
+    await api.sales.update(Number(invoiceId), { status: "DELETED" });
+    await loadInvoice();
+  } catch (e: any) {
+    console.error(e);
+    alert("Fehler beim Stornieren: " + (e?.message || ""));
   }
 };
 

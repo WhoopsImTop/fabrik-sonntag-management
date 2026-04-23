@@ -345,6 +345,7 @@ const getStatusClass = (status: string) => {
     SENT: "bg-blue-50 text-blue-700 border-blue-200",
     OVERDUE: "bg-red-50 text-red-700 border-red-200",
     DRAFT: "bg-gray-50 text-gray-700 border-gray-200",
+    DELETED: "bg-slate-100 text-slate-600 border-slate-200",
   };
   return classes[status] || classes.DRAFT;
 };
@@ -356,6 +357,7 @@ const getStatusLabel = (status: string) => {
     SENT: "Versendet",
     OVERDUE: "Überfällig",
     DRAFT: "Entwurf",
+    DELETED: "Storniert",
   };
   return labels[status] || status;
 };
@@ -387,6 +389,7 @@ const loadInvoices = async () => {
 };
 
 const togglePaidStatus = async (invoice: any) => {
+  if (invoice.status === "DELETED") return;
   try {
     const newStatus = invoice.status === 'PAID' ? 'SENT' : 'PAID';
     const updated = await api.sales.update(invoice.id, { status: newStatus });
