@@ -11,7 +11,7 @@ const columns = [
   { accessorKey: 'label', header: 'Bezeichnung' },
   { accessorKey: 'medium_code', header: 'Medium Code' },
   { accessorKey: 'aes_key', header: 'AES Key' },
-  { accessorKey: 'active', header: 'Status' },
+  { accessorKey: 'readings.length', header: 'Anzahl Zählerstände' },
   { id: 'actions' }
 ];
 
@@ -34,25 +34,29 @@ const formState = ref({
   label: '',
   medium_code: '',
   aes_key: '',
+  estate_number: '',
+  estate_description: '',
   active: true,
   _originalId: ''
 });
 
 const openCreateModal = () => {
   isEditing.value = false;
-  formState.value = { meter_id: '', label: '', medium_code: '', aes_key: '', active: true, _originalId: '' };
+  formState.value = { meter_id: '', label: '', medium_code: '', aes_key: '', estate_number: '', estate_description: '', active: true, _originalId: '' };
   isModalOpen.value = true;
 };
 
 const openEditModal = (meter: any) => {
   isEditing.value = true;
-  formState.value = { 
-      meter_id: meter.meter_id, 
-      label: meter.label || '', 
-      medium_code: meter.medium_code || '', 
-      aes_key: meter.aes_key || '', 
-      active: meter.active,
-      _originalId: meter.meter_id 
+  formState.value = {
+    meter_id: meter.meter_id,
+    label: meter.label || '',
+    medium_code: meter.medium_code || '',
+    aes_key: meter.aes_key || '',
+    estate_number: meter.estate_number || '',
+    estate_description: meter.estate_description || '',
+    active: meter.active,
+    _originalId: meter.meter_id
   };
   isModalOpen.value = true;
 };
@@ -63,6 +67,8 @@ const saveMeter = async () => {
     label: formState.value.label,
     medium_code: formState.value.medium_code,
     aes_key: formState.value.aes_key,
+    estate_number: formState.value.estate_number,
+    estate_description: formState.value.estate_description,
     active: formState.value.active
   };
 
@@ -84,7 +90,7 @@ const deleteMeter = async (meter_id: string) => {
 };
 
 const downloadCSV = async (meter_id: string) => {
-    await meterApi.downloadCSV(meter_id);
+  await meterApi.downloadCSV(meter_id);
 };
 
 // Mass Import Modal
@@ -92,44 +98,46 @@ const isImportModalOpen = ref(false);
 const importText = ref('');
 
 const openImportModal = () => {
-    importText.value = '';
-    isImportModalOpen.value = true;
+  importText.value = '';
+  isImportModalOpen.value = true;
 };
 
 const executeImport = async () => {
+  try {
+    let itemsToImport: any[] = [];
+
+    // Try JSON parsing first
     try {
-        let itemsToImport: any[] = [];
-        
-        // Try JSON parsing first
-        try {
-           itemsToImport = JSON.parse(importText.value);
-           if(!Array.isArray(itemsToImport)) {
-               // Wrap single object in array if needed
-               itemsToImport = [itemsToImport];
-           }
-        } catch(e) {
-           // Fallback CSV (assuming meter_id,aes_key,medium_code,label)
-           const lines = importText.value.split('\n').filter(l => l.trim().length > 0);
-           itemsToImport = lines.map(line => {
-               const parts = line.split(',');
-               return {
-                   meter_id: parts[0]?.trim(),
-                   aes_key: parts[1]?.trim() || '',
-                   medium_code: parts[2]?.trim() || '',
-                   label: parts[3]?.trim() || '',
-                   active: true
-               };
-           });
-        }
-        
-        if(itemsToImport.length > 0) {
-            await meterApi.massImportMeters(itemsToImport);
-            isImportModalOpen.value = false;
-            loadMeters();
-        }
+      itemsToImport = JSON.parse(importText.value);
+      if (!Array.isArray(itemsToImport)) {
+        // Wrap single object in array if needed
+        itemsToImport = [itemsToImport];
+      }
     } catch (e) {
-        alert("Fehler beim Parsen der Import-Daten");
+      // Fallback CSV (assuming meter_id,aes_key,medium_code,label,estate_number,estate_description)
+      const lines = importText.value.split('\n').filter(l => l.trim().length > 0);
+      itemsToImport = lines.map(line => {
+        const parts = line.split(',');
+        return {
+          meter_id: parts[0]?.trim(),
+          aes_key: parts[1]?.trim() || '',
+          medium_code: parts[2]?.trim() || '',
+          label: parts[3]?.trim() || '',
+          estate_number: parts[4]?.trim() || '',
+          estate_description: parts[5]?.trim() || '',
+          active: true
+        };
+      });
     }
+
+    if (itemsToImport.length > 0) {
+      await meterApi.massImportMeters(itemsToImport);
+      isImportModalOpen.value = false;
+      loadMeters();
+    }
+  } catch (e) {
+    alert("Fehler beim Parsen der Import-Daten");
+  }
 };
 
 </script>
@@ -139,103 +147,102 @@ const executeImport = async () => {
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Zählerverwaltung (AES Keys)</h1>
       <div class="flex gap-2">
-        <UButton
-          color="neutral"
-          variant="solid"
-          icon="i-lucide-upload"
-          @click="openImportModal"
-        >
+        <UButton color="neutral" variant="solid" icon="i-lucide-upload" @click="openImportModal">
           Mass Import
         </UButton>
-        <UButton
-          color="primary"
-          variant="solid"
-          icon="i-lucide-plus"
-          @click="openCreateModal"
-        >
+        <UButton color="primary" variant="solid" icon="i-lucide-plus" @click="openCreateModal">
           Neuer Zähler
         </UButton>
       </div>
     </div>
 
-    <div class="flex-1 flex flex-col min-h-0 bg-white ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 shadow sm:rounded-lg overflow-hidden relative">
-      <UTable
-        :data="meters"
-        :columns="columns"
-        :loading="loading"
-        class="h-full"
-      >
+    <div
+      class="flex-1 flex flex-col min-h-0 bg-white ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 shadow sm:rounded-lg overflow-hidden relative">
+      <UTable :data="meters" :columns="columns" :loading="loading" class="h-full">
         <template #active-cell="{ row }">
-            <UBadge :color="row.original.active ? 'primary' : 'error'">
-                {{ row.original.active ? 'Aktiv' : 'Inaktiv' }}
-            </UBadge>
+          <UBadge :color="row.original.active ? 'primary' : 'error'">
+            {{ row.original.active ? 'Aktiv' : 'Inaktiv' }}
+          </UBadge>
         </template>
         <template #aes_key-cell="{ row }">
-             <span class="font-mono text-xs">{{ row.original.aes_key }}</span>
+          <span class="font-mono text-xs">{{ row.original.aes_key }}</span>
         </template>
         <template #actions-cell="{ row }">
           <div class="flex items-center gap-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              icon="i-lucide-pencil"
-              size="xs"
-              @click="openEditModal(row.original)"
-            />
-            <UButton
-              color="neutral"
-              variant="ghost"
-              icon="i-lucide-download"
-              size="xs"
-              @click="downloadCSV(row.original.meter_id)"
-            />
-            <UButton
-              color="error"
-              variant="ghost"
-              icon="i-lucide-trash-2"
-              size="xs"
-              @click="deleteMeter(row.original.meter_id)"
-            />
+            <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs"
+              @click="openEditModal(row.original)" />
+            <UButton color="neutral" variant="ghost" icon="i-lucide-download" size="xs"
+              @click="downloadCSV(row.original.meter_id)" />
+            <UButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs"
+              @click="deleteMeter(row.original.meter_id)" />
           </div>
         </template>
       </UTable>
     </div>
-    
+
     <!-- Single Create/Edit Modal -->
     <UModal :open="isModalOpen" @update:open="isModalOpen = $event">
       <template #content>
-        <div class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
+        <div
+          class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
           <div class="flex items-center justify-between p-4 sm:px-6">
             <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
               {{ isEditing ? 'Zähler bearbeiten' : 'Zähler anlegen' }}
             </h3>
-            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isModalOpen = false" />
+            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+              @click="isModalOpen = false" />
           </div>
           <form @submit.prevent="saveMeter" class="space-y-4 p-4 sm:px-6 pb-6 opacity-100 z-50 pointer-events-auto">
-              <UFormGroup label="Meter ID" required>
-                  <UInput v-model="formState.meter_id" placeholder="12345678" :disabled="isEditing" />
-              </UFormGroup>
-              
-              <UFormGroup label="Bezeichnung">
-                  <UInput v-model="formState.label" placeholder="Heizung EG" />
-              </UFormGroup>
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">
+                Meter ID <span class="text-red-500">*</span>
+              </label>
+              <input v-model="formState.meter_id" placeholder="12345678" :disabled="isEditing" required
+                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
 
-              <UFormGroup label="Medium Code">
-                  <UInput v-model="formState.medium_code" placeholder="z.b. 04 für Wärme" />
-              </UFormGroup>
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Bezeichnung</label>
+              <input v-model="formState.label" placeholder="Heizung EG"
+                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
 
-              <UFormGroup label="AES Key">
-                  <UInput v-model="formState.aes_key" placeholder="32 Zeichen Hex..." class="font-mono text-xs" />
-              </UFormGroup>
-              
-              <UFormGroup label="Aktiv">
-                  <UToggle v-model="formState.active" />
-              </UFormGroup>
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Medium Code</label>
+              <input v-model="formState.medium_code" placeholder="z.b. 04 für Wärme"
+                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
 
-              <div class="flex justify-end gap-3 mt-4">
-                  <UButton color="neutral" variant="soft" @click="isModalOpen = false">Abbrechen</UButton>
-                  <UButton type="submit" color="primary">Speichern</UButton>
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">AES Key</label>
+              <input v-model="formState.aes_key" placeholder="32 Zeichen Hex..." 
+                class="font-mono flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Liegenschaftsnummer</label>
+              <input v-model="formState.estate_number" placeholder="Bsp: 1234.56"
+                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
+
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Liegenschaftsbeschreibung</label>
+              <input v-model="formState.estate_description" placeholder="Bsp: Wohnhaus Nord"
+                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+            </div>
+
+            <div class="flex flex-row items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 p-3 shadow-sm">
+              <div class="space-y-0.5">
+                <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Aktiv</label>
+                <p class="text-[0.8rem] text-gray-500 dark:text-gray-400">Dieser Zähler wird aktiv verwendet</p>
               </div>
+              <UToggle v-model="formState.active" />
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+              <button type="button" @click="isModalOpen = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-transparent hover:bg-gray-100 hover:text-gray-900 h-9 px-4 py-2 dark:border-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-50 shadow-sm">Abbrechen</button>
+              <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 shadow">Speichern</button>
+            </div>
           </form>
         </div>
       </template>
@@ -243,25 +250,32 @@ const executeImport = async () => {
 
     <UModal :open="isImportModalOpen" @update:open="isImportModalOpen = $event">
       <template #content>
-        <div class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
+        <div
+          class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
           <div class="flex items-center justify-between p-4 sm:px-6">
             <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
               Zähler Massenimport
             </h3>
-            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1" @click="isImportModalOpen = false" />
+            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
+              @click="isImportModalOpen = false" />
           </div>
           <div class="space-y-4 p-4 sm:px-6 pb-6 opacity-100 z-50 pointer-events-auto">
-              <p class="text-sm text-gray-500">
-                  Fügen Sie ein JSON Array oder CSV Format (meter_id,aes_key,medium_code,label) ein.
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">
+                Daten (JSON/CSV)
+              </label>
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Fügen Sie ein JSON Array oder CSV Format (meter_id,aes_key,medium_code,label,estate_number,estate_description) ein.
               </p>
-              <UFormGroup label="Daten (JSON/CSV)">
-                  <UTextarea v-model="importText" class="min-h-[200px]" placeholder="meter_id, aes_key, medium_code, label\n..." />
-              </UFormGroup>
-  
-              <div class="flex justify-end gap-3 mt-4">
-                  <UButton color="neutral" variant="soft" @click="isImportModalOpen = false">Abbrechen</UButton>
-                  <UButton color="primary" @click="executeImport">Importieren</UButton>
-              </div>
+              <textarea v-model="importText" 
+                class="flex min-h-[200px] w-full rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
+                placeholder="meter_id, aes_key, medium_code, label, estate_number, estate_description\n..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+              <button type="button" @click="isImportModalOpen = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-transparent hover:bg-gray-100 hover:text-gray-900 h-9 px-4 py-2 dark:border-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-50 shadow-sm">Abbrechen</button>
+              <button type="button" @click="executeImport" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 shadow">Importieren</button>
+            </div>
           </div>
         </div>
       </template>

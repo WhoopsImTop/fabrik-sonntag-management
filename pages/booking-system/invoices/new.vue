@@ -400,9 +400,9 @@ const form = ref({
   user_id: "" as string | number,
   status: "DRAFT",
   invoice_date: new Date().toISOString().split("T")[0],
-  due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+  due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
-    .split("T")[0], // 14 Tage
+    .split("T")[0], // 7 Tage
   days_to_pay: 7,
   notes: "",
   items: [
@@ -416,6 +416,34 @@ const form = ref({
     },
   ],
 });
+
+const parseDateInput = (value: string) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDateInput = (date: Date) => date.toISOString().split("T")[0];
+
+const calculateDueDateFromDays = (invoiceDate: string, daysToPay: number) => {
+  const baseDate = parseDateInput(invoiceDate);
+  if (!baseDate) return "";
+  const nextDate = new Date(baseDate);
+  nextDate.setDate(nextDate.getDate() + Number(daysToPay || 0));
+  return formatDateInput(nextDate);
+};
+
+const calculateDaysBetweenDates = (fromDate: string, toDate: string) => {
+  const from = parseDateInput(fromDate);
+  const to = parseDateInput(toDate);
+  if (!from || !to) return null;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const utcFrom = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const utcTo = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((utcTo - utcFrom) / msPerDay);
+};
+
+const syncingPaymentTerms = ref(false);
 
 // Formular für neuen Kunden
 const customerForm = ref({
@@ -434,11 +462,26 @@ const customerForm = ref({
 watch(
   () => [form.value.invoice_date, form.value.days_to_pay],
   ([newInvoiceDate, newDays]) => {
-    if (!newInvoiceDate) return;
-    const dueDate = new Date(newInvoiceDate as string);
-    dueDate.setDate(dueDate.getDate() + Number(newDays || 0));
-    form.value.due_date = dueDate.toISOString().split("T")[0];
+    if (syncingPaymentTerms.value || !newInvoiceDate) return;
+    syncingPaymentTerms.value = true;
+    form.value.due_date = calculateDueDateFromDays(
+      newInvoiceDate as string,
+      Number(newDays || 0),
+    );
+    syncingPaymentTerms.value = false;
   }
+);
+
+watch(
+  () => form.value.due_date,
+  (newDueDate) => {
+    if (syncingPaymentTerms.value || !form.value.invoice_date || !newDueDate) return;
+    const days = calculateDaysBetweenDates(form.value.invoice_date, newDueDate);
+    if (days === null) return;
+    syncingPaymentTerms.value = true;
+    form.value.days_to_pay = days;
+    syncingPaymentTerms.value = false;
+  },
 );
 
 // AUTOCOMPLETE

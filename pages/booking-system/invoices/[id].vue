@@ -169,7 +169,7 @@
             <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
           </div>
           <div class="p-6 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Status</label>
                 <select v-if="isEditing" v-model="form.status"
@@ -203,6 +203,16 @@
                 <div v-else
                   class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
                   {{ formatDate(invoice.due_date) }}
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700">Zahlungsziel (Tage)</label>
+                <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
+                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+                <div v-else
+                  class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
+                  {{ invoice.days_to_pay ?? form.days_to_pay }}
                 </div>
               </div>
             </div>
@@ -364,7 +374,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -384,6 +394,7 @@ const form = ref({
   notes: "",
   invoice_date: "",
   due_date: "",
+  days_to_pay: 7,
   user_id: null as number | null,
   user_preview: null as any,
   items: [] as Array<{
@@ -413,6 +424,34 @@ const isSearchingUsers = ref(false);
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const formatMoney = (val: any) => Number(val || 0).toFixed(2);
+
+const parseDateInput = (value: string) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatDateInput = (date: Date) => date.toISOString().split("T")[0];
+
+const calculateDueDateFromDays = (invoiceDate: string, daysToPay: number) => {
+  const baseDate = parseDateInput(invoiceDate);
+  if (!baseDate) return "";
+  const nextDate = new Date(baseDate);
+  nextDate.setDate(nextDate.getDate() + Number(daysToPay || 0));
+  return formatDateInput(nextDate);
+};
+
+const calculateDaysBetweenDates = (fromDate: string, toDate: string) => {
+  const from = parseDateInput(fromDate);
+  const to = parseDateInput(toDate);
+  if (!from || !to) return null;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const utcFrom = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const utcTo = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((utcTo - utcFrom) / msPerDay);
+};
+
+const syncingPaymentTerms = ref(false);
 
 const parseVatRateFromApi = (v: unknown): number => {
   if (v === null || v === undefined || v === "") return 0.19;
@@ -449,6 +488,31 @@ const formatDate = (dateString: string) => {
   if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString("de-DE");
 };
+
+watch(
+  () => [form.value.invoice_date, form.value.days_to_pay],
+  ([newInvoiceDate, newDays]) => {
+    if (syncingPaymentTerms.value || !isEditing.value || !newInvoiceDate) return;
+    syncingPaymentTerms.value = true;
+    form.value.due_date = calculateDueDateFromDays(
+      String(newInvoiceDate),
+      Number(newDays || 0),
+    );
+    syncingPaymentTerms.value = false;
+  },
+);
+
+watch(
+  () => form.value.due_date,
+  (newDueDate) => {
+    if (syncingPaymentTerms.value || !isEditing.value || !form.value.invoice_date || !newDueDate) return;
+    const days = calculateDaysBetweenDates(form.value.invoice_date, newDueDate);
+    if (days === null) return;
+    syncingPaymentTerms.value = true;
+    form.value.days_to_pay = days;
+    syncingPaymentTerms.value = false;
+  },
+);
 
 // --- Computed Products for Autocomplete ---
 const allProducts = computed(() => {
@@ -548,6 +612,13 @@ const loadInvoice = async () => {
       form.value.due_date = data.due_date
         ? new Date(data.due_date).toISOString().split("T")[0]
         : "";
+      const calculatedDays =
+        form.value.invoice_date && form.value.due_date
+          ? calculateDaysBetweenDates(form.value.invoice_date, form.value.due_date)
+          : null;
+      form.value.days_to_pay = Number.isFinite(Number(data.days_to_pay))
+        ? Number(data.days_to_pay)
+        : Number(calculatedDays ?? 0);
 
       form.value.user_id = data.user_id;
       form.value.user_preview = data.User;
@@ -706,6 +777,7 @@ const saveInvoice = async () => {
       notes: form.value.notes,
       invoice_date: form.value.invoice_date,
       due_date: form.value.due_date,
+      days_to_pay: Number(form.value.days_to_pay),
       user_id: form.value.user_id,
       items: form.value.items,
     });
