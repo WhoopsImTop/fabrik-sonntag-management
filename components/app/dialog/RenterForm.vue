@@ -1,10 +1,13 @@
 <template>
+  <div>
   <div
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
     v-if="modelValue"
   >
     <div
-      class="bg-white rounded-lg p-4 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+      class="bg-white rounded-xl p-5 w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
+      role="dialog"
+      aria-modal="true"
     >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">
@@ -28,8 +31,15 @@
         </button>
       </div>
 
-      <div class="space-y-4">
+      <div class="space-y-5">
         <div class="space-y-4">
+          <div class="rounded-lg border border-neutral-200 p-4 space-y-4 bg-neutral-50/40">
+            <div>
+              <h4 class="text-sm font-semibold text-neutral-900">Stammdaten</h4>
+              <p class="text-xs text-neutral-500">
+                Basisinformationen zum Mieter und der Kontaktperson.
+              </p>
+            </div>
           <div>
             <label class="block text-sm font-medium mb-1">Name</label>
             <input
@@ -38,6 +48,29 @@
               required
               class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
             />
+          </div>
+          <div class="rounded-md border border-neutral-200 bg-white p-3">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <label class="text-sm font-medium text-neutral-900"
+                  >Sync to Ideenlabor</label
+                >
+                <p class="text-xs text-neutral-500">
+                  Wenn aktiv, wird dieser Mieter für den Ideenlabor-Sync
+                  markiert.
+                </p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  v-model="form.syncToIdeenlabor"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-neutral-200 peer-checked:bg-yellow-400 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                ></div>
+              </label>
+            </div>
           </div>
           <div>
             <label class="block text-sm font-medium mb-1">Betreiber</label>
@@ -114,6 +147,7 @@
               class="w-full"
               @update:openingHours="handleOpeningHoursUpdate"
             />
+          </div>
           </div>
 
           <!-- Logo Selection -->
@@ -421,7 +455,7 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
   >
     <div
-      class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
     >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">Logo auswählen</h3>
@@ -456,7 +490,7 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
   >
     <div
-      class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
     >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
@@ -483,6 +517,7 @@
         @images-selected="handleMarketingImagesSelection"
       />
     </div>
+  </div>
   </div>
 </template>
 
@@ -542,6 +577,7 @@ const initialForm = {
   phone: "",
   email: "",
   website: "",
+  syncToIdeenlabor: false,
   logoId: null,
   marketingImageIds: [],
   hasArea: false,
@@ -571,7 +607,6 @@ onMounted(async () => {
     try {
       form.value.openingHours = JSON.parse(props.editingRenter.openingHours);
     } catch (error) {
-  localStorage.removeItem('jwt');
       console.error("Error parsing opening hours:", error);
       form.value.openingHours = {};
     }
@@ -768,7 +803,6 @@ function initializeMap() {
 
           console.log("Successfully added POI polygon to map");
         } catch (error) {
-  localStorage.removeItem('jwt');
           console.error("Error adding POI polygon:", error);
         }
       } else {
@@ -781,7 +815,6 @@ function initializeMap() {
           draw.value.add(form.value.area.areaGeoJson);
           console.log("Added area to draw");
         } catch (error) {
-  localStorage.removeItem('jwt');
           console.error("Error adding area to draw:", error);
         }
       }
@@ -813,7 +846,6 @@ async function startDrawing() {
       draw.value.changeMode("simple_select");
     }
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error changing draw mode:", error);
     isDrawing.value = false;
   }
@@ -861,7 +893,6 @@ async function loadFloors() {
     if (!response.ok) throw new Error("Failed to load floors");
     floors.value = await response.json();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error loading floors:", error);
     alert("Fehler beim Laden der Etagen");
   }
@@ -890,7 +921,6 @@ async function deleteFloor(id) {
     if (!response.ok) throw new Error("Failed to delete floor");
     floors.value = floors.value.filter((f) => f.id !== id);
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error deleting floor:", error);
     alert("Fehler beim Löschen der Etage");
   }
@@ -956,7 +986,6 @@ async function saveFloor() {
     editingFloor.value = null;
     floorForm.value = { name: "", level: 0, description: "" };
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error saving floor:", error);
     alert("Fehler beim Speichern der Etage");
   }
@@ -1011,7 +1040,6 @@ watch(
         });
         map.value.fitBounds(bounds, { padding: 50 });
       } catch (error) {
-  localStorage.removeItem('jwt');
         console.error("Error updating POI polygon:", error);
       }
     }
@@ -1086,7 +1114,6 @@ async function loadImages() {
     if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error loading images:", error);
   }
 }
@@ -1106,6 +1133,7 @@ async function saveRenter() {
       phone: form.value.phone || "",
       email: form.value.email || "",
       website: form.value.website || "",
+      syncToIdeenlabor: !!form.value.syncToIdeenlabor,
       logoId: form.value.logoId,
       marketingImageIds: form.value.marketingImageIds,
       openingHours: JSON.stringify(form.value.openingHours),
@@ -1161,7 +1189,6 @@ async function saveRenter() {
     emit("renter-saved", savedRenter);
     closeModal();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error saving renter:", error);
     alert("Fehler beim Speichern des Mieters");
   }

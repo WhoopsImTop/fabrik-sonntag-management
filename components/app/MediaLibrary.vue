@@ -142,7 +142,6 @@ async function loadImages() {
     if (!response.ok) throw new Error('Failed to load images');
     images.value = await response.json();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error('Error loading images:', error);
     alert('Fehler beim Laden der Bilder');
   }
@@ -185,7 +184,6 @@ async function uploadFiles(files) {
     }
     showUploadDialog.value = false;
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error('Error uploading images:', error);
     alert('Fehler beim Hochladen der Bilder');
   }
@@ -207,7 +205,6 @@ async function deleteImage(imageId) {
     images.value = images.value.filter(img => img.id !== imageId);
     selectedImages.value = selectedImages.value.filter(id => id !== imageId);
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error('Error deleting image:', error);
     alert('Fehler beim Löschen des Bildes');
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 const meterApi = useMeterApi();
 
@@ -36,6 +36,7 @@ const activeHover = ref<{
   meterId: string;
   pointIndex: number;
 } | null>(null);
+const expandedGroups = ref<Record<string, boolean>>({});
 
 const parseDateFromLabel = (value: string): Date | null => {
   if (!value) {
@@ -156,6 +157,12 @@ const meterCharts = computed(() => {
       }
 
       const key = `${record.kategorie || "Wert"}|${record.einheit || ""}`;
+      const [category, unit] = key.split("|");
+      const hasValidCategory = !!category && category !== "Unbekannt";
+      const hasValidUnit = unit !== "Bitmaske" && unit !== "Datum/Zeit" && unit !== "Datum";
+      if (!hasValidCategory || !hasValidUnit) {
+        return;
+      }
       frequencyByKey.set(key, (frequencyByKey.get(key) || 0) + 1);
     });
 
@@ -256,6 +263,7 @@ const meterCharts = computed(() => {
     return {
       meter_id: meterId,
       label: sortedReadings[0]?.meter?.label || meterId,
+      group: sortedReadings[0]?.meter?.group || null,
       count: sortedReadings.length,
       points: normalizedPoints,
       plottedPoints,
@@ -269,6 +277,53 @@ const meterCharts = computed(() => {
     };
   });
 });
+
+const groupedMeterCharts = computed(() => {
+  const grouped = new Map<string, { id: string; code: string; name: string; meters: any[] }>();
+
+  meterCharts.value.forEach((meter) => {
+    const groupId = meter.group?.id ? String(meter.group.id) : "ungrouped";
+    const groupCode = meter.group?.code || "Ohne Gruppe";
+    const groupName = meter.group?.name || "";
+    if (!grouped.has(groupId)) {
+      grouped.set(groupId, {
+        id: groupId,
+        code: groupCode,
+        name: groupName,
+        meters: [],
+      });
+    }
+    grouped.get(groupId)?.meters.push(meter);
+  });
+
+  return [...grouped.values()].sort((a, b) => a.code.localeCompare(b.code));
+});
+
+watch(groupedMeterCharts, (groups) => {
+  groups.forEach((group) => {
+    if (expandedGroups.value[group.id] === undefined) {
+      expandedGroups.value[group.id] = true;
+    }
+  });
+});
+
+const toggleGroup = (groupId: string) => {
+  expandedGroups.value[groupId] = !expandedGroups.value[groupId];
+};
+
+const getHoveredPoint = (meter: any) => {
+  const hoverState = activeHover.value;
+  if (!hoverState || hoverState.meterId !== meter.meter_id) {
+    return null;
+  }
+  const pointIndex = hoverState.pointIndex;
+  return meter.plottedPoints?.[pointIndex] || null;
+};
+
+const isUnitInFormattedValue = (formatted: string, unit: string): boolean => {
+  if (!formatted || !unit) return false;
+  return formatted.toLowerCase().includes(unit.toLowerCase());
+};
 
 onMounted(() => {
   loadReadings();
@@ -356,34 +411,45 @@ const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
     </div>
 
     <div class="flex flex-col">
-      <div
-        v-if="meterCharts.length"
-        class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6"
-      >
-        <UCard v-for="meter in meterCharts" :key="meter.meter_id">
+      <div v-if="groupedMeterCharts.length" class="space-y-4 mb-6">
+        <UCard v-for="group in groupedMeterCharts" :key="group.id">
           <template #header>
-            <div class="flex items-center justify-between gap-2">
+            <button class="w-full flex items-center justify-between text-left" @click="toggleGroup(String(group.id))">
               <div>
-                <div class="font-semibold">{{ meter.label }}</div>
+                <div class="font-semibold">{{ group.code }}</div>
                 <div class="text-xs text-gray-500">
-                  {{ meter.meter_id }} | {{ meter.count }} Readings
+                  {{ group.name || "Ohne Bezeichnung" }} | {{ group.meters.length }} Meter
                 </div>
               </div>
-              <UBadge color="neutral">
-                {{ meter.kategorie }} {{ meter.einheit }}
-              </UBadge>
-            </div>
+              <UIcon :name="expandedGroups[group.id] ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
+            </button>
           </template>
 
-          <div v-if="meter.points.length >= 2" class="space-y-2">
-            <div class="relative">
-              <svg
-                :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
-                class="w-full h-36 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
-                preserveAspectRatio="none"
-                @mousemove="updateHoverFromMouse($event, meter)"
-                @mouseleave="clearHoverPoint(meter.meter_id)"
-              >
+          <div v-if="expandedGroups[group.id]" class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <UCard v-for="meter in group.meters" :key="meter.meter_id">
+              <template #header>
+                <div class="flex items-center justify-between gap-2">
+                  <div>
+                    <div class="font-semibold">{{ meter.label }}</div>
+                    <div class="text-xs text-gray-500">
+                      {{ meter.meter_id }} | {{ meter.count }} Readings
+                    </div>
+                  </div>
+                  <UBadge color="neutral">
+                    {{ meter.kategorie }} {{ meter.einheit || "-" }}
+                  </UBadge>
+                </div>
+              </template>
+
+              <div v-if="meter.points.length >= 2" class="space-y-2">
+                <div class="relative">
+                  <svg
+                    :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
+                    class="w-full h-36 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
+                    preserveAspectRatio="none"
+                    @mousemove="updateHoverFromMouse($event, meter)"
+                    @mouseleave="clearHoverPoint(meter.meter_id)"
+                  >
                 <line
                   :x1="axisLeft"
                   :y1="chartHeight - axisBottom"
@@ -435,13 +501,9 @@ const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
                 />
                 <line
                   v-if="activeHover?.meterId === meter.meter_id"
-                  :x1="
-                    meter.plottedPoints[activeHover.pointIndex]?.x?.toFixed(2) || 0
-                  "
+                  :x1="getHoveredPoint(meter)?.x?.toFixed(2) || 0"
                   :y1="axisTop"
-                  :x2="
-                    meter.plottedPoints[activeHover.pointIndex]?.x?.toFixed(2) || 0
-                  "
+                  :x2="getHoveredPoint(meter)?.x?.toFixed(2) || 0"
                   :y2="chartHeight - axisBottom"
                   class="text-gray-300 dark:text-gray-600"
                   stroke="currentColor"
@@ -456,7 +518,7 @@ const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
                   r="2.5"
                   class="text-primary"
                   fill="currentColor"
-                  @mouseenter="setHoverPoint(meter.meter_id, pointIndex)"
+                  @mouseenter="setHoverPoint(meter.meter_id, Number(pointIndex))"
                 />
                 <text
                   v-for="(point, pointIndex) in meter.plottedPoints"
@@ -468,45 +530,54 @@ const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
                 >
                   {{ point.monthLabel }}
                 </text>
-              </svg>
-              <div
-                v-if="activeHover?.meterId === meter.meter_id"
-                class="absolute top-2 right-2 bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-[11px] leading-tight shadow"
-              >
-                <div class="font-medium">
-                  {{
-                    meter.plottedPoints[activeHover.pointIndex]?.monthLabel ||
-                    meter.plottedPoints[activeHover.pointIndex]?.label
-                  }}
+                  </svg>
+                  <div
+                    v-if="activeHover?.meterId === meter.meter_id"
+                    class="absolute top-2 right-2 bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-[11px] leading-tight shadow"
+                  >
+                    <div class="font-medium">
+                      {{
+                        getHoveredPoint(meter)?.monthLabel ||
+                        getHoveredPoint(meter)?.label
+                      }}
+                    </div>
+                    <div class="text-gray-600 dark:text-gray-300">
+                      {{ getHoveredPoint(meter)?.formatted }}
+                      {{
+                        isUnitInFormattedValue(
+                          getHoveredPoint(meter)?.formatted || "",
+                          meter.einheit || "",
+                        )
+                          ? ""
+                          : meter.einheit || "-"
+                      }}
+                    </div>
+                  </div>
                 </div>
-                <div class="text-gray-600 dark:text-gray-300">
-                  {{ meter.plottedPoints[activeHover.pointIndex]?.formatted }}
-                  {{ meter.einheit }}
+                <div class="text-xs text-gray-500 flex justify-between">
+                  <span>Min: {{ meter.minValue.toFixed(3) }}</span>
+                  <span>Max: {{ meter.maxValue.toFixed(3) }}</span>
+                  <span>
+                    Letzter:
+                    {{ meter.points[meter.points.length - 1]?.formatted }}
+                    {{ meter.einheit || "-" }}
+                  </span>
+                </div>
+                <div class="text-[11px] text-gray-400 flex justify-between">
+                  <span>{{ meter.points[0]?.monthLabel || meter.points[0]?.label }}</span>
+                  <span>
+                    {{
+                      meter.points[meter.points.length - 1]?.monthLabel ||
+                      meter.points[meter.points.length - 1]?.label
+                    }}
+                  </span>
                 </div>
               </div>
-            </div>
-            <div class="text-xs text-gray-500 flex justify-between">
-              <span>Min: {{ meter.minValue.toFixed(3) }}</span>
-              <span>Max: {{ meter.maxValue.toFixed(3) }}</span>
-              <span>
-                Letzter:
-                {{ meter.points[meter.points.length - 1]?.formatted }}
-                {{ meter.einheit }}
-              </span>
-            </div>
-            <div class="text-[11px] text-gray-400 flex justify-between">
-              <span>{{ meter.points[0]?.monthLabel || meter.points[0]?.label }}</span>
-              <span>
-                {{
-                  meter.points[meter.points.length - 1]?.monthLabel ||
-                  meter.points[meter.points.length - 1]?.label
-                }}
-              </span>
-            </div>
-          </div>
-          <div v-else class="text-sm text-gray-500">
-            Für diesen Zähler liegen noch nicht genug historische Werte für eine
-            Kurve vor.
+              <div v-else class="text-sm text-gray-500">
+                Für diesen Zähler liegen noch nicht genug historische Werte für eine
+                Kurve vor.
+              </div>
+            </UCard>
           </div>
         </UCard>
       </div>

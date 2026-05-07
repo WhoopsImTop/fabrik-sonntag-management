@@ -1,6 +1,6 @@
 <template>
   <div
-    class="bg-white rounded-lg shadow-lg p-4 flex flex-col gap-4 max-h-full overflow-auto"
+    class="bg-white rounded-xl shadow-xl p-5 flex flex-col gap-4 max-h-full overflow-auto border border-neutral-200"
   >
     <div class="flex items-center justify-between">
       <h2 class="text-lg font-semibold">
@@ -290,6 +290,9 @@
               </div>
               <div>
                 <h4 class="font-medium">{{ renter.name }}</h4>
+                <p v-if="renter.syncToIdeenlabor" class="text-xs text-emerald-700">
+                  Sync to Ideenlabor aktiv
+                </p>
                 <p v-if="renter.area" class="text-sm text-neutral-600">
                   Fläche: {{ renter.area.squaremeters }}m² | Kosten:
                   {{ renter.area.costs }}€
@@ -335,7 +338,7 @@
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
     >
       <div
-        class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
       >
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
@@ -369,7 +372,7 @@
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
     >
       <div
-        class="bg-white rounded-lg p-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
       >
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold">Icon auswählen</h3>
@@ -558,6 +561,7 @@ const initialRenterForm = {
   phone: "",
   email: "",
   website: "",
+  syncToIdeenlabor: false,
   hasArea: false,
   description: "",
   openingHours: null,
@@ -585,7 +589,6 @@ watch(
         const data = await response.json();
         renters.value = data;
       } catch (error) {
-  localStorage.removeItem('jwt');
         console.error("Error loading renters:", error);
       }
     } else {
@@ -623,7 +626,6 @@ async function deleteRenter(renter) {
     if (!response.ok) throw new Error("Failed to delete renter");
     renters.value = renters.value.filter((r) => r.id !== renter.id);
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error deleting renter:", error);
     alert("Fehler beim Löschen des Mieters");
   }
@@ -731,7 +733,6 @@ async function saveSortOrder() {
       throw new Error(result.message || "Unknown error");
     }
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error saving sort order:", error);
     // Optional: Fehler-Nachricht anzeigen
     alert("Fehler beim Speichern der Reihenfolge: " + error.message);
@@ -804,7 +805,6 @@ async function loadImages() {
     if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error loading images:", error);
   }
 }

@@ -1,10 +1,10 @@
 <template>
   <div
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
     v-if="modelValue"
   >
     <div
-      class="bg-white rounded-lg p-4 w-full max-w-4xl h-[80vh] flex flex-col"
+      class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden shadow-xl border border-neutral-200"
     >
       <div class="flex items-center justify-between mb-4">
         <div>
@@ -168,9 +168,11 @@
     <!-- Floor Form Modal -->
     <div
       v-if="showFloorForm"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
     >
-      <div class="bg-white rounded-lg p-4 w-full max-w-md">
+      <div
+        class="bg-white rounded-xl p-5 w-full max-w-md shadow-xl border border-neutral-200 max-h-[92vh] overflow-y-auto"
+      >
         <h3 class="text-lg font-semibold mb-4">
           {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
         </h3>
@@ -439,7 +441,6 @@ async function loadFloors() {
     if (!response.ok) throw new Error("Failed to load floors");
     floors.value = await response.json();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error loading floors:", error);
     alert("Fehler beim Laden der Etagen");
   }
@@ -468,7 +469,6 @@ async function deleteFloor(id) {
     if (!response.ok) throw new Error("Failed to delete floor");
     floors.value = floors.value.filter((f) => f.id !== id);
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error deleting floor:", error);
     alert("Fehler beim Löschen der Etage");
   }
@@ -512,7 +512,6 @@ async function saveFloor() {
     editingFloor.value = null;
     floorForm.value = { name: "", level: 0, description: "" };
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error saving floor:", error);
     alert("Fehler beim Speichern der Etage");
   }
@@ -543,7 +542,6 @@ async function updateAreaWithFloor(floorId) {
     const updatedArea = await response.json();
     emit("area-saved", updatedArea);
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error updating area with floor:", error);
     alert("Fehler beim Aktualisieren der Fläche");
   }
@@ -582,7 +580,6 @@ async function deleteArea() {
     emit("area-saved", null);
     closeModal();
   } catch (error) {
-  localStorage.removeItem('jwt');
     console.error("Error deleting area:", error);
     alert("Fehler beim Löschen der Fläche");
   }

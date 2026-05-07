@@ -1,9 +1,14 @@
 <template>
-  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+  <div
+    class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+  >
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
         <h3 class="text-lg font-semibold text-slate-900">Stammdaten</h3>
-        <button @click="isEditing = !isEditing" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+        <button
+          @click="isEditing = !isEditing"
+          class="text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
           {{ isEditing ? "Abbrechen" : "Bearbeiten" }}
         </button>
       </div>
@@ -11,24 +16,30 @@
       <div v-if="!isEditing" class="space-y-6">
         <div class="flex items-center gap-4">
           <div
-            class="h-16 w-16 rounded-full bg-slate-900 text-white flex items-center justify-center text-2xl font-bold">
+            class="h-16 w-16 rounded-full bg-slate-900 text-white flex items-center justify-center text-2xl font-bold"
+          >
             {{ getInitials(user.username) }}
           </div>
           <div>
             <h2 class="text-xl font-bold text-slate-900">
               {{
-                user.details?.user_type === 'COMPANY' && user.details.company
+                user.details?.user_type === "COMPANY" && user.details.company
                   ? user.details.company
-                  : (user.details?.first_name || '') + ' ' + (user.details?.last_name || '')
+                  : (user.details?.first_name || "") +
+                    " " +
+                    (user.details?.last_name || "")
               }}
             </h2>
             <div class="flex items-center gap-2">
               <span
-                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 uppercase tracking-wide">
-                {{ user.role || 'user' }}
+                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 uppercase tracking-wide"
+              >
+                {{ user.role || "user" }}
               </span>
-              <span v-if="user.details?.user_type === 'COMPANY'"
-                class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+              <span
+                v-if="user.details?.user_type === 'COMPANY'"
+                class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20"
+              >
                 Firma
               </span>
             </div>
@@ -37,23 +48,38 @@
 
         <div class="grid gap-4 border-t border-slate-100 pt-4">
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">E-Mail</label>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >E-Mail</label
+            >
             <p class="text-slate-900 font-medium flex items-center gap-2">
-              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <svg
+                class="w-4 h-4 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
               </svg>
               {{ user.email }}
             </p>
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">Mobilnummer</label>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Mobilnummer</label
+            >
             <p class="text-slate-900 font-medium flex items-center gap-2">
               {{ user.details?.mobile_number || "" }}
             </p>
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase">Mitglied seit</label>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Mitglied seit</label
+            >
             <p class="text-slate-900">{{ formatDate(user.createdAt) }}</p>
           </div>
         </div>
@@ -61,87 +87,166 @@
 
       <form v-else @submit.prevent="saveUser" class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Kontotyp</label>
+          <label class="block text-sm font-medium text-slate-700 mb-2"
+            >Kontotyp</label
+          >
           <div class="flex rounded-lg border border-slate-200 overflow-hidden">
-            <button type="button" @click="form.user_type = 'PERSON'"
-              :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', form.user_type === 'PERSON' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50']">Person</button>
-            <button type="button" @click="form.user_type = 'COMPANY'"
-              :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', form.user_type === 'COMPANY' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50']">Firma</button>
+            <button
+              type="button"
+              @click="form.user_type = 'PERSON'"
+              :class="[
+                'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+                form.user_type === 'PERSON'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-700 hover:bg-slate-50',
+              ]"
+            >
+              Person
+            </button>
+            <button
+              type="button"
+              @click="form.user_type = 'COMPANY'"
+              :class="[
+                'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+                form.user_type === 'COMPANY'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-700 hover:bg-slate-50',
+              ]"
+            >
+              Firma
+            </button>
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">{{ form.user_type === 'COMPANY' ?
-            'Ansprechpartner Vorname' : 'Vorname' }}</label>
-          <input v-model="form.first_name"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700">{{ form.user_type === 'COMPANY' ?
-            'Ansprechpartner Nachname' : 'Nachname' }}</label>
-          <input v-model="form.last_name"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700">{{ form.user_type === 'COMPANY' ?
-            'Ansprechpartner Telefon' : 'Telefonnummer' }}</label>
-          <input v-model="form.mobile_number"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700">Firma {{ form.user_type === 'COMPANY' ? '' :
-            '(optional)' }}</label>
-          <input v-model="form.company" :required="form.user_type === 'COMPANY'"
+          <label class="block text-sm font-medium text-slate-700">{{
+            form.user_type === "COMPANY" ? "Ansprechpartner Vorname" : "Vorname"
+          }}</label>
+          <input
+            v-model="form.first_name"
             class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-            :placeholder="form.user_type === 'COMPANY' ? 'Firmenname (Pflicht)' : 'Firma (optional)'" />
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700">{{
+            form.user_type === "COMPANY"
+              ? "Ansprechpartner Nachname"
+              : "Nachname"
+          }}</label>
+          <input
+            v-model="form.last_name"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700">{{
+            form.user_type === "COMPANY"
+              ? "Ansprechpartner Telefon"
+              : "Telefonnummer"
+          }}</label>
+          <input
+            v-model="form.mobile_number"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700"
+            >Firma {{ form.user_type === "COMPANY" ? "" : "(optional)" }}</label
+          >
+          <input
+            v-model="form.company"
+            :required="form.user_type === 'COMPANY'"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+            :placeholder="
+              form.user_type === 'COMPANY'
+                ? 'Firmenname (Pflicht)'
+                : 'Firma (optional)'
+            "
+          />
         </div>
 
         <div v-if="form.user_type === 'COMPANY'">
-          <label class="block text-sm font-medium text-slate-700">USt-IdNr.</label>
-          <input v-model="form.vat_number"
+          <label class="block text-sm font-medium text-slate-700"
+            >USt-IdNr.</label
+          >
+          <input
+            v-model="form.vat_number"
             class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-            placeholder="DE123456789" />
+            placeholder="DE123456789"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700">Straße</label>
-          <input v-model="form.street"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <input
+            v-model="form.street"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Hausnummer</label>
-          <input v-model="form.house_number"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <label class="block text-sm font-medium text-slate-700"
+            >Hausnummer</label
+          >
+          <input
+            v-model="form.house_number"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Postleitzahl</label>
-          <input v-model="form.zip_code"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <label class="block text-sm font-medium text-slate-700"
+            >Postleitzahl</label
+          >
+          <input
+            v-model="form.zip_code"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700">Stadt</label>
-          <input v-model="form.city"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <input
+            v-model="form.city"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Land</label>
+          <input
+            v-model="form.country"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700">E-Mail</label>
-          <input v-model="form.email" type="email"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <input
+            v-model="form.email"
+            type="email"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700">Rolle</label>
-          <select v-model="form.role"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
+          <select
+            v-model="form.role"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          >
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Debitoren Nummer</label>
-          <input v-model="form.debitor_number" type="text"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" />
+          <label class="block text-sm font-medium text-slate-700"
+            >Debitoren Nummer</label
+          >
+          <input
+            v-model="form.debitor_number"
+            type="text"
+            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+          />
         </div>
         <div class="pt-4 flex justify-end">
-          <button type="submit" :disabled="loading"
-            class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition-colors">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition-colors"
+          >
             {{ loading ? "Speichert..." : "Speichern" }}
           </button>
         </div>
@@ -166,6 +271,7 @@ const form = ref({
   house_number: "",
   zip_code: "",
   city: "",
+  country: "",
   email: "",
   role: "",
   debitor_number: "",
@@ -187,6 +293,7 @@ watch(
         house_number: u?.details?.house_number ?? "",
         zip_code: u?.details?.zip_code ?? "",
         city: u?.details?.city ?? "",
+        country: u?.details?.country ?? "",
         email: u.email,
         role: u.role,
         debitor_number: u?.details?.debitor_number ?? "",

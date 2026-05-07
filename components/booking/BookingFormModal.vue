@@ -483,6 +483,17 @@
                   class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
                 />
               </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Land</label
+                >
+                <input
+                  v-model="newUser.details.country"
+                  type="text"
+                  placeholder="Deutschland"
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                />
+              </div>
             </div>
 
             <div class="space-y-2">
@@ -577,6 +588,7 @@ const newUser = ref({
     house_number: "",
     zip_code: "",
     city: "",
+    country: "",
     company: "",
     mobile_number: "",
   },
@@ -625,6 +637,7 @@ const createUser = async () => {
           house_number: "",
           zip_code: "",
           city: "",
+          country: "",
           company: "",
           mobile_number: "",
         },

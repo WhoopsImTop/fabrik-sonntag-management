@@ -59,6 +59,67 @@ export const useMeterApi = () => {
       return res?.data || [];
     },
 
+    getMeterGroups: async () => {
+      const res = await apiCall(
+        () => $fetch(`${baseURL}/meters/groups`, { headers: getAuthHeaders() }),
+        "getMeterGroups",
+      );
+      return res?.data || [];
+    },
+
+    createMeterGroup: async (data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/meters/groups`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "createMeterGroup",
+      );
+      if (res && res.success) {
+        toast.add({ title: "Gruppe angelegt", color: "primary" });
+      }
+      return res;
+    },
+
+    updateMeterGroup: async (id: number, data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/meters/groups/${id}`, {
+            method: "PUT",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "updateMeterGroup",
+      );
+      if (res && res.success) {
+        toast.add({ title: "Gruppe aktualisiert", color: "primary" });
+      }
+      return res;
+    },
+
+    deleteMeterGroup: async (id: number) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/meters/groups/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "deleteMeterGroup",
+      );
+      if (res && res.success) {
+        toast.add({ title: "Gruppe gelöscht", color: "primary" });
+      }
+      return res;
+    },
+
     createMeter: async (data: any) => {
       const res = await apiCall(
         () =>

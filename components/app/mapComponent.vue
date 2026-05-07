@@ -418,7 +418,6 @@ export default {
           this.map.getSource(POI_SOURCE_ID).setData(geoJsonData);
         }
       } catch (error) {
-  localStorage.removeItem('jwt');
         console.error("Error loading POIs:", error);
       }
     },
@@ -833,7 +832,6 @@ export default {
             : "Neuer POI erfolgreich erstellt!"
         );
       } catch (error) {
-  localStorage.removeItem('jwt');
         console.error("Error saving POI:", error);
         alert(`Fehler beim Speichern: ${error.message}`);
       } finally {
@@ -970,7 +968,6 @@ export default {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(downloadUrl);
       } catch (error) {
-  localStorage.removeItem('jwt');
         console.error("Error exporting map:", error);
         alert("Fehler beim Exportieren der Karte");
       } finally {

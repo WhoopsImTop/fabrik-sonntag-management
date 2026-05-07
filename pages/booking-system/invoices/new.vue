@@ -187,6 +187,12 @@
                   class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
                   placeholder="Berlin" />
               </div>
+              <div class="col-span-3 space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700">Land</label>
+                <input v-model="customerForm.country"
+                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                  placeholder="Deutschland" />
+              </div>
             </div>
           </div>
         </div>
@@ -455,7 +461,8 @@ const customerForm = ref({
   houseNumber: "",
   phone: "",
   zip_code: "",
-  city: "",
+  city: "", 
+  country: "",
   user_type: "PERSON" as "PERSON" | "COMPANY",
 });
 
