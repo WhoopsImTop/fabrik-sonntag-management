@@ -226,6 +226,18 @@
               </div>
 
               <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700">Leistungsbeginn</label>
+                <input type="date" v-model="form.service_start"
+                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700">Leistungsende</label>
+                <input type="date" v-model="form.service_end"
+                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+              </div>
+
+              <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-slate-700">Zahlungsziel</label>
                 <input type="date" v-model="form.due_date"
                   class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
@@ -406,6 +418,8 @@ const form = ref({
   user_id: "" as string | number,
   status: "DRAFT",
   invoice_date: new Date().toISOString().split("T")[0],
+  service_start: "",
+  service_end: "",
   due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0], // 7 Tage
@@ -696,6 +710,13 @@ const populateFromBooking = () => {
     } else if (b.Resource) {
       form.value.items[0].description = `Buchung: ${b.Resource.name}`;
     }
+
+    if (b.start_at) {
+      form.value.service_start = new Date(b.start_at).toISOString().split("T")[0];
+    }
+    if (b.end_at) {
+      form.value.service_end = new Date(b.end_at).toISOString().split("T")[0];
+    }
   }
 };
 
@@ -752,6 +773,15 @@ const save = async () => {
     return;
   }
 
+  if (
+    form.value.service_start &&
+    form.value.service_end &&
+    form.value.service_end < form.value.service_start
+  ) {
+    alert("Leistungsende darf nicht vor Leistungsbeginn liegen.");
+    return;
+  }
+
   const cleanItems = form.value.items.filter(
     (i) => i.description.trim() !== "" || Number(i.amount) > 0,
   );
@@ -786,6 +816,8 @@ const save = async () => {
       user_id: finalUserId || null,
       status: form.value.status,
       invoice_date: form.value.invoice_date,
+      service_start: form.value.service_start || null,
+      service_end: form.value.service_end || null,
       due_date: form.value.due_date,
       days_to_pay: Number(form.value.days_to_pay),
       notes: form.value.notes,
