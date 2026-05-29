@@ -5,13 +5,7 @@ const meterApi = useMeterApi();
 
 const readings = ref<any[]>([]);
 const loading = ref(false);
-const chartWidth = 420;
-const chartHeight = 140;
 const maxHistoryIndex = 11;
-const axisLeft = 46;
-const axisRight = 8;
-const axisTop = 8;
-const axisBottom = 26;
 
 const columns = [
   { accessorKey: "createdAt", header: "Empfangen am" },
@@ -32,10 +26,6 @@ const getNumericValue = (input: any): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const activeHover = ref<{
-  meterId: string;
-  pointIndex: number;
-} | null>(null);
 const expandedGroups = ref<Record<string, boolean>>({});
 
 const parseDateFromLabel = (value: string): Date | null => {
@@ -238,23 +228,6 @@ const meterCharts = computed(() => {
     const values = normalizedPoints.map((point) => point.value);
     const minValue = values.length ? Math.min(...values) : 0;
     const maxValue = values.length ? Math.max(...values) : 0;
-    const valueRange = Math.max(maxValue - minValue, 1);
-
-    const plotWidth = chartWidth - axisLeft - axisRight;
-    const plotHeight = chartHeight - axisTop - axisBottom;
-
-    const plottedPoints = normalizedPoints.map((point, index) => {
-      const x =
-        normalizedPoints.length === 1
-          ? axisLeft + plotWidth / 2
-          : axisLeft + (index / (normalizedPoints.length - 1)) * plotWidth;
-      const y =
-        axisTop + plotHeight - ((point.value - minValue) / valueRange) * plotHeight;
-      return { ...point, x, y };
-    });
-    const path = plottedPoints
-      .map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`)
-      .join(" ");
 
     const [kategorie = "Messwert", einheit = ""] = (preferredKey || "").split(
       "|",
@@ -266,11 +239,8 @@ const meterCharts = computed(() => {
       group: sortedReadings[0]?.meter?.group || null,
       count: sortedReadings.length,
       points: normalizedPoints,
-      plottedPoints,
-      path,
       minValue,
       maxValue,
-      midValue: minValue + valueRange / 2,
       kategorie,
       einheit,
       sourceDate: chartReading?.createdAt || "",
@@ -311,20 +281,6 @@ const toggleGroup = (groupId: string) => {
   expandedGroups.value[groupId] = !expandedGroups.value[groupId];
 };
 
-const getHoveredPoint = (meter: any) => {
-  const hoverState = activeHover.value;
-  if (!hoverState || hoverState.meterId !== meter.meter_id) {
-    return null;
-  }
-  const pointIndex = hoverState.pointIndex;
-  return meter.plottedPoints?.[pointIndex] || null;
-};
-
-const isUnitInFormattedValue = (formatted: string, unit: string): boolean => {
-  if (!formatted || !unit) return false;
-  return formatted.toLowerCase().includes(unit.toLowerCase());
-};
-
 onMounted(() => {
   loadReadings();
 });
@@ -354,45 +310,6 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString("de-DE");
 };
 
-const setHoverPoint = (meterId: string, pointIndex: number) => {
-  activeHover.value = { meterId, pointIndex };
-};
-
-const clearHoverPoint = (meterId: string) => {
-  if (activeHover.value?.meterId === meterId) {
-    activeHover.value = null;
-  }
-};
-
-const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
-  if (!meter?.plottedPoints?.length) {
-    return;
-  }
-
-  const target = event.currentTarget as SVGElement | null;
-  if (!target) {
-    return;
-  }
-
-  const rect = target.getBoundingClientRect();
-  if (!rect.width) {
-    return;
-  }
-
-  const relativeX = ((event.clientX - rect.left) / rect.width) * chartWidth;
-  let nearestIndex = 0;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-
-  meter.plottedPoints.forEach((point: any, index: number) => {
-    const distance = Math.abs(point.x - relativeX);
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-      nearestIndex = index;
-    }
-  });
-
-  setHoverPoint(meter.meter_id, nearestIndex);
-};
 </script>
 
 <template>
@@ -442,117 +359,15 @@ const updateHoverFromMouse = (event: MouseEvent, meter: any) => {
               </template>
 
               <div v-if="meter.points.length >= 2" class="space-y-2">
-                <div class="relative">
-                  <svg
-                    :viewBox="`0 0 ${chartWidth} ${chartHeight}`"
-                    class="w-full h-36 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700"
-                    preserveAspectRatio="none"
-                    @mousemove="updateHoverFromMouse($event, meter)"
-                    @mouseleave="clearHoverPoint(meter.meter_id)"
-                  >
-                <line
-                  :x1="axisLeft"
-                  :y1="chartHeight - axisBottom"
-                  :x2="chartWidth - axisRight"
-                  :y2="chartHeight - axisBottom"
-                  class="text-gray-300 dark:text-gray-600"
-                  stroke="currentColor"
-                  stroke-width="1"
-                />
-                <line
-                  :x1="axisLeft"
-                  :y1="axisTop"
-                  :x2="axisLeft"
-                  :y2="chartHeight - axisBottom"
-                  class="text-gray-300 dark:text-gray-600"
-                  stroke="currentColor"
-                  stroke-width="1"
-                />
-                <text
-                  :x="axisLeft - 4"
-                  :y="axisTop + 4"
-                  text-anchor="end"
-                  class="fill-gray-500 dark:fill-gray-400 text-[9px]"
+                <div
+                  class="rounded border border-gray-200 bg-gray-50 p-2 dark:border-gray-700 dark:bg-gray-800"
                 >
-                  {{ meter.maxValue.toFixed(2) }}
-                </text>
-                <text
-                  :x="axisLeft - 4"
-                  :y="(axisTop + (chartHeight - axisBottom)) / 2 + 3"
-                  text-anchor="end"
-                  class="fill-gray-500 dark:fill-gray-400 text-[9px]"
-                >
-                  {{ meter.midValue.toFixed(2) }}
-                </text>
-                <text
-                  :x="axisLeft - 4"
-                  :y="chartHeight - axisBottom + 3"
-                  text-anchor="end"
-                  class="fill-gray-500 dark:fill-gray-400 text-[9px]"
-                >
-                  {{ meter.minValue.toFixed(2) }}
-                </text>
-                <polyline
-                  :points="meter.path"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  class="text-primary"
-                />
-                <line
-                  v-if="activeHover?.meterId === meter.meter_id"
-                  :x1="getHoveredPoint(meter)?.x?.toFixed(2) || 0"
-                  :y1="axisTop"
-                  :x2="getHoveredPoint(meter)?.x?.toFixed(2) || 0"
-                  :y2="chartHeight - axisBottom"
-                  class="text-gray-300 dark:text-gray-600"
-                  stroke="currentColor"
-                  stroke-width="1"
-                  stroke-dasharray="4 3"
-                />
-                <circle
-                  v-for="(point, pointIndex) in meter.plottedPoints"
-                  :key="`${meter.meter_id}-${pointIndex}`"
-                  :cx="point.x.toFixed(2)"
-                  :cy="point.y.toFixed(2)"
-                  r="2.5"
-                  class="text-primary"
-                  fill="currentColor"
-                  @mouseenter="setHoverPoint(meter.meter_id, Number(pointIndex))"
-                />
-                <text
-                  v-for="(point, pointIndex) in meter.plottedPoints"
-                  :key="`label-${meter.meter_id}-${pointIndex}`"
-                  :x="point.x.toFixed(2)"
-                  :y="chartHeight - 8"
-                  text-anchor="middle"
-                  class="fill-gray-500 dark:fill-gray-400 text-[9px]"
-                >
-                  {{ point.monthLabel }}
-                </text>
-                  </svg>
-                  <div
-                    v-if="activeHover?.meterId === meter.meter_id"
-                    class="absolute top-2 right-2 bg-white/95 dark:bg-gray-900/95 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-[11px] leading-tight shadow"
-                  >
-                    <div class="font-medium">
-                      {{
-                        getHoveredPoint(meter)?.monthLabel ||
-                        getHoveredPoint(meter)?.label
-                      }}
-                    </div>
-                    <div class="text-gray-600 dark:text-gray-300">
-                      {{ getHoveredPoint(meter)?.formatted }}
-                      {{
-                        isUnitInFormattedValue(
-                          getHoveredPoint(meter)?.formatted || "",
-                          meter.einheit || "",
-                        )
-                          ? ""
-                          : meter.einheit || "-"
-                      }}
-                    </div>
-                  </div>
+                  <ClientOnly>
+                    <MetersMeterReadingChart
+                      :points="meter.points"
+                      :einheit="meter.einheit"
+                    />
+                  </ClientOnly>
                 </div>
                 <div class="text-xs text-gray-500 flex justify-between">
                   <span>Min: {{ meter.minValue.toFixed(3) }}</span>

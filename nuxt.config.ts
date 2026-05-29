@@ -3,6 +3,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
   ssr: false,
+  experimental: {
+    // SPA (ssr: false): ohne SSR-Vite-Server wird sonst kein Vite-Node-IPC-Socket gesetzt
+    viteEnvironmentApi: true,
+  },
   app: {
     head: {
       title: "Fabrik Sonntag Management"

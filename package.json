@@ -12,9 +12,10 @@
   "dependencies": {
     "@mapbox/mapbox-gl-draw": "^1.5.0",
     "@nuxt/eslint": "^1.2.0",
-    "@nuxt/ui": "^3.0.0",
+    "@nuxt/ui": "^3.3.7",
     "@tailwindcss/vite": "^4.0.14",
     "axios": "^1.8.4",
+    "chart.js": "^4.5.1",
     "dotenv": "^16.4.7",
     "eslint": "^9.22.0",
     "jspdf": "^4.2.0",
@@ -29,6 +30,6 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.34",
-    "@watergis/maplibre-gl-export": "^3.8.5"
+    "@watergis/maplibre-gl-export": "^4.1.2"
   }
 }
