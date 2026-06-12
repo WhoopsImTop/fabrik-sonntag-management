@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import {
+  extractHistoricalPointsFromParsed,
+  extractTimeSeriesPoints,
+  resolveMeterChartSeries,
+} from "~/composables/useMeterChartMetrics";
 
 const meterApi = useMeterApi();
 
 const readings = ref<any[]>([]);
 const loading = ref(false);
-const maxHistoryIndex = 11;
 
 const columns = [
+  { accessorKey: "timestamp", header: "Zeitstempel" },
   { accessorKey: "createdAt", header: "Empfangen am" },
   { accessorKey: "label", header: "Name" },
   { accessorKey: "meter_id", header: "Meter ID" },
@@ -28,222 +33,92 @@ const getNumericValue = (input: any): number | null => {
 
 const expandedGroups = ref<Record<string, boolean>>({});
 
-const parseDateFromLabel = (value: string): Date | null => {
-  if (!value) {
-    return null;
-  }
-
-  const normalized = value.split(" ")[0];
-  const parts = normalized.split(".");
-  if (parts.length !== 3) {
-    const fallback = new Date(value);
-    return Number.isNaN(fallback.getTime()) ? null : fallback;
-  }
-
-  const [day, month, year] = parts;
-  const parsed = new Date(
-    Number.parseInt(year, 10),
-    Number.parseInt(month, 10) - 1,
-    Number.parseInt(day, 10),
-  );
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+const formatParsedValue = (value: unknown): string => {
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
 };
 
-const getMonthOffset = (record: any): number | null => {
-  const storage = Number(record.storage_number);
-  if (Number.isInteger(storage) && storage >= 0 && storage <= maxHistoryIndex) {
-    return storage;
+const getDisplayRecords = (reading: any) => {
+  const items: { label: string; value: string }[] = [];
+
+  if (reading.value_kwh != null) {
+    items.push({ label: "Energie", value: `${reading.value_kwh} kWh` });
+  }
+  if (reading.value_m3 != null) {
+    items.push({ label: "Volumen", value: `${reading.value_m3} m³` });
   }
 
-  const index = Number(record.record_index);
-  if (Number.isInteger(index) && index >= 0 && index <= maxHistoryIndex) {
-    return index;
-  }
-
-  return null;
-};
-
-const getMonthLabel = (record: any): string => {
-  const index = getMonthOffset(record) ?? 0;
-  const baseDate = new Date();
-  baseDate.setDate(1);
-
-  if (index === 0) {
-    return baseDate.toLocaleDateString("de-DE", {
-      month: "short",
-      year: "2-digit",
+  const parsed = reading.parsed_json;
+  if (parsed && typeof parsed === "object") {
+    const skipKeys = new Set([
+      "id",
+      "meter_id",
+      "media",
+      "meter",
+      "mfct",
+      "manufacturer",
+      "timestamp",
+      "total_kwh",
+      "total_m3",
+    ]);
+    Object.entries(parsed).forEach(([key, value]) => {
+      if (skipKeys.has(key)) return;
+      if (value === null || value === undefined || value === "") return;
+      items.push({ label: key, value: formatParsedValue(value) });
     });
   }
 
-  if (record.historisches_datum) {
-    const parsed = parseDateFromLabel(record.historisches_datum);
-    if (parsed) {
-      return parsed.toLocaleDateString("de-DE", {
-        month: "short",
-        year: "2-digit",
-      });
-    }
-  }
-
-  baseDate.setMonth(baseDate.getMonth() - index);
-
-  return baseDate.toLocaleDateString("de-DE", {
-    month: "short",
-    year: "2-digit",
-  });
-};
-
-const getPointDate = (record: any): Date => {
-  const index = getMonthOffset(record) ?? 0;
-  const baseDate = new Date();
-  baseDate.setDate(1);
-
-  if (index === 0) {
-    return baseDate;
-  }
-
-  if (record.historisches_datum) {
-    const parsed = parseDateFromLabel(record.historisches_datum);
-    if (parsed) {
-      return parsed;
-    }
-  }
-
-  baseDate.setMonth(baseDate.getMonth() - index);
-  return baseDate;
+  return items;
 };
 
 const meterCharts = computed(() => {
   const grouped = new Map<string, any[]>();
 
   readings.value?.forEach((reading) => {
-    if (!reading.meter_id) {
-      return;
-    }
-
+    if (!reading.meter_id) return;
     if (!grouped.has(reading.meter_id)) {
       grouped.set(reading.meter_id, []);
     }
-
     grouped.get(reading.meter_id)?.push(reading);
   });
 
   return Array.from(grouped.entries()).map(([meterId, meterReadings]) => {
     const sortedReadings = [...meterReadings].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        new Date(b.timestamp || b.createdAt).getTime() -
+        new Date(a.timestamp || a.createdAt).getTime(),
     );
-    const chartReading =
-      sortedReadings.find((reading) => reading.processing_status === "parsed") ||
-      sortedReadings[0];
+    const latestReading = sortedReadings[0];
 
-    const records = [...(chartReading?.records || [])];
-    const frequencyByKey = new Map<string, number>();
+    const historical = extractHistoricalPointsFromParsed(latestReading);
+    let points = historical.points;
+    let series = historical.series;
 
-    records.forEach((record: any) => {
-      const numericValue = getNumericValue(record.wert_roh);
-      if (numericValue === null) {
-        return;
+    if (points.length < 2) {
+      series =
+        series ||
+        resolveMeterChartSeries(latestReading?.parsed_json, latestReading);
+      if (series) {
+        points = extractTimeSeriesPoints(meterReadings, series);
       }
+    }
 
-      const key = `${record.kategorie || "Wert"}|${record.einheit || ""}`;
-      const [category, unit] = key.split("|");
-      const hasValidCategory = !!category && category !== "Unbekannt";
-      const hasValidUnit = unit !== "Bitmaske" && unit !== "Datum/Zeit" && unit !== "Datum";
-      if (!hasValidCategory || !hasValidUnit) {
-        return;
-      }
-      frequencyByKey.set(key, (frequencyByKey.get(key) || 0) + 1);
-    });
-
-    const preferredKey = [...frequencyByKey.entries()].sort(
-      (a, b) => b[1] - a[1],
-    )[0]?.[0];
-
-    const points = records
-      .filter((record: any) => {
-        const numericValue = getNumericValue(record.wert_roh);
-        if (numericValue === null) {
-          return false;
-        }
-        const index = getMonthOffset(record);
-        if (index === null) {
-          return false;
-        }
-        if (!preferredKey) {
-          return true;
-        }
-        const key = `${record.kategorie || "Wert"}|${record.einheit || ""}`;
-        return key === preferredKey;
-      })
-      .map((record: any) => {
-        const value = getNumericValue(record.wert_roh);
-        if (value === null) {
-          return null;
-        }
-        const index = getMonthOffset(record) ?? 0;
-        const pointDate = getPointDate(record);
-
-        return {
-          index,
-          timestamp: record.historisches_datum || chartReading?.createdAt || "",
-          pointDate,
-          monthLabel: getMonthLabel(record),
-          label:
-            record.historisches_datum ||
-            (index > 0
-              ? `Monat -${index}`
-              : "Aktuell"),
-          value,
-          formatted: record.wert_formatiert || String(record.wert_roh),
-        };
-      })
-      .filter(
-        (
-          point,
-        ): point is {
-          index: number;
-          timestamp: string;
-          pointDate: Date;
-          monthLabel: string;
-          label: string;
-          value: number;
-          formatted: string;
-        } => !!point,
-      )
-      .sort((a, b) => a.pointDate.getTime() - b.pointDate.getTime());
-
-    // Pro Monat nur einen Punkt zeigen (verhindert doppelte Monatslabels).
-    const uniquePointsByMonth = new Map<number, (typeof points)[number]>();
-    points.forEach((point) => {
-      const existing = uniquePointsByMonth.get(point.index);
-      if (!existing || point.pointDate.getTime() > existing.pointDate.getTime()) {
-        uniquePointsByMonth.set(point.index, point);
-      }
-    });
-    const normalizedPoints = [...uniquePointsByMonth.values()].sort(
-      (a, b) => a.pointDate.getTime() - b.pointDate.getTime(),
-    );
-
-    const values = normalizedPoints.map((point) => point.value);
+    const values = points.map((point) => point.value);
     const minValue = values.length ? Math.min(...values) : 0;
     const maxValue = values.length ? Math.max(...values) : 0;
 
-    const [kategorie = "Messwert", einheit = ""] = (preferredKey || "").split(
-      "|",
-    );
-
     return {
       meter_id: meterId,
-      label: sortedReadings[0]?.meter?.label || meterId,
-      group: sortedReadings[0]?.meter?.group || null,
+      label: latestReading?.meter?.label || meterId,
+      group: latestReading?.meter?.group || null,
       count: sortedReadings.length,
-      points: normalizedPoints,
+      points,
       minValue,
       maxValue,
-      kategorie,
-      einheit,
-      sourceDate: chartReading?.createdAt || "",
+      kategorie: series?.kategorie || "Messwert",
+      einheit: series?.einheit || "",
+      sourceDate: latestReading?.timestamp || latestReading?.createdAt || "",
     };
   });
 });
@@ -309,7 +184,6 @@ const formatDate = (dateString: string) => {
   if (!dateString) return "-";
   return new Date(dateString).toLocaleString("de-DE");
 };
-
 </script>
 
 <template>
@@ -378,19 +252,9 @@ const formatDate = (dateString: string) => {
                     {{ meter.einheit || "-" }}
                   </span>
                 </div>
-                <div class="text-[11px] text-gray-400 flex justify-between">
-                  <span>{{ meter.points[0]?.monthLabel || meter.points[0]?.label }}</span>
-                  <span>
-                    {{
-                      meter.points[meter.points.length - 1]?.monthLabel ||
-                      meter.points[meter.points.length - 1]?.label
-                    }}
-                  </span>
-                </div>
               </div>
               <div v-else class="text-sm text-gray-500">
-                Für diesen Zähler liegen noch nicht genug historische Werte für eine
-                Kurve vor.
+                Für diesen Zähler liegen noch nicht genug Werte für eine Kurve vor.
               </div>
             </UCard>
           </div>
@@ -401,6 +265,10 @@ const formatDate = (dateString: string) => {
     <div
       class="flex-1 flex flex-col min-h-0 bg-white ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 shadow sm:rounded-lg overflow-hidden relative">
       <UTable :data="readings" :columns="columns" :loading="loading" class="h-full">
+        <template #timestamp-cell="{ row }">
+          {{ formatDate(row.original.timestamp) }}
+        </template>
+
         <template #createdAt-cell="{ row }">
           {{ formatDate(row.original.createdAt) }}
         </template>
@@ -411,26 +279,14 @@ const formatDate = (dateString: string) => {
           </span>
         </template>
 
-        <template #processing_status-cell="{ row }">
-          <UBadge :color="row.original.processing_status === 'parsed'
-            ? 'primary'
-            : row.original.processing_status === 'error'
-              ? 'error'
-              : 'neutral'
-            ">
-            {{ row.original.processing_status }}
-          </UBadge>
-        </template>
-
         <template #recordsData-cell="{ row }">
           <div class="flex flex-col gap-1 text-xs">
-            <div v-if="!row.original.records || row.original.records.length === 0" class="text-gray-400 italic">
+            <div v-if="getDisplayRecords(row.original).length === 0" class="text-gray-400 italic">
               Keine Daten
             </div>
-            <div v-else v-for="(rec, i) in row.original.records" :key="i" class="flex gap-2">
-              <span class="font-semibold">{{ rec.kategorie }}:</span>
-              <span>{{ rec.wert_formatiert || rec.wert_roh }}
-                {{ rec.einheit || "" }}</span>
+            <div v-else v-for="(rec, i) in getDisplayRecords(row.original)" :key="i" class="flex gap-2">
+              <span class="font-semibold">{{ rec.label }}:</span>
+              <span>{{ rec.value }}</span>
             </div>
           </div>
         </template>
