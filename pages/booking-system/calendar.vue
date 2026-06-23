@@ -1,6 +1,13 @@
 <template>
   <div class="h-[calc(100vh-4rem)] flex flex-col bg-slate-50 font-sans">
-    <BookingVoucherModal v-if="showVoucherModal" @close="showVoucherModal=false"/>
+    <BookingVoucherModal
+      v-if="showVoucherModal"
+      :initial-email="selectedBooking?.User?.email || ''"
+      :user-id="selectedBooking?.user_id"
+      :booking-id="selectedBooking?.id"
+      @close="showVoucherModal = false"
+      @success="handleWelcomeEmailSuccess"
+    />
     <header
       class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between flex-shrink-0 z-20 gap-4"
     >
@@ -111,9 +118,10 @@
       >
         <div
           v-if="selectedBooking"
-          class="absolute inset-y-0 right-0 w-96 z-20 shadow-xl"
+          class="absolute inset-y-0 right-0 w-[420px] sm:w-[440px] max-w-[90vw] z-20 shadow-xl"
         >
           <BookingDetails
+            ref="bookingDetailsRef"
             :booking="selectedBooking"
             @close="selectedBooking = null"
             @edit="openEditModal"
@@ -158,6 +166,12 @@ const draggedBooking = ref<any | null>(null);
 const createDate = ref<Date | null>(null);
 const route = useRoute();
 const showVoucherModal = ref(false);
+const bookingDetailsRef = ref<InstanceType<typeof BookingDetails> | null>(null);
+
+const handleWelcomeEmailSuccess = () => {
+  showVoucherModal.value = false;
+  bookingDetailsRef.value?.reloadCommunications?.();
+};
 
 // Modal State
 const isModalOpen = ref(false);
@@ -256,10 +270,8 @@ const handleCancel = async (b: any) => {
 };
 
 const handleDeletion = async (b: any) => {
-  if (confirm("Wirklich löschen?")) {
-    await api.bookings.delete(b.id);
-    refreshData();
-  }
+  await api.bookings.delete(b.id);
+  refreshData();
 };
 
 const handleDrop = async ({ date, event }: any) => {

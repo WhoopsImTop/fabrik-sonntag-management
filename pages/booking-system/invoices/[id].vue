@@ -390,6 +390,7 @@ const router = useRouter();
 // Fix Nuxt auto-import issues by asserting useBookingApi exists.
 // In Nuxt this is auto-imported, so we'll just use it directly.
 const api = useBookingApi();
+const { confirm } = useConfirm();
 
 const loading = ref(true);
 const saving = ref(false);
@@ -837,8 +838,15 @@ const handleDownload = async () => {
 };
 
 const handleDelete = async () => {
-  if (!confirm("Sind Sie sicher, dass Sie diese Rechnung löschen möchten?"))
-    return;
+  const confirmed = await confirm({
+    title: "Rechnung löschen",
+    message:
+      "Sind Sie sicher, dass Sie diese Rechnung unwiderruflich löschen möchten?",
+    variant: "danger",
+    confirmLabel: "Ja, löschen",
+  });
+  if (!confirmed) return;
+
   try {
     await api.sales.delete(Number(invoiceId));
     router.push("/booking-system/invoices");
@@ -849,18 +857,21 @@ const handleDelete = async () => {
 };
 
 const sendInvoiceEmail = async () => {
-  if (
-    !confirm(
-      `Rechnung jetzt per E-Mail an ${invoice.value.User?.email || "den Kunden"} senden?`,
-    )
-  ) {
-    return;
-  }
+  const recipientEmail = invoice.value.User?.email || "den Kunden";
+  const confirmed = await confirm({
+    title: "Rechnung per E-Mail senden",
+    message: `Rechnung jetzt per E-Mail an ${recipientEmail} senden?`,
+    variant: "default",
+    confirmLabel: "Ja, senden",
+    icon: "i-heroicons-envelope-20-solid",
+  });
+  if (!confirmed) return;
+
   try {
-    await api.sales.sendEmail(Number(invoiceId));
+    const res = await api.sales.sendEmail(Number(invoiceId));
+    if (!res) return;
     alert("E-Mail wurde erfolgreich versendet.");
-    // Reload to refresh status
-    loadInvoice();
+    await loadInvoice();
   } catch (e: any) {
     console.error(e);
     alert("Fehler beim Senden der E-Mail: " + (e.message || ""));
@@ -878,13 +889,16 @@ const markInvoicePaid = async () => {
 };
 
 const stornoInvoice = async () => {
-  if (
-    !confirm(
+  const confirmed = await confirm({
+    title: "Rechnung stornieren",
+    message:
       "Diese Rechnung stornieren? Die Rechnungsnummer bleibt dauerhaft vergeben. Das archivierte PDF wird mit „STORNIERT“ gekennzeichnet.",
-    )
-  ) {
-    return;
-  }
+    variant: "warning",
+    confirmLabel: "Ja, stornieren",
+    icon: "i-heroicons-exclamation-triangle-20-solid",
+  });
+  if (!confirmed) return;
+
   try {
     await api.sales.update(Number(invoiceId), { status: "DELETED" });
     await loadInvoice();

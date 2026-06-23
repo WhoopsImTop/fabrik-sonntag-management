@@ -169,7 +169,7 @@
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <p class="text-[10px] text-amber-800 leading-snug">
-                      Der Tag <strong>{{ wifi_token }}</strong> wird automatisch durch <strong>{{ formatVoucherCode(selectedVoucher?.code) }}</strong> ersetzt.
+                      Der Tag wird automatisch durch <strong>{{ formatVoucherCode(selectedVoucher?.code) }}</strong> ersetzt.
                     </p>
                   </div>
                 </div>
@@ -216,7 +216,7 @@
               v-else
               @click="confirmSend = true"
               :disabled="!emailData.email || !emailData.subject || loading"
-              class="px-8 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 active:scale-95 transition-all"
+              class="px-8 py-3 disabled:bg-neutral-400 disabled:text-neutral-200 disabled:cursor-not-allowed disabled:shadow-none bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-xl shadow-blue-200 active:scale-95 transition-all"
             >
               Prüfen & Senden
             </button>
@@ -224,7 +224,7 @@
         </div>
 
         <transition name="fade">
-          <div v-if="confirmSend" class="absolute inset-0 z-[100] bg-slate-950/50 backdrop-blur-md flex items-center justify-center p-6">
+          <div v-if="confirmSend" class="absolute inset-0 z-99 bg-slate-950/50 backdrop-blur-md flex items-center justify-center p-6">
             <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-slate-100 text-center transform transition-all">
               <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 rotate-3">
                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,8 +255,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 
-const props = defineProps({ 
-  initialEmail: { type: String, default: "" } 
+const props = defineProps({
+  initialEmail: { type: String, default: "" },
+  userId: { type: Number, default: null },
+  bookingId: { type: Number, default: null },
 });
 const emit = defineEmits(["close", "success"]);
 
@@ -375,6 +377,8 @@ const handleSend = async () => {
       email: emailData.email,
       subject: emailData.subject,
       content: renderedContent.value,
+      user_id: props.userId ?? null,
+      booking_id: props.bookingId ?? null,
     };
     const success = await api.emailService.sendCustomEmail(payload);
     if (success) {

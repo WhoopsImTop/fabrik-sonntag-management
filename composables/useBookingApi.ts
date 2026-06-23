@@ -1134,6 +1134,29 @@ export const useBookingApi = () => {
     },
   };
 
+  const communications = {
+    getByUser: async (userId: number) => {
+      return await apiCall(
+        () =>
+          $fetch(`${baseURL}/communications`, {
+            headers: getAuthHeaders(),
+            params: { user_id: userId },
+          }),
+        "communications.getByUser",
+      );
+    },
+    getByBooking: async (bookingId: number) => {
+      return await apiCall(
+        () =>
+          $fetch(`${baseURL}/communications`, {
+            headers: getAuthHeaders(),
+            params: { booking_id: bookingId },
+          }),
+        "communications.getByBooking",
+      );
+    },
+  };
+
   return {
     users,
     resources,
@@ -1148,5 +1171,6 @@ export const useBookingApi = () => {
     subscriptions,
     wifiToken,
     emailService,
+    communications,
   };
 };

@@ -1,267 +1,116 @@
 <template>
-  <div class="h-full flex flex-col bg-white border-l border-slate-200 shadow-2xl font-sans" v-if="booking">
-    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-start bg-white shrink-0">
-      <div>
-        <h3 class="text-lg font-bold text-slate-900 tracking-tight">
-          Buchungsdetails
-        </h3>
-        <p class="text-xs text-slate-500 font-mono mt-0.5">
-          ID: #{{ booking.id }}
-        </p>
-      </div>
-      <button @click="$emit('close')"
-        class="rounded-full p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-6 space-y-8">
-      <div class="rounded-lg p-4 border flex items-center gap-3" :class="statusStyles[booking.status]?.bg || 'bg-slate-50 border-slate-200'
-        ">
-        <div class="p-2 rounded-full shrink-0" :class="statusStyles[booking.status]?.iconBg ||
-          'bg-slate-200 text-slate-500'
-          ">
-          <component :is="statusStyles[booking.status]?.icon" class="w-5 h-5" />
-        </div>
-        <div>
-          <p class="text-sm font-bold" :class="statusStyles[booking.status]?.text || 'text-slate-700'">
-            {{ statusStyles[booking.status]?.label || booking.status }}
-          </p>
-          <p class="text-xs opacity-80" :class="statusStyles[booking.status]?.text || 'text-slate-600'">
-            {{ statusStyles[booking.status]?.desc }}
-          </p>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400 mb-1 block">Ressource</span>
-          <h4 class="text-xl font-bold text-slate-900 leading-tight">
+  <div
+    v-if="booking"
+    class="h-full flex flex-col bg-white border-l border-slate-200 shadow-2xl font-sans"
+  >
+    <!-- Zone 1: Hero Header -->
+    <div class="px-5 py-4 border-b border-slate-100 shrink-0 bg-white">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <h3 class="text-base font-bold text-slate-900 tracking-tight truncate">
             {{ booking.Resource?.name || "Unbekannt" }}
-          </h4>
-        </div>
-
-        <div class="flex items-start gap-3 p-4 bg-slate-50 border border-slate-100 rounded-xl group">
-          <div class="mt-0.5 text-slate-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div v-if="!isEditingDuration" class="flex-1">
-            <div class="flex items-start justify-between">
-              <div>
-                <p class="text-sm font-semibold text-slate-900">
-                  {{ formatDate(booking.start_at) }}
-                  <span v-if="
-                    formatDate(booking.start_at) !== formatDate(booking.end_at)
-                  " class="text-slate-400">
-                    bis
-                  </span>
-                  <span v-if="
-                    formatDate(booking.start_at) !== formatDate(booking.end_at)
-                  ">{{ formatDate(booking.end_at) }}</span>
-                </p>
-                <p class="text-sm text-slate-500 mt-0.5">
-                  {{ formatTime(booking.start_at) }} –
-                  {{ formatTime(booking.end_at) }} Uhr
-                </p>
-              </div>
-              <button @click="startDurationEdit"
-                class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-700 p-1 transition-opacity"
-                title="Dauer bearbeiten">
-                <component :is="Icons.Edit" class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          <div v-else class="flex-1 space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-[10px] font-medium text-slate-500 mb-1">Start</label>
-                <input v-model="editStartAt" type="datetime-local"
-                  class="w-full bg-white border border-slate-200 text-slate-900 text-[13px] rounded focus:ring-slate-900 focus:border-slate-900 block p-1.5 font-mono" />
-              </div>
-              <div>
-                <label class="block text-[10px] font-medium text-slate-500 mb-1">Ende</label>
-                <input v-model="editEndAt" type="datetime-local"
-                  class="w-full bg-white border border-slate-200 text-slate-900 text-[13px] rounded focus:ring-slate-900 focus:border-slate-900 block p-1.5 font-mono" />
-              </div>
-            </div>
-            <div class="flex justify-end gap-2">
-              <button @click="cancelDurationEdit"
-                class="px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded hover:bg-slate-50 transition-colors"
-                :disabled="isSavingDuration">
-                Abbrechen
-              </button>
-              <button @click="saveDurationEdit"
-                class="px-2.5 py-1 text-xs font-medium text-white bg-slate-900 rounded hover:bg-slate-800 transition-colors flex items-center"
-                :disabled="isSavingDuration">
-                <svg v-if="isSavingDuration" class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-white" fill="none"
-                  viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                  </path>
-                </svg>
-                Speichern
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-3">
-        <h5 class="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-100 pb-2">
-          Kunde
-        </h5>
-
-        <div class="flex items-center gap-4">
-          <div
-            class="h-10 w-10 shrink-0 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-slate-50">
-            {{ getInitials(booking.User?.username) }}
-          </div>
-          <div class="min-w-0">
-            <p class="text-sm font-semibold text-slate-900 truncate">
-              {{ booking.User?.username || "Gast" }}
-            </p>
-            <a v-if="booking.User?.email" :href="'mailto:' + booking.User.email"
-              class="text-xs text-blue-600 hover:underline truncate block">
-              {{ booking.User.email }}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h5 class="text-xs font-bold uppercase tracking-widest text-slate-900">
-            Rechnung
-          </h5>
-          <span v-if="booking.Invoice" class="text-[10px] font-mono text-slate-400">{{ booking.Invoice.invoice_number
-            }}</span>
-        </div>
-
-        <div v-if="booking.Invoice"
-          class="group relative rounded-xl border border-slate-200 overflow-hidden hover:border-slate-300 transition-colors">
-          <div class="bg-slate-50/50 px-4 py-3 flex justify-between items-center">
-            <div class="flex flex-col">
-              <span class="text-xs font-medium" :class="booking.Invoice.status === 'PAID'
-                  ? 'text-emerald-600'
-                  : 'text-amber-600'
-                ">
-                {{
-                  booking.Invoice.status === "DRAFT"
-                    ? "Entwurf"
-                    : booking.Invoice.status === "PAID"
-                      ? "Bezahlt"
-                      : "Offen"
-                }}
-              </span>
-            </div>
-            <div class="text-right">
-              <span class="block text-sm font-bold text-slate-900">{{
-                formatCurrency(booking.Invoice.total_amount)
-                }}</span>
-            </div>
-          </div>
-          <button @click="downloadInvoice(booking.Invoice.id)" :disabled="isDownloading"
-            class="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 border-t border-slate-200 transition-colors">
-            <svg v-if="isDownloading" class="animate-spin w-3 h-3" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
-            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            PDF Laden
-          </button>
-        </div>
-        <div v-else-if="booking.paid_with_quota"
-          class="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/30 text-center">
-          <p class="text-sm font-medium text-slate-600">
-            Gebucht über das hinterlegte Kontingent
+          </h3>
+          <p class="text-sm text-slate-600 mt-0.5">
+            {{ formatDateHeader(booking.start_at, booking.end_at) }}
+          </p>
+          <p class="text-sm font-medium text-slate-700 truncate mt-0.5">
+            {{ customerFullName }}
+          </p>
+          <p
+            v-if="customerCompany"
+            class="text-xs text-slate-500 truncate"
+          >
+            {{ customerCompany }}
           </p>
         </div>
-        <div v-else
-          class="flex flex-col items-center justify-center gap-3 p-6 rounded-lg border border-dashed border-slate-200 bg-slate-50/50">
-          <div class="text-slate-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <p class="text-sm font-medium text-slate-500">Keine Rechnung vorhanden</p>
-          <button @click="router.push(`/booking-system/invoices/new?bookingId=${booking.id}`)"
-            class="mt-2 inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Rechnung erstellen
-          </button>
-        </div>
-      </div>
-      <div class="space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h5 class="text-xs font-bold uppercase tracking-widest text-slate-900">
-            Willkommens Email senden
-          </h5>
-        </div>
-        <button @click="$emit('welcome-email')"
-          class="w-full col-span-1 inline-flex items-center justify-center rounded-lg bg-yellow-400 px-4 py-2.5 text-sm font-medium text-white hover:bg-yellow-500 shadow-sm transition-all hover:cursor-pointer">
-          Email erstellen
+        <button
+          @click="$emit('close')"
+          class="rounded-full p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
+
+      <div class="flex items-center justify-between gap-2 mt-3">
+        <div class="relative inline-flex">
+          <select
+            :value="booking.status"
+            :disabled="isUpdatingStatus"
+            :class="[
+              'appearance-none cursor-pointer rounded-full border pl-3 pr-8 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-60 disabled:cursor-wait',
+              statusChipClasses[booking.status],
+            ]"
+            @change="handleStatusChange"
+          >
+            <option value="PENDING">Ausstehend</option>
+            <option value="CONFIRMED">Bestätigt</option>
+            <option value="CANCELLED">Storniert</option>
+          </select>
+          <svg
+            class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 opacity-60"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+        <span class="text-[10px] font-mono text-slate-400">#{{ booking.id }}</span>
+      </div>
     </div>
 
-    <div class="p-4 border-t border-slate-100 bg-white space-y-3 shrink-0">
-      <div class="mb-4">
-        <input type="checkbox" id="sendMail" v-model="shouldSendEmail"
-          class="rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
-        <label for="sendMail" class="text-xs text-slate-600 font-medium cursor-pointer">
-          Kunden per E-Mail benachrichtigen
-        </label>
-      </div>
-      <div v-if="booking.status === 'PENDING'" class="grid grid-cols-2 gap-3">
-        <button @click="updateStatus('CONFIRMED')"
-          class="col-span-1 inline-flex items-center justify-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <!-- Zone 2: Sticky Aktionsleiste -->
+    <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/80 shrink-0">
+      <div v-if="booking.status === 'PENDING'" class="grid grid-cols-2 gap-2">
+        <button
+          @click="requestStatusChange('CONFIRMED')"
+          class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 shadow-sm transition-all"
+        >
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           Bestätigen
         </button>
-        <button @click="handleReject"
-          class="col-span-1 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-all">
+        <button
+          @click="requestStatusChange('CANCELLED')"
+          class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-all"
+        >
           Ablehnen
         </button>
       </div>
 
-      <div v-else-if="booking.status === 'CONFIRMED'" class="grid grid-cols-2 gap-3">
-        <button @click="$emit('edit', booking)"
-          class="col-span-1 inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 shadow-sm transition-all">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else-if="booking.status === 'CONFIRMED'" class="grid grid-cols-2 gap-2">
+        <button
+          @click="$emit('edit', booking)"
+          class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 shadow-sm transition-all"
+        >
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           Verschieben
         </button>
-        <button @click="handleCancel"
-          class="col-span-1 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all">
+        <button
+          @click="requestStatusChange('CANCELLED')"
+          class="inline-flex items-center justify-center rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-50 transition-all"
+        >
           Stornieren
         </button>
       </div>
 
-      <div v-else class="grid grid-cols-2 gap-3">
-        <button @click="$emit('edit', booking)"
-          class="w-full inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all">
+      <div v-else class="flex items-center gap-2">
+        <button
+          @click="$emit('edit', booking)"
+          class="flex-1 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-all"
+        >
           Details bearbeiten
         </button>
-        <button @click="handleDeletion"
-          class="col-span-1 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all">
+        <button
+          @click="handleDeletion"
+          class="inline-flex items-center justify-center rounded-lg border border-red-100 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
+        >
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -270,15 +119,170 @@
         </button>
       </div>
     </div>
+
+    <!-- Zone 3: Scrollbarer Accordion-Inhalt -->
+    <div class="flex-1 overflow-y-auto">
+      <BookingDrawerSection title="Kunde" :default-open="true">
+        <div v-if="booking.user_id && booking.User" class="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-3">
+          <NuxtLink
+            :to="`/booking-system/users/${booking.user_id}`"
+            class="flex items-center gap-3 group"
+          >
+            <div
+              class="h-9 w-9 shrink-0 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs"
+            >
+              {{ customerInitials }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                {{ customerFullName }}
+              </p>
+              <p class="text-xs text-blue-600 group-hover:underline">Profil öffnen</p>
+            </div>
+          </NuxtLink>
+
+          <div class="space-y-2 border-t border-slate-200/80 pt-3 text-sm">
+            <a
+              v-if="booking.User.email"
+              :href="'mailto:' + booking.User.email"
+              class="flex items-center gap-2 text-blue-600 hover:underline break-all"
+            >
+              <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              {{ booking.User.email }}
+            </a>
+            <a
+              v-if="userDetails?.mobile_number"
+              :href="'tel:' + userDetails.mobile_number"
+              class="flex items-center gap-2 text-blue-600 hover:underline"
+            >
+              <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              {{ userDetails.mobile_number }}
+            </a>
+            <p
+              v-if="!booking.User.email && !userDetails?.mobile_number"
+              class="text-slate-500 text-xs"
+            >
+              Keine Kontaktdaten hinterlegt
+            </p>
+          </div>
+        </div>
+
+        <p v-else class="text-sm text-slate-500 py-1">Kein registrierter Kunde (Gastbuchung)</p>
+      </BookingDrawerSection>
+
+      <BookingDrawerSection
+        title="Abrechnung"
+        :default-open="billingDefaultOpen"
+        :badge="billingBadge"
+      >
+        <div v-if="booking.Invoice" class="flex items-center justify-between gap-3 py-1">
+          <div class="min-w-0">
+            <span
+              class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+              :class="invoiceStatusClasses"
+            >
+              {{ invoiceStatusLabel }}
+            </span>
+            <p class="text-[10px] font-mono text-slate-400 mt-1 truncate">
+              {{ booking.Invoice.invoice_number }}
+            </p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="text-sm font-bold text-slate-900">
+              {{ formatCurrency(booking.Invoice.total_amount) }}
+            </p>
+            <button
+              @click="downloadInvoice(booking.Invoice.id)"
+              :disabled="isDownloading"
+              class="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline mt-0.5 disabled:opacity-50"
+            >
+              {{ isDownloading ? "Lädt…" : "PDF laden" }}
+            </button>
+          </div>
+        </div>
+
+        <p v-else-if="booking.paid_with_quota" class="text-sm text-slate-600 py-1">
+          Gebucht über das hinterlegte Kontingent
+        </p>
+
+        <div v-else class="flex items-center justify-between gap-2 py-1">
+          <p class="text-sm text-slate-500">Keine Rechnung</p>
+          <button
+            @click="router.push(`/booking-system/invoices/new?bookingId=${booking.id}`)"
+            class="text-xs font-medium text-slate-700 hover:text-slate-900 underline underline-offset-2"
+          >
+            Rechnung erstellen
+          </button>
+        </div>
+      </BookingDrawerSection>
+
+      <BookingDrawerSection
+        title="Kommunikation"
+        :default-open="false"
+        @open="commSectionOpen = true"
+      >
+        <CommunicationHistory
+          v-if="booking.id && commSectionOpen"
+          ref="communicationHistoryRef"
+          :booking-id="booking.id"
+          class="mb-3"
+        />
+        <button
+          @click="$emit('welcome-email')"
+          class="w-full inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all"
+        >
+          <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          Willkommens-E-Mail erstellen
+        </button>
+      </BookingDrawerSection>
+    </div>
+
+    <ConfirmationModal
+      v-model:open="showStatusModal"
+      :title="statusModalCopy.title"
+      :description="statusModalCopy.message"
+      :variant="statusModalCopy.variant"
+      :confirm-label="statusModalCopy.confirmLabel"
+      :loading="isUpdatingStatus"
+      icon="i-heroicons-arrow-path-20-solid"
+      @confirm="confirmStatusChange"
+      @cancel="cancelStatusChange"
+    >
+      <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+        <input
+          v-model="shouldSendEmail"
+          type="checkbox"
+          class="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+        />
+        Kunden per E-Mail benachrichtigen
+      </label>
+    </ConfirmationModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, h } from "vue";
+import { ref, computed } from "vue";
+import ConfirmationModal from "@/components/app/ConfirmationModal.vue";
+import BookingDrawerSection from "@/components/booking/BookingDrawerSection.vue";
+import CommunicationHistory from "@/components/communication/CommunicationHistory.vue";
+
 const router = useRouter();
 const api = useBookingApi();
+const { confirm } = useConfirm();
 
 const shouldSendEmail = ref(true);
+const showStatusModal = ref(false);
+const pendingStatus = ref<string | null>(null);
+const isUpdatingStatus = ref(false);
 
 const props = defineProps<{ booking: any }>();
 const emit = defineEmits([
@@ -287,184 +291,163 @@ const emit = defineEmits([
   "cancel",
   "update-status",
   "delete",
-  "welcome-email"
+  "welcome-email",
 ]);
 
 const isDownloading = ref(false);
-const showVoucherModal = ref(false);
+const commSectionOpen = ref(false);
+const communicationHistoryRef = ref<InstanceType<typeof CommunicationHistory> | null>(null);
 
-const isEditingDuration = ref(false);
-const editStartAt = ref("");
-const editEndAt = ref("");
-const isSavingDuration = ref(false);
+const userDetails = computed(() => props.booking.User?.details);
 
-// --- ICONS & STYLES ---
-const Icons = {
-  Check: h(
-    "svg",
-    {
-      fill: "none",
-      viewBox: "0 0 24 24",
-      stroke: "currentColor",
-      "stroke-width": 2,
-    },
-    [
-      h("path", {
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        d: "M5 13l4 4L19 7",
-      }),
-    ],
-  ),
-  Clock: h(
-    "svg",
-    {
-      fill: "none",
-      viewBox: "0 0 24 24",
-      stroke: "currentColor",
-      "stroke-width": 2,
-    },
-    [
-      h("path", {
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        d: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-      }),
-    ],
-  ),
-  X: h(
-    "svg",
-    {
-      fill: "none",
-      viewBox: "0 0 24 24",
-      stroke: "currentColor",
-      "stroke-width": 2,
-    },
-    [
-      h("path", {
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        d: "M6 18L18 6M6 6l12 12",
-      }),
-    ],
-  ),
-  Edit: h(
-    "svg",
-    {
-      fill: "none",
-      viewBox: "0 0 24 24",
-      stroke: "currentColor",
-      "stroke-width": 2,
-    },
-    [
-      h("path", {
-        "stroke-linecap": "round",
-        "stroke-linejoin": "round",
-        d: "M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z",
-      }),
-    ],
-  ),
+const customerFullName = computed(() => {
+  const first = userDetails.value?.first_name?.trim() || "";
+  const last = userDetails.value?.last_name?.trim() || "";
+  const fullName = [first, last].filter(Boolean).join(" ");
+  return fullName || "Gast";
+});
+
+const customerCompany = computed(() => userDetails.value?.company?.trim() || "");
+
+const customerInitials = computed(() => {
+  const first = userDetails.value?.first_name?.trim();
+  const last = userDetails.value?.last_name?.trim();
+  if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
+  if (first) return first.substring(0, 2).toUpperCase();
+  if (last) return last.substring(0, 2).toUpperCase();
+  return "?";
+});
+
+const statusChipClasses: Record<string, string> = {
+  CONFIRMED: "bg-emerald-50 border-emerald-200 text-emerald-700 focus:ring-emerald-500",
+  PENDING: "bg-amber-50 border-amber-200 text-amber-700 focus:ring-amber-500",
+  CANCELLED: "bg-slate-100 border-slate-200 text-slate-600 focus:ring-slate-400",
 };
 
-const statusStyles: any = {
-  CONFIRMED: {
-    label: "Bestätigt",
-    desc: "Die Buchung ist aktiv.",
-    bg: "bg-emerald-50 border-emerald-100",
-    text: "text-emerald-700",
-    iconBg: "bg-emerald-100",
-    icon: Icons.Check,
-  },
-  PENDING: {
-    label: "Ausstehend",
-    desc: "Wartet auf Bestätigung.",
-    bg: "bg-amber-50 border-amber-100",
-    text: "text-amber-700",
-    iconBg: "bg-amber-100",
-    icon: Icons.Clock,
-  },
-  CANCELLED: {
-    label: "Storniert",
-    desc: "Diese Buchung wurde abgesagt.",
-    bg: "bg-slate-50 border-slate-200",
-    text: "text-slate-500",
-    iconBg: "bg-slate-200",
-    icon: Icons.X,
-  },
+const statusLabels: Record<string, string> = {
+  PENDING: "Ausstehend",
+  CONFIRMED: "Bestätigt",
+  CANCELLED: "Storniert",
 };
 
-// --- ACTIONS ---
+const billingDefaultOpen = computed(
+  () => !!(props.booking.Invoice || props.booking.paid_with_quota),
+);
 
-const updateStatus = async (newStatus: string) => {
+const billingBadge = computed(() => {
+  if (props.booking.Invoice) return invoiceStatusLabel.value;
+  if (props.booking.paid_with_quota) return "Kontingent";
+  return undefined;
+});
+
+const invoiceStatusLabel = computed(() => {
+  const status = props.booking.Invoice?.status;
+  if (status === "DRAFT") return "Entwurf";
+  if (status === "PAID") return "Bezahlt";
+  return "Offen";
+});
+
+const invoiceStatusClasses = computed(() => {
+  const status = props.booking.Invoice?.status;
+  if (status === "PAID") return "bg-emerald-50 text-emerald-700";
+  if (status === "DRAFT") return "bg-slate-100 text-slate-600";
+  return "bg-amber-50 text-amber-700";
+});
+
+const statusModalCopy = computed(() => {
+  const from = props.booking.status;
+  const to = pendingStatus.value || from;
+
+  if (to === "CANCELLED" && from === "CONFIRMED") {
+    return {
+      title: "Buchung stornieren",
+      message: "Möchten Sie diese bestätigte Buchung wirklich stornieren?",
+      variant: "warning" as const,
+      confirmLabel: "Ja, stornieren",
+    };
+  }
+
+  if (to === "CANCELLED") {
+    return {
+      title: "Buchung ablehnen",
+      message: "Möchten Sie diese Buchung wirklich ablehnen oder stornieren?",
+      variant: "warning" as const,
+      confirmLabel: "Ja, stornieren",
+    };
+  }
+
+  if (to === "CONFIRMED") {
+    return {
+      title: "Buchung bestätigen",
+      message: `Status auf „${statusLabels.CONFIRMED}" setzen?`,
+      variant: "default" as const,
+      confirmLabel: "Ja, bestätigen",
+    };
+  }
+
+  return {
+    title: "Status ändern",
+    message: `Status von „${statusLabels[from] || from}" auf „${statusLabels[to] || to}" ändern?`,
+    variant: "default" as const,
+    confirmLabel: "Status ändern",
+  };
+});
+
+const requestStatusChange = (newStatus: string) => {
+  if (newStatus === props.booking.status) return;
+  pendingStatus.value = newStatus;
+  shouldSendEmail.value = true;
+  showStatusModal.value = true;
+};
+
+const handleStatusChange = (event: Event) => {
+  const newStatus = (event.target as HTMLSelectElement).value;
+  requestStatusChange(newStatus);
+  (event.target as HTMLSelectElement).value = props.booking.status;
+};
+
+const cancelStatusChange = () => {
+  pendingStatus.value = null;
+};
+
+const confirmStatusChange = async () => {
+  const newStatus = pendingStatus.value;
+  if (!newStatus || newStatus === props.booking.status) {
+    showStatusModal.value = false;
+    return;
+  }
+
+  isUpdatingStatus.value = true;
   try {
-    await api.bookings.update(
-      props.booking.id,
-      { status: newStatus },
-      shouldSendEmail.value,
-    );
-    emit("update-status");
+    if (newStatus === "CANCELLED" && props.booking.status === "CONFIRMED") {
+      await api.bookings.cancel(props.booking.id, shouldSendEmail.value);
+      emit("cancel", props.booking);
+    } else {
+      await api.bookings.update(
+        props.booking.id,
+        { status: newStatus },
+        shouldSendEmail.value,
+      );
+      emit("update-status");
+    }
+    showStatusModal.value = false;
+    pendingStatus.value = null;
   } catch (e) {
     alert("Fehler beim Status-Update");
-  }
-};
-
-const formatDatetimeInput = (iso: string) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => (n < 10 ? "0" + n : n);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const startDurationEdit = () => {
-  editStartAt.value = formatDatetimeInput(props.booking.start_at);
-  editEndAt.value = formatDatetimeInput(props.booking.end_at);
-  isEditingDuration.value = true;
-};
-
-const cancelDurationEdit = () => {
-  isEditingDuration.value = false;
-};
-
-const saveDurationEdit = async () => {
-  if (!editStartAt.value) return;
-  isSavingDuration.value = true;
-  try {
-    await api.bookings.update(
-      props.booking.id,
-      { start_at: editStartAt.value, end_at: editEndAt.value || null },
-      shouldSendEmail.value,
-    );
-    emit("update-status");
-    isEditingDuration.value = false;
-  } catch (e) {
-    alert("Fehler beim Speichern der Dauer");
   } finally {
-    isSavingDuration.value = false;
+    isUpdatingStatus.value = false;
   }
 };
 
-const handleReject = async () => {
-  try {
-    await api.bookings.update(
-      props.booking.id,
-      { status: "CANCELLED" },
-      shouldSendEmail.value,
-    );
-    emit("update-status");
-  } catch (e) {
-    alert("Fehler beim Status-Update");
-  }
-};
-
-const handleCancel = async () => {
-  if (confirm("Möchten Sie diese Buchung wirklich stornieren?")) {
-    await api.bookings.cancel(props.booking.id, shouldSendEmail.value);
-    emit("cancel", props.booking);
-  }
-};
-
-const handleDeletion = () => {
-  if (confirm("Möchten Sie diese Buchung wirklich löschen?")) {
+const handleDeletion = async () => {
+  const confirmed = await confirm({
+    title: "Buchung löschen",
+    message: "Möchten Sie diese Buchung wirklich löschen?",
+    variant: "danger",
+    confirmLabel: "Ja, löschen",
+    icon: "i-heroicons-trash-20-solid",
+  });
+  if (confirmed) {
     emit("delete", props.booking);
   }
 };
@@ -491,33 +474,41 @@ const downloadInvoice = async (invoiceId: number) => {
   }
 };
 
-// --- HELPERS ---
+const formatDateHeader = (start: string, end: string) => {
+  if (!start) return "-";
+  const startDate = new Date(start);
+  const weekday = startDate.toLocaleDateString("de-DE", { weekday: "short" });
+  const dateStr = formatDate(start);
+  const timeStr = `${formatTime(start)}–${formatTime(end)} Uhr`;
+  if (formatDate(start) !== formatDate(end)) {
+    return `${weekday}, ${dateStr} – ${formatDate(end)} · ${timeStr}`;
+  }
+  return `${weekday}, ${dateStr} · ${timeStr}`;
+};
+
 const formatDate = (iso: string) =>
   iso
     ? new Date(iso).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    })
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
     : "-";
+
 const formatTime = (iso: string) =>
   iso
     ? new Date(iso).toLocaleTimeString("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "--:--";
+
 const formatCurrency = (val: string | number) =>
   new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(
     Number(val || 0),
   );
-const getInitials = (name: string) =>
-  name
-    ? name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2)
-      .toUpperCase()
-    : "?";
+
+defineExpose({
+  reloadCommunications: () => communicationHistoryRef.value?.reload?.(),
+});
 </script>

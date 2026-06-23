@@ -35,24 +35,28 @@
           <div 
             v-for="booking in day.bookings" 
             :key="booking.id"
-            draggable="true"
-            @dragstart="$emit('drag-start', { booking, event: $event })"
+            :draggable="booking.status !== 'CANCELLED'"
+            @dragstart="booking.status !== 'CANCELLED' && $emit('drag-start', { booking, event: $event })"
             @click.stop="$emit('select', booking)"
-            v-show="booking.status != 'CANCELLED'"
             :class="[
-              'text-[11px] px-2 py-1 rounded-sm border cursor-pointer transition-all active:cursor-grabbing truncate flex items-center gap-1.5 shadow-sm hover:shadow-md hover:z-10 relative',
+              'text-[11px] px-2 py-1 rounded-sm border cursor-pointer transition-all truncate flex items-center gap-1.5 shadow-sm hover:shadow-md hover:z-10 relative',
+              booking.status !== 'CANCELLED' ? 'active:cursor-grabbing' : 'opacity-70 cursor-default',
               getBookingStyles(booking)
             ]"
           >
             <div class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="getDotColor(booking)"></div>
             
-            <div class="flex-1 truncate font-medium flex items-center">
+            <div class="flex-1 truncate font-medium flex items-center gap-1">
                <span v-if="isStartDay(booking, day.date)" class="mr-1 font-normal opacity-70">
                 {{ formatTime(booking.start_at) }}
               </span>
               <span v-else class="mr-1 text-[9px] opacity-40">↳</span>
               
-              {{ booking.resource_name }}
+              <span class="truncate">{{ booking.resource_name }}</span>
+              <span
+                v-if="booking.status === 'PENDING'"
+                class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-600"
+              >?</span>
             </div>
           </div>
         </div>
@@ -89,7 +93,11 @@ const getStyleConfig = (id: any) => {
 
 const getBookingStyles = (b: any) => {
   if (b.status === 'CANCELLED') {
-    return 'bg-slate-50 text-slate-400 border-slate-100 line-through decoration-slate-400'
+    return 'bg-slate-50 text-slate-400 border-slate-200 line-through decoration-slate-400'
+  }
+  if (b.status === 'PENDING') {
+    const style = getStyleConfig(b.resource_id)
+    return `${style.bg} ${style.border} ${style.text} border-dashed`
   }
   const style = getStyleConfig(b.resource_id)
   return `${style.bg} ${style.border} ${style.text}`
@@ -97,6 +105,7 @@ const getBookingStyles = (b: any) => {
 
 const getDotColor = (b: any) => {
   if (b.status === 'CANCELLED') return 'bg-slate-300'
+  if (b.status === 'PENDING') return 'bg-amber-400'
   const style = getStyleConfig(b.resource_id)
   return style.dot
 }

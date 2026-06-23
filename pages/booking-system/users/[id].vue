@@ -89,6 +89,7 @@
               v-for="tab in [
                 'bookings',
                 'invoices',
+                'communications',
                 'memberships',
                 'kontingente',
               ]"
@@ -106,6 +107,8 @@
                   ? "Mitgliedschaften"
                   : tab === "bookings"
                     ? "Buchungen"
+                    : tab === "communications"
+                      ? "Kommunikation"
                     : tab === "kontingente"
                       ? "Kontingente"
                       : "Rechnungen"
@@ -124,6 +127,13 @@
               <UserInvoicesList
                 :invoices="user.Invoices"
                 @download="downloadInvoice"
+              />
+            </div>
+
+            <div v-if="activeTab === 'communications'" class="p-6">
+              <CommunicationHistory
+                :user-id="user.id"
+                show-booking-link
               />
             </div>
 
@@ -478,6 +488,7 @@ import { useRoute, useRouter } from "vue-router";
 import UserProfileCard from "@/components/users/UserProfileCard.vue";
 import UserBookingsHistory from "@/components/users/UserBookingsHistory.vue";
 import UserInvoicesList from "@/components/users/UserInvoicesList.vue";
+import CommunicationHistory from "@/components/communication/CommunicationHistory.vue";
 
 const api = useBookingApi();
 const route = useRoute();

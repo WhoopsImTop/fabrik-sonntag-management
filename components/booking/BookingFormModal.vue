@@ -192,8 +192,8 @@
                     >Endzeit</label
                   >
                   <input
-                    v-model="form.end_at"
-                    @change="recalcDuration"
+                    :value="form.end_at"
+                    @input="handleEndChange"
                     type="datetime-local"
                     class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2 font-mono"
                   />
@@ -261,7 +261,7 @@
               </div>
             </div>
 
-            <div v-if="!isEdit" class="space-y-3">
+            <div class="space-y-3">
               <div>
                 <label
                   class="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide"
@@ -269,13 +269,20 @@
                 >
                 <select
                   v-model="form.pricingPlanId"
+                  @change="tariffManuallySelected = true"
                   class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2.5"
                 >
                   <option value="">Standard (Manuell)</option>
                   <option v-for="p in availablePlans" :key="p.id" :value="p.id">
-                    {{ p.name }} ({{ p.price }}€)
+                    {{ p.name }} ({{ p.price }}€ / {{ billingIntervalLabel(p.billing_interval) }})
                   </option>
                 </select>
+                <p
+                  v-if="suggestedPlanLabel"
+                  class="text-xs text-slate-500 mt-1"
+                >
+                  Vorschlag nach Dauer: {{ suggestedPlanLabel }}
+                </p>
               </div>
             </div>
 
@@ -551,7 +558,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, nextTick } from "vue";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -664,6 +671,8 @@ const form = ref({
 
 // Interne State für Dauer (in Millisekunden)
 const currentDurationMs = ref(60 * 60 * 1000); // Default 1h
+const tariffManuallySelected = ref(false);
+const skipTariffAutoSelect = ref(false);
 
 const isEdit = computed(() => !!props.editData);
 const canCheckAvailability = computed(() => {
@@ -679,6 +688,7 @@ const canSubmit = computed(() => {
   if (!form.value.resourceId || !form.value.user_id) return false;
   if (!canCheckAvailability.value) return false;
   if (availabilityStatus.value === "unavailable") return false;
+  if (!isEdit.value && !form.value.pricingPlanId) return false;
   return true;
 });
 
@@ -689,21 +699,32 @@ const handleStartChange = (e: Event) => {
   const newStartVal = (e.target as HTMLInputElement).value;
   if (!newStartVal) return;
 
+  tariffManuallySelected.value = false;
   form.value.start_at = newStartVal;
 
   // Neues Ende berechnen basierend auf alter Dauer
   const startDate = new Date(newStartVal);
   const newEndDate = new Date(startDate.getTime() + currentDurationMs.value);
   form.value.end_at = formatDatetime(newEndDate);
+  applySuggestedTariff();
 };
 
 // 2. Wenn Enddatum manuell geändert wird -> Dauer neu berechnen
+const handleEndChange = (e: Event) => {
+  const newEndVal = (e.target as HTMLInputElement).value;
+  if (!newEndVal) return;
+  tariffManuallySelected.value = false;
+  form.value.end_at = newEndVal;
+  recalcDuration();
+};
+
 const recalcDuration = () => {
   if (form.value.start_at && form.value.end_at) {
     const s = new Date(form.value.start_at).getTime();
     const e = new Date(form.value.end_at).getTime();
     if (e > s) {
       currentDurationMs.value = e - s;
+      applySuggestedTariff();
     }
   }
 };
@@ -712,6 +733,7 @@ const recalcDuration = () => {
 const shiftTime = (amount: number, unit: "hour" | "day" | "week") => {
   if (!form.value.start_at || !form.value.end_at) return;
 
+  tariffManuallySelected.value = false;
   const s = new Date(form.value.start_at);
   const e = new Date(form.value.end_at);
 
@@ -728,6 +750,7 @@ const shiftTime = (amount: number, unit: "hour" | "day" | "week") => {
 
   form.value.start_at = formatDatetime(s);
   form.value.end_at = formatDatetime(e);
+  applySuggestedTariff();
 };
 
 // 4. Anzeige Dauer String
@@ -749,17 +772,74 @@ const formatDatetime = (d: Date) => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
-const applyInitialDate = (dateInput?: Date | string | null) => {
-  if (!dateInput || isEdit.value) return;
-  const base = new Date(dateInput);
-  if (isNaN(base.getTime())) return;
-  base.setHours(9, 0, 0, 0);
-  const end = new Date(base.getTime() + currentDurationMs.value);
-  form.value.start_at = formatDatetime(base);
-  form.value.end_at = formatDatetime(end);
+const toDatetimeLocal = (value?: string | Date | null) => {
+  if (!value) return "";
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return "";
+  return formatDatetime(d);
 };
 
-// --- DATA LOADING & SUBMIT ---
+const billingIntervalLabel = (interval?: string) => {
+  return (
+    (
+      {
+        HOUR: "Stunde",
+        DAY: "Tag",
+        MONTH: "Monat",
+        ONE_OFF: "Einmalig",
+      } as Record<string, string>
+    )[interval || ""] || interval || "—"
+  );
+};
+
+const suggestPricingPlanId = (
+  plans: any[],
+  startAt: string,
+  endAt: string,
+): string | number => {
+  if (!plans.length || !startAt || !endAt) return "";
+
+  const start = new Date(startAt);
+  const end = new Date(endAt);
+  if (end <= start) return "";
+
+  const durationHours = Math.ceil(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60),
+  );
+  const sameDay = start.toDateString() === end.toDateString();
+
+  const byInterval = (interval: string) =>
+    plans.find((p) => p.billing_interval === interval);
+
+  const hourPlan = byInterval("HOUR");
+  const dayPlan = byInterval("DAY");
+  const monthPlan = byInterval("MONTH");
+  const oneOffPlan = byInterval("ONE_OFF");
+
+  if (sameDay && durationHours < 24 && hourPlan) {
+    if (dayPlan) {
+      const hourTotal = Number(hourPlan.price) * durationHours;
+      const dayTotal = Number(dayPlan.price);
+      if (hourTotal >= dayTotal) return dayPlan.id;
+    }
+    return hourPlan.id;
+  }
+
+  if (dayPlan) {
+    const days = Math.ceil(durationHours / 24);
+    if (hourPlan) {
+      const hourTotal = Number(hourPlan.price) * durationHours;
+      const dayTotal = Number(dayPlan.price) * days;
+      return dayTotal <= hourTotal ? dayPlan.id : hourPlan.id;
+    }
+    return dayPlan.id;
+  }
+
+  if (hourPlan) return hourPlan.id;
+  if (monthPlan) return monthPlan.id;
+  if (oneOffPlan) return oneOffPlan.id;
+  return plans[0]?.id ?? "";
+};
 
 // Plans for Resource
 const availablePlans = computed(() => {
@@ -768,6 +848,44 @@ const availablePlans = computed(() => {
     (p) => p.resource_id == form.value.resourceId,
   );
 });
+
+const applySuggestedTariff = () => {
+  if (skipTariffAutoSelect.value) return;
+  if (tariffManuallySelected.value) return;
+  if (!form.value.resourceId || !form.value.start_at || !form.value.end_at)
+    return;
+
+  const suggested = suggestPricingPlanId(
+    availablePlans.value,
+    form.value.start_at,
+    form.value.end_at,
+  );
+  if (suggested) form.value.pricingPlanId = String(suggested);
+};
+
+const suggestedPlanLabel = computed(() => {
+  const suggestedId = suggestPricingPlanId(
+    availablePlans.value,
+    form.value.start_at,
+    form.value.end_at,
+  );
+  if (!suggestedId || suggestedId == form.value.pricingPlanId) return "";
+  const plan = availablePlans.value.find((p) => p.id == suggestedId);
+  return plan ? `${plan.name} (${plan.price}€)` : "";
+});
+
+const applyInitialDate = (dateInput?: Date | string | null) => {
+  if (!dateInput || isEdit.value) return;
+  const base = new Date(dateInput);
+  if (isNaN(base.getTime())) return;
+  base.setHours(9, 0, 0, 0);
+  const end = new Date(base.getTime() + currentDurationMs.value);
+  form.value.start_at = formatDatetime(base);
+  form.value.end_at = formatDatetime(end);
+  applySuggestedTariff();
+};
+
+// --- DATA LOADING & SUBMIT ---
 
 // User Search Logic
 const handleUserSearch = () => {
@@ -816,6 +934,38 @@ const userSearchResults = ref<any[]>([]);
 const isSearchingUsers = ref(false);
 let searchTimeout: any = null;
 
+const hydrateEditForm = (booking: any) => {
+  const user =
+    users.value.find((u: any) => u.id == booking.user_id) ||
+    booking.User ||
+    null;
+
+  skipTariffAutoSelect.value = true;
+  tariffManuallySelected.value = false;
+
+  form.value = {
+    resourceId: booking.resource_id,
+    user_id: booking.user_id,
+    start_at: toDatetimeLocal(booking.start_at),
+    end_at: toDatetimeLocal(booking.end_at),
+    pricingPlanId: booking.pricing_plan_id || "",
+    status: booking.status,
+    user_preview: user,
+    manual_price: booking.Invoice?.total_amount ?? null,
+  };
+
+  originalRange.value = {
+    resourceId: String(booking.resource_id ?? ""),
+    start_at: form.value.start_at,
+    end_at: form.value.end_at,
+  };
+
+  recalcDuration();
+  nextTick(() => {
+    skipTariffAutoSelect.value = false;
+  });
+};
+
 onMounted(async () => {
   const [resData, usrData, plansData] = await Promise.all([
     api.resources.getAll(),
@@ -839,7 +989,12 @@ onMounted(async () => {
       const end = new Date(now);
       end.setHours(end.getHours() + 1);
       form.value.end_at = formatDatetime(end);
+      applySuggestedTariff();
     }
+  }
+
+  if (props.editData) {
+    hydrateEditForm(props.editData);
   }
 });
 
@@ -847,34 +1002,38 @@ onMounted(async () => {
 watch(
   () => props.editData,
   (newVal) => {
-    console.log(newVal);
     if (newVal) {
-      form.value = {
-        resourceId: newVal.resource_id,
-        user_id: newVal.user_id,
-        start_at: newVal.start_at.slice(0, 16),
-        end_at: newVal.end_at.slice(0, 16),
-        pricingPlanId: newVal.pricing_plan_id,
-        status: newVal.status,
-        manual_price: newVal.Invoice?.total_amount || 0,
-      };
-      originalRange.value = {
-        resourceId: String(newVal.resourceId ?? ""),
-        start_at: form.value.start_at,
-        end_at: form.value.end_at,
-      };
-      console.log(form.value);
-      // Duration setzen
-      recalcDuration();
+      hydrateEditForm(newVal);
     } else {
-      // Reset defaults (optional)
+      tariffManuallySelected.value = false;
+      skipTariffAutoSelect.value = false;
       form.value.resourceId = "";
       form.value.user_id = "";
+      form.value.pricingPlanId = "";
+      form.value.user_preview = null;
       if (props.initialDate) applyInitialDate(props.initialDate);
     }
   },
-  { immediate: true },
 );
+
+watch(
+  () => form.value.resourceId,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      tariffManuallySelected.value = false;
+      applySuggestedTariff();
+    }
+  },
+);
+
+watch(users, () => {
+  if (props.editData?.user_id && !form.value.user_preview) {
+    const user = users.value.find(
+      (u: any) => u.id == props.editData.user_id,
+    );
+    if (user) form.value.user_preview = user;
+  }
+});
 
 watch(
   () => props.initialDate,

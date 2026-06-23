@@ -248,6 +248,7 @@ import { ref, computed, onMounted } from "vue";
 // Router importieren für die Navigation
 const router = useRouter();
 const api = useBookingApi();
+const { confirm } = useConfirm();
 
 // State
 const loading = ref(true);
@@ -328,19 +329,30 @@ const loadData = async () => {
 // HIER WURDEN MODAL-FUNKTIONEN (openModal, save, addItem etc.) ENTFERNT
 
 const cancelSubscription = async (sub: any) => {
-  if (
-    !confirm(
+  const confirmed = await confirm({
+    title: "Abo beenden",
+    message:
       'Möchten Sie dieses Abo wirklich beenden? Der Status wird auf "Beendet" gesetzt.',
-    )
-  )
-    return;
+    variant: "warning",
+    confirmLabel: "Ja, beenden",
+    icon: "i-heroicons-exclamation-triangle-20-solid",
+  });
+  if (!confirmed) return;
 
   await api.subscriptions.update(sub.id, { status: "CANCELLED" });
   await loadData();
 };
 
 const deleteSubscription = async (id: number) => {
-  if (!confirm("Achtung: Soll das Abo wirklich gelöscht werden?")) return;
+  const confirmed = await confirm({
+    title: "Abo löschen",
+    message: "Achtung: Soll das Abo wirklich gelöscht werden?",
+    variant: "danger",
+    confirmLabel: "Ja, löschen",
+    icon: "i-heroicons-trash-20-solid",
+  });
+  if (!confirmed) return;
+
   await api.subscriptions.delete(id);
   await loadData();
 };
