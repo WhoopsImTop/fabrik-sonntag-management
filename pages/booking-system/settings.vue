@@ -157,6 +157,75 @@
 
       <hr class="border-slate-100" />
 
+      <div>
+        <h3 class="text-lg font-medium text-slate-900 mb-4">
+          Steuer & Bankverbindung
+        </h3>
+        <p class="text-sm text-slate-500 mb-4">
+          Diese Angaben werden für ZUGFeRD/E-Rechnungen und Zahlungsinformationen
+          im XML verwendet.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-slate-700"
+              >USt-IdNr.</label
+            >
+            <input
+              v-model="form.vat_id"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
+              placeholder="DE123456789"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700"
+              >Steuernummer</label
+            >
+            <input
+              v-model="form.tax_number"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">IBAN</label>
+            <input
+              v-model="form.iban"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border font-mono"
+              placeholder="DE89 3704 0044 0532 0130 00"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">BIC</label>
+            <input
+              v-model="form.bic"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border font-mono"
+              placeholder="COBADEFFXXX"
+            />
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700"
+              >Bank / Kontoinhaber</label
+            >
+            <input
+              v-model="form.bank_name"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
+              placeholder="Commerzbank / Fabrik Sonntag GmbH"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700"
+              >Land</label
+            >
+            <input
+              v-model="form.country"
+              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
+              placeholder="Deutschland"
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr class="border-slate-100" />
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-slate-700"

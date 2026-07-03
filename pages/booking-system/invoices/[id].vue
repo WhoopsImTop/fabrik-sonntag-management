@@ -70,7 +70,7 @@
             class="inline-flex h-9 items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500">
             Als bezahlt markieren
           </button>
-          <button v-if="isLockedAfterSend" @click="stornoInvoice"
+          <button v-if="canStornoInvoice" @click="stornoInvoice"
             class="inline-flex h-9 items-center justify-center rounded-md border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900 shadow-sm transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500">
             Stornieren
           </button>
@@ -78,7 +78,7 @@
             class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950">
             Bearbeiten
           </button>
-          <button v-if="isDraft" @click="handleDelete"
+          <button v-if="canDeleteInvoice" @click="handleDelete"
             class="inline-flex h-9 items-center justify-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500">
             Löschen
           </button>
@@ -399,6 +399,15 @@ const invoice = ref<any>(null);
 
 const isDraft = computed(() => invoice.value?.status === "DRAFT");
 const isStorno = computed(() => invoice.value?.status === "DELETED");
+const hasDraftNumber = computed(
+  () =>
+    !invoice.value?.invoice_number ||
+    invoice.value.invoice_number.startsWith("DRAFT"),
+);
+const canDeleteInvoice = computed(() => hasDraftNumber.value);
+const canStornoInvoice = computed(
+  () => !hasDraftNumber.value && invoice.value?.status !== "DELETED",
+);
 const isLockedAfterSend = computed(() =>
   ["SENT", "PAID", "OVERDUE"].includes(invoice.value?.status),
 );
@@ -850,9 +859,13 @@ const handleDelete = async () => {
   try {
     await api.sales.delete(Number(invoiceId));
     router.push("/booking-system/invoices");
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    alert("Fehler beim Löschen.");
+    const message =
+      e?.data?.error ||
+      e?.message ||
+      "Fehler beim Löschen.";
+    alert(message);
   }
 };
 

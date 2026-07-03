@@ -280,6 +280,27 @@
                     Übersicht aller Kontingente.
                   </p>
                 </div>
+                <button
+                  @click="showQuotaModal = true"
+                  class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="mr-2 h-4 w-4"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="M12 5v14" />
+                  </svg>
+                  Zuweisen
+                </button>
               </div>
 
               <div
@@ -313,22 +334,29 @@
                 class="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden"
               >
                 <li
-                  v-for="ms in user.UserQuota"
-                  :key="ms.id"
+                  v-for="quota in user.UserQuota"
+                  :key="quota.id"
                   class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition-colors group"
                 >
                   <div>
                     <p class="font-semibold text-slate-900">
-                      {{ ms.quota_amount - ms.used_amount }}x Buchungen
-                      verfügbar
+                      {{ formatQuotaAvailable(quota) }}
                     </p>
                     <div
-                      class="flex items-center text-xs text-slate-500 mt-1 space-x-2"
+                      class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 mt-1"
                     >
-                      <span v-if="ms.valid_until"
+                      <span v-if="quota.Resource?.name">{{
+                        quota.Resource.name
+                      }}</span>
+                      <span v-if="quota.PricingPlan?.name">• {{ quota.PricingPlan.name }}</span>
+                      <span v-if="quota.purchase_booking_id">• Mit Rechnung</span>
+                      <span v-else-if="quota.notes">• {{ quota.notes }}</span>
+                      <span v-else>• Kostenlos zugewiesen</span>
+                      <span>•</span>
+                      <span v-if="quota.valid_until"
                         >Gültig bis:
                         {{
-                          new Date(ms.valid_until).toLocaleDateString("de-DE")
+                          new Date(quota.valid_until).toLocaleDateString("de-DE")
                         }}</span
                       >
                       <span v-else>Unbegrenzt gültig</span>
@@ -337,9 +365,9 @@
 
                   <div class="flex items-center gap-4">
                     <button
-                      @click="deleteQuota(ms.id)"
+                      @click="deleteQuota(quota.id)"
                       class="text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
-                      title="Mitgliedschaft entfernen"
+                      title="Kontingent entfernen"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -479,6 +507,210 @@
         </div>
       </div>
     </div>
+
+    <div
+      v-if="showQuotaModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
+    >
+      <div
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        @click="showQuotaModal = false"
+      ></div>
+      <div
+        class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200"
+      >
+        <button
+          @click="showQuotaModal = false"
+          class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-4 w-4"
+          >
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+          <span class="sr-only">Schließen</span>
+        </button>
+
+        <div class="p-6">
+          <h3
+            class="text-lg font-semibold text-slate-900 leading-none tracking-tight mb-1"
+          >
+            Kontingent zuweisen
+          </h3>
+          <p class="text-sm text-slate-500 mb-6">
+            Kostenlos oder über ein bestehendes Kontingent-Paket mit Rechnung.
+          </p>
+
+          <form @submit.prevent="assignQuota" class="space-y-4">
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none text-slate-700"
+                >Art der Zuweisung</label
+              >
+              <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+                <button
+                  type="button"
+                  @click="newQuota.mode = 'free'"
+                  :class="[
+                    'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+                    newQuota.mode === 'free'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white text-slate-700 hover:bg-slate-50',
+                  ]"
+                >
+                  Kostenlos
+                </button>
+                <button
+                  type="button"
+                  @click="newQuota.mode = 'paid'"
+                  :class="[
+                    'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+                    newQuota.mode === 'paid'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white text-slate-700 hover:bg-slate-50',
+                  ]"
+                >
+                  Kostenpflichtig
+                </button>
+              </div>
+            </div>
+
+            <template v-if="newQuota.mode === 'free'">
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Ressource</label
+                >
+                <select
+                  v-model="newQuota.resource_id"
+                  required
+                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                >
+                  <option :value="null" disabled>Bitte wählen...</option>
+                  <option
+                    v-for="resource in resources"
+                    :key="resource.id"
+                    :value="resource.id"
+                  >
+                    {{ resource.name }}
+                  </option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Menge</label
+                >
+                <input
+                  type="number"
+                  v-model.number="newQuota.quota_amount"
+                  min="1"
+                  required
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Einheit</label
+                >
+                <select
+                  v-model="newQuota.quota_unit"
+                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                >
+                  <option value="BOOKINGS">Buchungen</option>
+                  <option value="HOURS">Stunden</option>
+                  <option value="DAYS">Tage</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Gültig ab</label
+                >
+                <input
+                  type="date"
+                  v-model="newQuota.valid_from"
+                  required
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Gültig bis (Optional)</label
+                >
+                <input
+                  type="date"
+                  v-model="newQuota.valid_until"
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                />
+              </div>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Notiz (Optional)</label
+                >
+                <input
+                  type="text"
+                  v-model="newQuota.notes"
+                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  placeholder="z.B. Kulanz"
+                />
+              </div>
+            </template>
+
+            <template v-else>
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none text-slate-700"
+                  >Kontingent-Paket</label
+                >
+                <select
+                  v-model="newQuota.pricing_plan_id"
+                  required
+                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                >
+                  <option :value="null" disabled>Bitte wählen...</option>
+                  <option
+                    v-for="plan in quotaPlans"
+                    :key="plan.id"
+                    :value="plan.id"
+                  >
+                    {{ plan.name }} ({{ plan.quota_amount }}x
+                    {{ formatQuotaUnit(plan.quota_unit) }})
+                  </option>
+                </select>
+                <p class="text-[0.8rem] text-slate-500">
+                  Erstellt automatisch eine Rechnung als Entwurf.
+                </p>
+              </div>
+            </template>
+
+            <div
+              class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 pt-4 border-t border-slate-100"
+            >
+              <button
+                type="button"
+                @click="showQuotaModal = false"
+                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 sm:mt-0"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="submit"
+                :disabled="!canAssignQuota"
+                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none mb-2 sm:mb-0"
+              >
+                Zuweisen
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -498,13 +730,52 @@ const loading = ref(true);
 const user = ref<any>(null);
 const activeTab = ref("bookings");
 const showMembershipModal = ref(false);
+const showQuotaModal = ref(false);
 const membershipTypes = ref<any[]>([]);
+const resources = ref<any[]>([]);
+const pricingPlans = ref<any[]>([]);
 
 const newMembership = ref({
   type_id: null,
   valid_from: new Date().toISOString().split("T")[0],
   valid_until: "",
 });
+
+const newQuota = ref({
+  mode: "free" as "free" | "paid",
+  resource_id: null as number | null,
+  quota_amount: 1,
+  quota_unit: "DAYS",
+  valid_from: new Date().toISOString().split("T")[0],
+  valid_until: "",
+  notes: "",
+  pricing_plan_id: null as number | null,
+});
+
+const quotaPlans = computed(() =>
+  pricingPlans.value.filter(
+    (plan) => plan.quota_amount && Number(plan.quota_amount) > 0,
+  ),
+);
+
+const canAssignQuota = computed(() => {
+  if (newQuota.value.mode === "free") {
+    return Boolean(newQuota.value.resource_id && newQuota.value.quota_amount);
+  }
+  return Boolean(newQuota.value.pricing_plan_id);
+});
+
+const formatQuotaUnit = (unit?: string) => {
+  if (unit === "HOURS") return "Stunden";
+  if (unit === "DAYS") return "Tage";
+  return "Buchungen";
+};
+
+const formatQuotaAvailable = (quota: any) => {
+  const available =
+    Number(quota.quota_amount) - Number(quota.used_amount || 0);
+  return `${available}x ${formatQuotaUnit(quota.quota_unit)} verfügbar`;
+};
 
 const totalRevenue = computed(() => {
   if (!user.value?.Invoices) return "0.00";
@@ -537,6 +808,59 @@ const loadMembershipTypes = async () => {
     }
   } catch (e) {
     console.error("Fehler beim Laden der M-Typen", e);
+  }
+};
+
+const loadQuotaFormData = async () => {
+  try {
+    const [resourceList, planList] = await Promise.all([
+      api.resources.getAll(),
+      api.pricing.getAll(),
+    ]);
+    if (resourceList) resources.value = resourceList;
+    if (planList) pricingPlans.value = planList;
+  } catch (e) {
+    console.error("Fehler beim Laden der Kontingent-Daten", e);
+  }
+};
+
+const assignQuota = async () => {
+  try {
+    const payload =
+      newQuota.value.mode === "free"
+        ? {
+            user_id: user.value.id,
+            mode: "free" as const,
+            resource_id: newQuota.value.resource_id,
+            quota_amount: newQuota.value.quota_amount,
+            quota_unit: newQuota.value.quota_unit,
+            valid_from: newQuota.value.valid_from,
+            valid_until: newQuota.value.valid_until || null,
+            notes: newQuota.value.notes || undefined,
+          }
+        : {
+            user_id: user.value.id,
+            mode: "paid" as const,
+            pricing_plan_id: newQuota.value.pricing_plan_id,
+          };
+
+    const result = await api.quotas.assign(payload);
+    if (result) {
+      showQuotaModal.value = false;
+      newQuota.value = {
+        mode: "free",
+        resource_id: null,
+        quota_amount: 1,
+        quota_unit: "BOOKINGS",
+        valid_from: new Date().toISOString().split("T")[0],
+        valid_until: "",
+        notes: "",
+        pricing_plan_id: null,
+      };
+      await loadUser();
+    }
+  } catch (e) {
+    console.error(e);
   }
 };
 
@@ -613,11 +937,19 @@ const downloadInvoice = async (invoiceId: number) => {
 };
 
 const deleteQuota = async (id: number) => {
-  window.alert("Muss programmiert werden");
+  if (!confirm("Möchten Sie dieses Kontingent wirklich entfernen?")) return;
+
+  try {
+    await api.quotas.delete(id);
+    await loadUser();
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 onMounted(() => {
   loadUser();
   loadMembershipTypes();
+  loadQuotaFormData();
 });
 </script>

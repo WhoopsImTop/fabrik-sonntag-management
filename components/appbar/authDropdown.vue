@@ -8,6 +8,11 @@ const items = [
   ],
   [
     {
+      label: "Passwort ändern",
+      icon: "i-lucide-key-round",
+      to: "/change-password",
+    },
+    {
       label: "Abmelden",
       color: "neutral",
       icon: "i-lucide-lock-open",

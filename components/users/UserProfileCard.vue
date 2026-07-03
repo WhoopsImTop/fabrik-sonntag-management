@@ -47,6 +47,46 @@
         </div>
 
         <div class="grid gap-4 border-t border-slate-100 pt-4">
+          <div v-if="user.details?.user_type === 'PERSON'">
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Vorname</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details?.first_name || "—" }}
+            </p>
+          </div>
+          <div v-if="user.details?.user_type === 'PERSON'">
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Nachname</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details?.last_name || "—" }}
+            </p>
+          </div>
+          <div
+            v-if="
+              user.details?.user_type === 'COMPANY' &&
+              (user.details?.first_name || user.details?.last_name)
+            "
+          >
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Ansprechpartner</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details?.first_name || "" }}
+              {{ user.details?.last_name || "" }}
+            </p>
+          </div>
+          <div
+            v-if="user.details?.company && user.details?.user_type !== 'COMPANY'"
+          >
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Firma</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details.company }}
+            </p>
+          </div>
           <div>
             <label class="text-xs font-semibold text-slate-500 uppercase"
               >E-Mail</label
@@ -65,7 +105,13 @@
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
-              {{ user.email }}
+              <a
+                v-if="user.email"
+                :href="'mailto:' + user.email"
+                class="hover:text-blue-600"
+                >{{ user.email }}</a
+              >
+              <span v-else>—</span>
             </p>
           </div>
           <div>
@@ -73,7 +119,61 @@
               >Mobilnummer</label
             >
             <p class="text-slate-900 font-medium flex items-center gap-2">
-              {{ user.details?.mobile_number || "" }}
+              <a
+                v-if="user.details?.mobile_number"
+                :href="'tel:' + user.details.mobile_number"
+                class="hover:text-blue-600"
+                >{{ user.details.mobile_number }}</a
+              >
+              <span v-else>—</span>
+            </p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Straße</label
+            >
+            <p class="text-slate-900 font-medium">
+              <template v-if="user.details?.street || user.details?.house_number">
+                {{ user.details?.street || "" }}
+                {{ user.details?.house_number || "" }}
+              </template>
+              <span v-else>—</span>
+            </p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >PLZ / Stadt</label
+            >
+            <p class="text-slate-900 font-medium">
+              <template v-if="user.details?.zip_code || user.details?.city">
+                {{ user.details?.zip_code || "" }}
+                {{ user.details?.city || "" }}
+              </template>
+              <span v-else>—</span>
+            </p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Land</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details?.country || "—" }}
+            </p>
+          </div>
+          <div v-if="user.details?.vat_number">
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >USt-IdNr.</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details.vat_number }}
+            </p>
+          </div>
+          <div v-if="user.details?.debitor_number">
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Debitorennummer</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details.debitor_number }}
             </p>
           </div>
           <div>

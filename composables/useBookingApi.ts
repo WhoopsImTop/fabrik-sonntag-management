@@ -464,6 +464,33 @@ export const useBookingApi = () => {
       return result;
     },
 
+    assign: async (data: {
+      user_id: number;
+      mode: "free" | "paid";
+      resource_id?: number;
+      quota_amount?: number;
+      quota_unit?: string;
+      valid_from?: string;
+      valid_until?: string | null;
+      notes?: string;
+      pricing_plan_id?: number;
+    }) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/quotas/assign`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "assignQuota",
+      );
+      if (result) toast.add({ title: "Kontingent zugewiesen", color: "green" });
+      return result;
+    },
+
     update: async (id: number, data: any) => {
       const result = await apiCall(
         () =>
@@ -1157,6 +1184,37 @@ export const useBookingApi = () => {
     },
   };
 
+  const auth = {
+    changePassword: async (
+      currentPassword: string,
+      newPassword: string,
+    ) => {
+      try {
+        return await $fetch<{ message: string }>(
+          `${baseURL}/auth/change-password`,
+          {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: { currentPassword, newPassword },
+          },
+        );
+      } catch (error: any) {
+        console.error("Error in auth.changePassword:", error);
+        const apiMessage = error?.data?.error;
+        if (error?.status === 401 || error?.statusCode === 401) {
+          toast.add({
+            title: "Fehler",
+            description: apiMessage || "Aktuelles Passwort ist falsch",
+            color: "red",
+          });
+          return null;
+        }
+        handleError(error, "auth.changePassword");
+        return null;
+      }
+    },
+  };
+
   return {
     users,
     resources,
@@ -1172,5 +1230,6 @@ export const useBookingApi = () => {
     wifiToken,
     emailService,
     communications,
+    auth,
   };
 };
