@@ -951,7 +951,13 @@ const hydrateEditForm = (booking: any) => {
     pricingPlanId: booking.pricing_plan_id || "",
     status: booking.status,
     user_preview: user,
-    manual_price: booking.Invoice?.total_amount ?? null,
+    manual_price:
+      booking.Invoice?.net_amount != null
+        ? booking.Invoice.net_amount
+        : booking.Invoice
+          ? parseFloat(booking.Invoice.total_amount || 0) -
+            parseFloat(booking.Invoice.tax_amount || 0)
+          : null,
   };
 
   originalRange.value = {

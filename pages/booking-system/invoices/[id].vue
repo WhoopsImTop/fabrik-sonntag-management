@@ -243,19 +243,19 @@
             <table class="w-full caption-bottom text-sm">
               <thead class="[&_tr]:border-b border-slate-200">
                 <tr class="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[35%]">Beschreibung</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[15%]">Einheit</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
+                  <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-slate-500 w-[35%]">Beschreibung</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
+                  <th class="h-10 px-1 text-left align-middle font-medium text-slate-500 w-[15%]">Einheit</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
+                  <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
                   <th v-if="isEditing && isDraft" class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
                   <tr class="transition-colors hover:bg-slate-50/50 group">
-                    <td class="p-4 align-middle relative">
+                    <td class="pl-4 pr-1 py-2 align-middle relative">
                       <div v-if="isEditing && isDraft" class="relative">
                         <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
                           class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
@@ -280,27 +280,27 @@
                       <span v-else class="font-medium text-slate-900 block">{{ item.description }}</span>
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <input v-if="isEditing && isDraft" type="number" v-model="item.quantity" min="1"
                         class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
                       <span v-else class="text-slate-600 block">{{ item.quantity }}</span>
                     </td>
 
-                    <td class="p-4 align-middle text-left">
+                    <td class="p-1 align-middle text-left">
                       <input v-if="isEditing && isDraft" type="text" v-model="item.unit"
                         class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
                       <span v-else class="text-slate-500 block">{{ item.unit || '-' }}</span>
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <input v-if="isEditing && isDraft" type="number" v-model="item.amount" step="0.01"
                         class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="0.00" />
                       <span v-else class="text-slate-900 block">{{ formatMoney(item.amount) }} €</span>
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <select v-if="isEditing && isDraft" v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
                         <option :value="0">0%</option>
@@ -311,7 +311,7 @@
                         }}%</span>
                     </td>
 
-                    <td class="p-4 align-middle text-right font-medium">
+                    <td class="pl-1 pr-4 align-middle text-right font-medium">
                       {{ formatMoney((Number(item.quantity) || 0) * (Number(item.amount) || 0)) }} €
                     </td>
 
@@ -329,7 +329,7 @@
 
                   <tr v-if="(isEditing && isDraft) || item.long_description"
                     class="border-b border-slate-100 transition-colors hover:bg-slate-50/50">
-                    <td :colspan="(isEditing && isDraft) ? 7 : 6" class="px-4 pb-4 pt-0">
+                    <td :colspan="(isEditing && isDraft) ? 7 : 6" class="px-4 pb-1 pt-0">
                       <div>
                         <textarea v-if="isEditing && isDraft" v-model="item.long_description"
                           placeholder="Zusätzliche Beschreibung (optional)..."

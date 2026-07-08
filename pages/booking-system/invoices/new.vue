@@ -268,19 +268,19 @@
             <table class="w-full caption-bottom text-sm">
               <thead class="[&_tr]:border-b border-slate-200">
                 <tr class="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[200px]">Beschreibung</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[50px]">Menge</th>
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[100px]">Einheit</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[75px]">Preis (€)</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[100px]">MwSt.</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[100px]">Gesamt</th>
+                  <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-slate-500 w-[200px]">Beschreibung</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[50px]">Menge</th>
+                  <th class="h-10 px-1 text-left align-middle font-medium text-slate-500 w-[100px]">Einheit</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[75px]">Preis (€)</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[100px]">MwSt.</th>
+                  <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-slate-500 w-[100px]">Gesamt</th>
                   <th class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
                   <tr class="transition-colors hover:bg-slate-50/50 group">
-                    <td class="p-4 align-middle relative">
+                    <td class="pl-4 pr-1 py-2 align-middle relative">
                       <div class="relative">
                         <input v-model="item.description" @input="handleInput(index)" @focus="focusRow(index)"
                           @blur="blurRow(index)"
@@ -305,12 +305,12 @@
                       </div>
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <input type="number" v-model="item.quantity" min="1"
                         class="border border-slate-200 flex h-9 w-full text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
                     </td>
 
-                    <td class="p-4 align-middle text-left">
+                    <td class="p-1 align-middle text-left">
                       <input type="text" v-model="item.unit"
                         class="border border-slate-200 flex h-9 w-full rounded-md px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
@@ -322,13 +322,13 @@
                       </datalist>
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <input type="number" v-model="item.amount" step="0.01"
                         class="border border-slate-200 flex h-9 w-full text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
                         placeholder="0.00" />
                     </td>
 
-                    <td class="p-4 align-middle text-right">
+                    <td class="p-1 align-middle text-right">
                       <select v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
                         <option :value="0">0%</option>
@@ -337,11 +337,11 @@
                       </select>
                     </td>
 
-                    <td class="p-4 align-middle text-right font-medium">
+                    <td class="pl-1 pr-4 align-middle text-right font-medium">
                       {{ formatMoney(item.quantity * item.amount) }} €
                     </td>
 
-                    <td class="p-4 align-middle text-center relative">
+                    <td class="p-1 align-middle text-center relative">
                       <button @click="removeItem(index)"
                         class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                         title="Löschen">
@@ -354,7 +354,7 @@
                   </tr>
 
                   <tr class="border-b border-slate-100/50 hover:bg-slate-50/30">
-                    <td colspan="7" class="px-4 pb-4 pt-0">
+                    <td colspan="7" class="px-4 pb-1 pt-0">
                       <textarea v-model="item.long_description"
                         placeholder="Zusätzliche Details oder Nachricht eingeben..."
                         class="w-full rounded-md border border-slate-200 bg-transparent p-3 text-sm text-slate-600 focus-visible:outline-none focus:border-slate-300 focus:bg-white transition-all"

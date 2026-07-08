@@ -77,8 +77,18 @@
               {{ user.details?.last_name || "" }}
             </p>
           </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 uppercase"
+              >Ansprechpartner auf Rechnung</label
+            >
+            <p class="text-slate-900 font-medium">
+              {{ user.details?.display_contact_person ? "Ja" : "Nein" }}
+            </p>
+          </div>
           <div
-            v-if="user.details?.company && user.details?.user_type !== 'COMPANY'"
+            v-if="
+              user.details?.company && user.details?.user_type !== 'COMPANY'
+            "
           >
             <label class="text-xs font-semibold text-slate-500 uppercase"
               >Firma</label
@@ -133,7 +143,9 @@
               >Straße</label
             >
             <p class="text-slate-900 font-medium">
-              <template v-if="user.details?.street || user.details?.house_number">
+              <template
+                v-if="user.details?.street || user.details?.house_number"
+              >
                 {{ user.details?.street || "" }}
                 {{ user.details?.house_number || "" }}
               </template>
@@ -216,6 +228,16 @@
               Firma
             </button>
           </div>
+        </div>
+        <!-- Ansprechpartner auf Rechnung display_contact_person true/false mit eigenem toggle button -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700"
+            >Ansprechpartner auf Rechnung einblenden</label
+          >
+          <ToggleButton
+            v-model="form.display_contact_person"
+            :labels="{ checked: 'Ja', unchecked: 'Nein' }"
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700">{{
@@ -357,6 +379,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
+import ToggleButton from "@/components/users/ToggleButton.vue";
 const props = defineProps<{ user: any }>();
 const emit = defineEmits(["update"]);
 
@@ -377,6 +400,7 @@ const form = ref({
   debitor_number: "",
   user_type: "PERSON" as "PERSON" | "COMPANY",
   vat_number: "",
+  display_contact_person: false,
 });
 
 // Init Form
@@ -399,6 +423,7 @@ watch(
         debitor_number: u?.details?.debitor_number ?? "",
         user_type: u?.details?.user_type ?? "PERSON",
         vat_number: u?.details?.vat_number ?? "",
+        display_contact_person: u?.details?.display_contact_person ?? false,
       };
   },
   { immediate: true },
