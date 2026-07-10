@@ -576,6 +576,7 @@ const resources = ref<any[]>([]);
 const users = ref<any[]>([]);
 const pricingPlans = ref<any[]>([]);
 const originalRange = ref({ resourceId: "", start_at: "", end_at: "" });
+const originalManualPrice = ref<number | null>(null);
 
 const showAddModal = ref(false);
 const createLoading = ref(false);
@@ -675,6 +676,9 @@ const tariffManuallySelected = ref(false);
 const skipTariffAutoSelect = ref(false);
 
 const isEdit = computed(() => !!props.editData);
+const excludeBookingId = computed(() =>
+  isEdit.value ? Number(props.editData?.id) : undefined,
+);
 const canCheckAvailability = computed(() => {
   if (!form.value.resourceId || !form.value.start_at || !form.value.end_at)
     return false;
@@ -965,6 +969,7 @@ const hydrateEditForm = (booking: any) => {
     start_at: form.value.start_at,
     end_at: form.value.end_at,
   };
+  originalManualPrice.value = form.value.manual_price;
 
   recalcDuration();
   nextTick(() => {
@@ -1077,6 +1082,7 @@ watch(
           Number(form.value.resourceId),
           form.value.start_at,
           form.value.end_at,
+          excludeBookingId.value,
         );
         const isAvailable =
           typeof res === "boolean"
@@ -1087,7 +1093,9 @@ watch(
           availabilityMessage.value = "Zeitraum ist belegt.";
         } else {
           availabilityStatus.value = "available";
-          availabilityMessage.value = "Zeitraum ist verfügbar.";
+          availabilityMessage.value = isEdit.value
+            ? "Zeitraum wird aktualisiert."
+            : "Zeitraum ist verfügbar.";
         }
       } catch (e) {
         availabilityStatus.value = "unavailable";
@@ -1099,6 +1107,25 @@ watch(
     }, 300);
   },
 );
+
+const buildUpdatePayload = () => {
+  const payload: Record<string, unknown> = {
+    user_id: form.value.user_id,
+    resource_id: form.value.resourceId,
+    start_at: form.value.start_at,
+    end_at: form.value.end_at,
+    status: form.value.status,
+  };
+
+  if (
+    form.value.manual_price !== null &&
+    form.value.manual_price !== originalManualPrice.value
+  ) {
+    payload.manual_price = form.value.manual_price;
+  }
+
+  return payload;
+};
 
 const submit = async () => {
   if (!canCheckAvailability.value) {
@@ -1112,6 +1139,7 @@ const submit = async () => {
         Number(form.value.resourceId),
         form.value.start_at,
         form.value.end_at,
+        excludeBookingId.value,
       );
       const isAvailable =
         typeof res === "boolean"
@@ -1142,7 +1170,7 @@ const submit = async () => {
   loading.value = true;
   try {
     if (isEdit.value) {
-      await api.bookings.update(props.editData.id, form.value);
+      await api.bookings.update(props.editData.id, buildUpdatePayload());
     } else {
       await api.bookings.create(form.value);
     }

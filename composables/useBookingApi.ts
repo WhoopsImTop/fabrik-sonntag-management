@@ -747,11 +747,16 @@ export const useBookingApi = () => {
       resourceId: number,
       start: string,
       end: string,
+      excludeBookingId?: number,
     ) => {
+      const excludeParam =
+        excludeBookingId != null
+          ? `&exclude_booking_id=${excludeBookingId}`
+          : "";
       return await apiCall(
         () =>
           $fetch(
-            `${baseURL}/bookings/availabilities?resource_id=${resourceId}&start=${start}&end=${end}`,
+            `${baseURL}/bookings/availabilities?resource_id=${resourceId}&start=${start}&end=${end}${excludeParam}`,
             {
               headers: getAuthHeaders(),
             },
