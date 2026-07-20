@@ -1,24 +1,25 @@
 <template>
   <div
-    class="bg-white rounded-xl shadow-xl p-5 flex flex-col gap-4 max-h-full overflow-auto border border-neutral-200"
+    class="dialog-panel flex max-h-full flex-col gap-0 overflow-auto border border-neutral-200"
   >
-    <div class="flex items-center justify-between">
-      <h2 class="text-lg font-semibold">
+    <div class="dialog-header">
+      <h2 class="dialog-title">
         {{ poiToEdit?.id ? "POI bearbeiten" : "Neuer POI" }}
       </h2>
       <div class="flex items-center gap-2">
         <div class="relative group">
           <button
-            @click="handleGeometryAction"
-            class="p-2 rounded-md border"
+            type="button"
+            class="border p-2"
             :class="{
-              'bg-orange-100 border-orange-500': isGeometryEditMode,
-              'bg-white border-neutral-200': !isGeometryEditMode,
+              'border-orange-500 bg-orange-100': isGeometryEditMode,
+              'border-neutral-200 bg-white': !isGeometryEditMode,
             }"
+            @click="handleGeometryAction"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
+              class="h-5 w-5"
               :class="{
                 'text-orange-500': isGeometryEditMode,
                 'text-neutral-500': !isGeometryEditMode,
@@ -33,50 +34,34 @@
             </svg>
           </button>
           <div
-            class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
+            class="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap bg-black px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100"
           >
             {{ geometryButtonTooltip }}
           </div>
         </div>
-        <div class="relative group">
-          <button
-            @click="handleCancel"
-            class="p-2 rounded-md border border-neutral-200 bg-white"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5 text-neutral-500"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-          <div
-            class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            Schließen
-          </div>
-        </div>
+        <button
+          type="button"
+          class="dialog-close"
+          aria-label="Schließen"
+          @click="handleCancel"
+        >
+          <UiIcon name="i-lucide-x" class="size-5" />
+        </button>
       </div>
     </div>
 
-    <form @submit.prevent="submitForm" class="flex flex-col gap-6">
+    <form @submit.prevent="submitForm" class="dialog-body flex flex-col gap-6">
       <div>
         <h3 class="text-sm font-semibold mb-3 text-neutral-500">
           Basis Informationen
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="flex flex-col mt-2">
-            <label for="poiType" class="text-sm mb-1 font-medium text-gray-700"
-              >Typ:</label
-            >
+            <label for="poiType" class="dialog-label">Typ:</label>
             <select
               id="poiType"
               v-model="formData.poiType"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             >
               <option value="BUILDING">Gebäude</option>
               <option value="AREA">Fläche</option>
@@ -85,51 +70,41 @@
           </div>
 
           <div class="flex flex-col mt-2">
-            <label for="name" class="text-sm mb-1 font-medium text-gray-700"
-              >Name:</label
-            >
+            <label for="name" class="dialog-label">Name:</label>
             <input
               id="name"
               type="text"
               v-model.trim="formData.name"
               required
               placeholder="Name des Ortes"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
 
           <div class="flex flex-col mt-2">
-            <label for="address" class="text-sm mb-1 font-medium text-gray-700"
-              >Adresse:</label
-            >
+            <label for="address" class="dialog-label">Adresse:</label>
             <input
               id="address"
               type="text"
               v-model.trim="formData.address"
               placeholder="Vollständige Adresse"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
 
           <div class="flex flex-col mt-2">
-            <label
-              for="shortName"
-              class="text-sm mb-1 font-medium text-gray-700"
-              >Abgekürzter Name:</label
-            >
+            <label for="shortName" class="dialog-label">Abgekürzter Name:</label>
             <input
               id="shortName"
               type="text"
               v-model.trim="formData.shortName"
               placeholder="z.B. Hausnummer, Symbol"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
 
           <div class="flex flex-col mt-2 md:col-span-2">
-            <label
-              for="description"
-              class="text-sm mb-1 font-medium text-gray-700"
+            <label for="description" class="dialog-label"
               >Kurze Beschreibung (optional):</label
             >
             <textarea
@@ -137,18 +112,16 @@
               rows="4"
               v-model="formData.directionDescription"
               placeholder="Zusätzliche Informationen oder Hinweise zum Ort"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             ></textarea>
           </div>
 
           <div class="flex flex-col mt-2" v-if="formData.poiType === 'POINT'">
-            <label for="iconId" class="text-sm mb-1 font-medium text-gray-700"
-              >Icon (optional):</label
-            >
+            <label for="iconId" class="dialog-label">Icon (optional):</label>
             <select
               id="iconId"
               v-model="formData.iconId"
-              class="p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             >
               <option :value="null">Kein Icon</option>
               <option value="icon-pin">Pin</option>
@@ -157,7 +130,7 @@
           </div>
           <!-- Custom Icon Selection -->
           <div class="flex flex-col mt-2">
-            <label class="block text-sm font-medium mb-1">Eigenes Icon</label>
+            <label class="dialog-label">Eigenes Icon</label>
             <div class="flex items-center gap-4">
               <div
                 v-if="formData.iconId && !isPredefinedIcon(formData.iconId)"
@@ -171,15 +144,15 @@
                 <button
                   type="button"
                   @click="formData.iconId = null"
-                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 w-6 h-6 flex items-center justify-center"
+                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 w-6 h-6 flex items-center justify-center"
                 >
-                  <UIcon name="i-lucide-x" size="12" />
+                  <UiIcon name="i-lucide-x" size="12" />
                 </button>
               </div>
               <button
                 type="button"
                 @click="showIconMediaLibrary = true"
-                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+                class="btn-dialog-primary"
               >
                 {{
                   formData.iconId && !isPredefinedIcon(formData.iconId)
@@ -196,7 +169,7 @@
           Marketing Bilder
         </h3>
         <div v-if="images.length > 0">
-          <label class="block text-sm font-medium mb-1">Marketing Bilder</label>
+          <label class="dialog-label">Marketing Bilder</label>
           <div class="space-y-4">
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               <div
@@ -212,16 +185,16 @@
                 <button
                   type="button"
                   @click="removeMarketingImage(index)"
-                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center h-6 w-6"
+                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 flex items-center justify-center h-6 w-6"
                 >
-                  <UIcon name="i-lucide-x" size="16" />
+                  <UiIcon name="i-lucide-x" size="16" />
                 </button>
               </div>
             </div>
             <button
               type="button"
               @click="showMarketingMediaLibrary = true"
-              class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+              class="btn-dialog-primary"
             >
               Marketing Bilder hinzufügen
             </button>
@@ -229,17 +202,17 @@
         </div>
       </div>
 
-      <div class="flex justify-end gap-3">
+      <div class="dialog-footer !px-0 !pb-0">
         <button
-          @click="handleCancel"
           type="button"
-          class="py-1 px-2 text-sm bg-neutral-200 border border-neutral-900/5 rounded-md hover:bg-neutral-300 hover:cursor-pointer transition"
+          class="btn-dialog-cancel"
+          @click="handleCancel"
         >
           Abbrechen
         </button>
         <button
           type="submit"
-          class="py-1 px-2 text-sm bg-yellow-400 border border-neutral-900/5 rounded-md text-neutral-900 hover:bg-yellow-500 hover:cursor-pointer transition"
+          class="btn-dialog-primary"
           @click="saveEntry"
         >
           {{ isEditMode ? "Änderungen speichern" : "POI erstellen" }}
@@ -248,13 +221,16 @@
     </form>
 
     <!-- Renter section - moved outside the form -->
-    <div v-if="poiToEdit.poiType === 'BUILDING'" class="border-t pt-4">
+    <div
+      v-if="poiToEdit.poiType === 'BUILDING'"
+      class="border-t border-neutral-200 px-6 py-5"
+    >
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-medium">Mieter</h3>
         <button
           type="button"
           @click="showRenterForm = true"
-          class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+          class="btn-dialog-primary"
         >
           Mieter hinzufügen
         </button>
@@ -286,7 +262,7 @@
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div v-if="renters.length > 1" class="text-neutral-400">
-                <UIcon name="i-lucide-grip-vertical" class="h-5 w-5" />
+                <UiIcon name="i-lucide-grip-vertical" class="h-5 w-5" />
               </div>
               <div>
                 <h4 class="font-medium">{{ renter.name }}</h4>
@@ -303,16 +279,16 @@
               <button
                 type="button"
                 @click="editRenter(renter)"
-                class="p-1 rounded-md border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center"
+                class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center"
               >
-                <UIcon name="i-lucide-edit" class="h-6 m-0 p-0" />
+                <UiIcon name="i-lucide-edit" class="h-6 m-0 p-0" />
               </button>
               <button
                 type="button"
                 @click="deleteRenter(renter)"
-                class="p-1 rounded-md border border-neutral-200 hover:bg-neutral-50 text-red-500 flex items-center justify-center"
+                class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 text-red-500 flex items-center justify-center"
               >
-                <UIcon name="i-lucide-trash" class="h-6" />
+                <UiIcon name="i-lucide-trash" class="h-6" />
               </button>
             </div>
           </div>
@@ -335,73 +311,61 @@
     <!-- Media Library Modals -->
     <div
       v-if="showMarketingMediaLibrary"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+      class="dialog-overlay z-[60]"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
-      >
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
+      <div class="dialog-panel max-w-4xl">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Marketing Bilder auswählen</h3>
           <button
             type="button"
             @click="showMarketingMediaLibrary = false"
-            class="p-2 rounded-md hover:bg-neutral-100"
+            class="dialog-close"
+            aria-label="Schließen"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
-        <MediaLibrary
-          :is-multi-select="true"
-          :initial-selection="formData.marketingImages"
-          @images-selected="handleMarketingMediaSelected"
-        />
+        <div class="dialog-body">
+          <MediaLibrary
+            :is-multi-select="true"
+            :initial-selection="formData.marketingImages"
+            @images-selected="handleMarketingMediaSelected"
+          />
+        </div>
       </div>
     </div>
 
     <div
       v-if="showIconMediaLibrary"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+      class="dialog-overlay z-[60]"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
-      >
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold">Icon auswählen</h3>
+      <div class="dialog-panel max-w-4xl">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Icon auswählen</h3>
           <button
             type="button"
             @click="showIconMediaLibrary = false"
-            class="p-2 rounded-md hover:bg-neutral-100"
+            class="dialog-close"
+            aria-label="Schließen"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
-        <MediaLibrary
-          :is-multi-select="false"
-          :initial-selection="
-            formData.iconId && !isPredefinedIcon(formData.iconId)
-              ? [formData.iconId]
-              : []
-          "
-          @images-selected="handleIconMediaSelected"
-        />
+        <div class="dialog-body">
+          <MediaLibrary
+            :is-multi-select="false"
+            :initial-selection="
+              formData.iconId && !isPredefinedIcon(formData.iconId)
+                ? [formData.iconId]
+                : []
+            "
+            @images-selected="handleIconMediaSelected"
+          />
+        </div>
       </div>
     </div>
   </div>

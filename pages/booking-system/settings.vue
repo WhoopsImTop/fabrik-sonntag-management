@@ -322,7 +322,7 @@
         <button
           @click="save"
           :disabled="loading"
-          class="bg-slate-900 text-white px-6 py-2 rounded-md font-medium hover:bg-slate-800 transition-colors"
+          class="bg-slate-900 text-white px-6 py-2 rounded-none font-medium hover:bg-slate-800 transition-colors"
         >
           {{ loading ? "Speichert..." : "Einstellungen speichern" }}
         </button>
@@ -331,35 +331,24 @@
 
     <div
       v-if="showMediaModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      class="dialog-overlay"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
-      >
-        <div
-          class="p-4 border-b border-slate-100 flex justify-between items-center bg-white z-10"
-        >
-          <h3 class="font-semibold text-lg text-slate-900">Bild auswählen</h3>
+      <div class="absolute inset-0" @click="showMediaModal = false" />
+      <div class="dialog-panel max-w-4xl">
+        <div class="dialog-header">
+          <h3 class="dialog-title">Bild auswählen</h3>
           <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
             @click="showMediaModal = false"
-            class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors"
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
-        <div class="flex-1 overflow-y-auto p-4 bg-slate-50">
+        <div class="dialog-body bg-neutral-50">
           <MediaLibrary
             :is-multi-select="false"
             @images-selected="handleImageSelection"

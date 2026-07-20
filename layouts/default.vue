@@ -1,11 +1,8 @@
 <template>
-  <div class="h-full">
-    <AppbarHeader />
-    <div class="flex">
-      <Sidebar />
-      <div class="w-full overflow-y-scroll p-4 max-h-[calc(100vh-60px)]">
-        <slot />
-      </div>
+  <div class="flex h-dvh overflow-hidden bg-white">
+    <Sidebar class="shrink-0" />
+    <div class="flex-1 overflow-y-auto px-8 py-8">
+      <slot />
     </div>
   </div>
 </template>

@@ -46,7 +46,7 @@
       <button 
         @click="save" 
         :disabled="saving"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-white hover:bg-slate-900/90 h-9 px-4 py-2 shadow disabled:opacity-50"
+        class="btn-dialog-primary h-9"
       >
         <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Services verknüpfen' }}

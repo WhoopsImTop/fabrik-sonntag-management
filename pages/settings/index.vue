@@ -7,7 +7,7 @@
       <!-- Invoice Settings -->
       <div class="mb-6">
         <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <UIcon name="i-lucide-file-text" size="20" />
+          <UiIcon name="i-lucide-file-text" size="20" />
           Rechnungseinstellungen
         </h2>
         

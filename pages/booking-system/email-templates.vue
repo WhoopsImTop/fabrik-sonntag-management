@@ -1,120 +1,122 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto py-6 px-4">
-    <div class="flex items-center justify-between">
+  <div class="space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900">E-Mail Vorlagen</h1>
-        <p class="text-slate-600 mt-1">Verwalten Sie die automatischen System-Nachrichten.</p>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
+          E-Mail Vorlagen
+        </h1>
+        <p class="mt-1 text-neutral-500">
+          Verwalten Sie die automatischen System-Nachrichten.
+        </p>
       </div>
-      <button @click="openEditor()"
-        class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-none bg-brand-accent px-4 py-2 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95"
+        @click="openEditor()"
+      >
+        <UiIcon name="i-lucide-plus" class="size-4" />
         Neue Vorlage
       </button>
     </div>
 
-    <div v-if="loading" class="flex justify-center py-12">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-    </div>
-
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="template in templatesList" :key="template.id"
-        class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-        <div class="p-6 flex-1">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center space-x-3">
-              <div class="p-2 bg-blue-50 rounded-lg">
-                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-semibold text-slate-900 leading-tight">{{ template.name }}</h3>
-                <code
-                  class="text-[10px] text-slate-400 mt-1 block bg-slate-50 px-1 py-0.5 rounded w-fit">{{ template.key }}</code>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-4">
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Betreff</span>
-            <p class="text-sm text-slate-700 font-medium truncate" :title="template.subject">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-neutral-200 text-neutral-500">
+            <th class="pb-3 pr-4 font-medium">Name</th>
+            <th class="pb-3 pr-4 font-medium">Key</th>
+            <th class="pb-3 pr-4 font-medium">Betreff</th>
+            <th class="pb-3 pr-4 font-medium">Status</th>
+            <th class="pb-3 font-medium text-right">Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="loading">
+            <td colspan="5" class="py-12 text-center text-neutral-500">Lädt…</td>
+          </tr>
+          <tr v-else-if="templatesList.length === 0">
+            <td colspan="5" class="py-12 text-center text-neutral-500">
+              Keine Vorlagen vorhanden.
+            </td>
+          </tr>
+          <tr
+            v-for="template in templatesList"
+            :key="template.id"
+            class="cursor-pointer border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
+            @click="openEditor(template)"
+          >
+            <td class="py-4 pr-4 font-medium text-neutral-900">
+              {{ template.name }}
+            </td>
+            <td class="py-4 pr-4 font-mono text-xs text-neutral-500">
+              {{ template.key }}
+            </td>
+            <td class="max-w-xs truncate py-4 pr-4 text-neutral-700">
               {{ template.subject }}
-            </p>
-          </div>
-
-          <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-            <span :class="[
-              'px-2.5 py-0.5 text-xs font-medium rounded-full',
-              template.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-            ]">
-              {{ template.is_active ? 'Aktiv' : 'Inaktiv' }}
-            </span>
-          </div>
-        </div>
-
-        <div class="bg-gray-50 px-6 py-3 rounded-b-xl border-t border-gray-100 flex justify-end">
-          <button @click="openEditor(template)"
-            class="text-sm font-medium text-slate-700 hover:text-blue-600 flex items-center gap-1 transition-colors">
-            Bearbeiten
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+            </td>
+            <td class="py-4 pr-4">
+              <span
+                :class="
+                  template.is_active ? 'text-emerald-600' : 'text-neutral-400'
+                "
+              >
+                {{ template.is_active ? "Aktiv" : "Inaktiv" }}
+              </span>
+            </td>
+            <td class="py-4 text-right">
+              <button
+                type="button"
+                class="font-medium text-brand-accent hover:underline"
+                @click.stop="openEditor(template)"
+              >
+                Bearbeiten
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div v-if="showDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto"
+    <div v-if="showDialog" class="dialog-overlay overflow-y-auto"
       aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="closeDialog"
-        aria-hidden="true"></div>
+      <div class="absolute inset-0" @click="closeDialog" aria-hidden="true"></div>
 
-      <div
-        class="relative z-10 w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden max-h-[calc(100vh-2rem)] flex flex-col">
-        <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between shrink-0">
-          <h3 id="modal-title" class="text-lg leading-6 font-medium text-gray-900">
+      <div class="dialog-panel max-w-3xl">
+        <div class="dialog-header">
+          <h3 id="modal-title" class="dialog-title">
             {{ isNewTemplate ? 'Neue Vorlage' : 'Vorlage bearbeiten:' }}
-            <span class="text-blue-600" v-if="!isNewTemplate">{{ editingTemplate.name }}</span>
+            <span class="text-neutral-900 font-normal" v-if="!isNewTemplate">{{ editingTemplate.name }}</span>
           </h3>
-          <button type="button" @click="closeDialog"
-            class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 shrink-0 ml-4">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button type="button" class="dialog-close" aria-label="Schließen" @click="closeDialog">
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
 
-        <div class="overflow-y-auto flex-1">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-
-            <div class="grid grid-cols-1 gap-6">
+        <div class="dialog-body">
+          <div class="grid grid-cols-1 gap-6">
               <div v-if="isNewTemplate" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label class="dialog-label">Name</label>
                   <input v-model="form.name" type="text" placeholder="z.B. Passwort Reset"
-                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2.5 border" />
+                    class="dialog-input" />
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Key</label>
+                  <label class="dialog-label">Key</label>
                   <input v-model="form.key" type="text" placeholder="PASSWORD_RESET"
-                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2.5 border" />
+                    class="dialog-input" />
                 </div>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Betreff der E-Mail</label>
+                <label class="dialog-label">Betreff der E-Mail</label>
                 <input v-model="form.subject" type="text"
-                  class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2.5 border" />
+                  class="dialog-input" />
               </div>
 
-              <div v-if="availableVariables.length" class="bg-blue-50 p-4 rounded-md border border-blue-100">
-                <p class="text-xs text-blue-800 font-bold mb-2 uppercase tracking-wide">Verfügbare Platzhalter</p>
+              <div v-if="availableVariables.length" class="bg-neutral-50 p-4 rounded-none border border-neutral-200">
+                <p class="text-xs text-neutral-700 font-bold mb-2 uppercase tracking-wide">Verfügbare Platzhalter</p>
                 <div class="flex flex-wrap gap-2">
                   <button v-for="v in availableVariables" :key="v" @click="insertVariable(v)"
-                    class="px-2 py-1 bg-white text-blue-700 text-xs font-mono rounded border border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-colors"
+                    class="px-2 py-1 bg-white text-neutral-700 text-xs font-mono rounded-none border border-neutral-200 hover:bg-neutral-100 hover:border-neutral-300 transition-colors"
                     title="Klicken zum Einfügen">
                     {{ `${v}` }}
                   </button>
@@ -122,7 +124,7 @@
               </div>
 
               <div class="flex items-center justify-between mb-1 mt-4">
-                <label class="block text-sm font-medium text-gray-700">Anhänge</label>
+                <label class="dialog-label mb-0">Anhänge</label>
               </div>
               <!-- Attachments List -->
               <div v-if="form.attachments && form.attachments.length > 0" class="mb-3 space-y-2">
@@ -153,21 +155,21 @@
                       d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
-                  <div class="flex text-sm text-gray-600 justify-center">
+                  <div class="flex text-sm text-neutral-600 justify-center">
                     <label for="file-upload"
-                      class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                      class="relative cursor-pointer bg-white rounded-md font-medium text-neutral-900 hover:text-neutral-700 focus-within:outline-none focus-within:ring-1 focus-within:ring-neutral-400">
                       <span>Datei hochladen</span>
                       <input id="file-upload" name="file-upload" type="file" multiple class="sr-only"
                         @change="handleFileUpload">
                     </label>
                   </div>
-                  <p class="text-xs text-gray-500">
+                  <p class="text-xs text-neutral-500">
                     Zusätzliche Anhänge für das Template (z.B. PDF, Bilder)
                   </p>
                 </div>
                 <!-- Loading overlay -->
                 <div v-if="uploading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-                  <svg class="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin h-6 w-6 text-neutral-600" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor"
                       d="M4 12a8 8 0 018-8v8C5.373 20 0 14.627 0 8h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
@@ -178,17 +180,17 @@
 
               <div>
                 <div class="flex items-center justify-between mb-1 mt-6">
-                  <label class="block text-sm font-medium text-gray-700">E-Mail Inhalt (HTML)</label>
+                  <label class="dialog-label mb-0">E-Mail Inhalt (HTML)</label>
                   <button type="button" @click="showPreview = !showPreview"
-                    class="text-xs font-medium text-blue-600 hover:text-blue-700">
+                    class="text-xs font-medium text-neutral-700 hover:text-neutral-900">
                     {{ showPreview ? 'Editor anzeigen' : 'Vorschau' }}
                   </button>
                 </div>
                 <textarea v-if="!showPreview" id="templateBody" v-model="form.body" rows="12"
-                  class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md font-mono p-3 border text-gray-800 leading-relaxed"></textarea>
-                <div v-else class="border border-gray-200 rounded-md p-4 text-sm text-gray-700 bg-gray-50 min-h-[200px]"
+                  class="dialog-input font-mono leading-relaxed min-h-[200px]"></textarea>
+                <div v-else class="border border-neutral-200 rounded-md p-4 text-sm text-neutral-700 bg-neutral-50 min-h-[200px]"
                   v-html="form.body"></div>
-                <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <p class="text-xs text-neutral-500 mt-2 flex items-center gap-1">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -200,21 +202,22 @@
 
               <div class="flex items-center">
                 <button type="button" @click="form.is_active = !form.is_active"
-                  :class="[form.is_active ? 'bg-blue-600' : 'bg-gray-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500']"
+                  :class="[form.is_active ? 'bg-neutral-900' : 'bg-neutral-200', 'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-1 focus:ring-neutral-400']"
                   role="switch" aria-checked="false">
                   <span aria-hidden="true"
                     :class="[form.is_active ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"></span>
                 </button>
-                <span class="ml-3 text-sm font-medium text-gray-900">Automatischen Versand aktivieren</span>
+                <span class="ml-3 text-sm font-medium text-neutral-900">Automatischen Versand aktivieren</span>
               </div>
             </div>
-          </div>
         </div>
 
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-100 shrink-0">
-          <button type="button" @click="save" :disabled="saving"
-            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-slate-900 text-base font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-70 disabled:cursor-not-allowed">
-            <svg v-if="saving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+        <div class="dialog-footer">
+          <button type="button" class="btn-dialog-cancel" @click="closeDialog">
+            Abbrechen
+          </button>
+          <button type="button" class="btn-dialog-primary" @click="save" :disabled="saving">
+            <svg v-if="saving" class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg"
               fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor"
@@ -223,12 +226,8 @@
             </svg>
             {{ saving ? 'Speichert...' : 'Speichern' }}
           </button>
-          <button type="button" @click="closeDialog"
-            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-            Abbrechen
-          </button>
         </div>
-        <p v-if="formError" class="px-4 pb-3 text-xs text-red-600 text-center shrink-0">
+        <p v-if="formError" class="px-6 pb-3 text-xs text-red-600 text-center shrink-0">
           {{ formError }}
         </p>
       </div>

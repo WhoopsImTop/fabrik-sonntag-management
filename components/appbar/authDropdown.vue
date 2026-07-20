@@ -16,7 +16,7 @@ const items = [
       label: "Abmelden",
       color: "neutral",
       icon: "i-lucide-lock-open",
-      onSelect(e) {
+      onSelect() {
         localStorage.removeItem("jwt");
         window.location.reload();
       },
@@ -26,14 +26,7 @@ const items = [
 </script>
 
 <template>
-  <UDropdownMenu :items="items" :ui="{ content: 'w-48' }">
-    <UButton color="neutral" variant="none" icon="i-lucide-menu" />
-
-    <template #profile-trailing>
-      <UIcon
-        name="i-lucide-badge-check"
-        class="shrink-0 size-5 text-(--ui-primary)"
-      />
-    </template>
-  </UDropdownMenu>
+  <UiDropdownMenu :items="items" :ui="{ content: 'w-48' }">
+    <UiButton color="neutral" variant="none" icon="i-lucide-menu" />
+  </UiDropdownMenu>
 </template>

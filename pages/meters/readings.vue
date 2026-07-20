@@ -191,19 +191,19 @@ const formatDate = (dateString: string) => {
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Zählerstände (Readings)</h1>
       <div class="flex gap-2">
-        <UButton color="error" variant="outline" icon="i-lucide-trash-2" @click="deleteAllReadings"
+        <UiButton color="error" variant="outline" icon="i-lucide-trash-2" @click="deleteAllReadings"
           :disabled="readings.length === 0">
           Alle Löschen
-        </UButton>
-        <UButton color="neutral" variant="solid" icon="i-lucide-refresh-cw" @click="loadReadings">
+        </UiButton>
+        <UiButton color="neutral" variant="solid" icon="i-lucide-refresh-cw" @click="loadReadings">
           Aktualisieren
-        </UButton>
+        </UiButton>
       </div>
     </div>
 
     <div class="flex flex-col">
       <div v-if="groupedMeterCharts.length" class="space-y-4 mb-6">
-        <UCard v-for="group in groupedMeterCharts" :key="group.id">
+        <UiCard v-for="group in groupedMeterCharts" :key="group.id">
           <template #header>
             <button class="w-full flex items-center justify-between text-left" @click="toggleGroup(String(group.id))">
               <div>
@@ -212,12 +212,12 @@ const formatDate = (dateString: string) => {
                   {{ group.name || "Ohne Bezeichnung" }} | {{ group.meters.length }} Meter
                 </div>
               </div>
-              <UIcon :name="expandedGroups[group.id] ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
+              <UiIcon :name="expandedGroups[group.id] ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
             </button>
           </template>
 
           <div v-if="expandedGroups[group.id]" class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            <UCard v-for="meter in group.meters" :key="meter.meter_id">
+            <UiCard v-for="meter in group.meters" :key="meter.meter_id">
               <template #header>
                 <div class="flex items-center justify-between gap-2">
                   <div>
@@ -226,9 +226,9 @@ const formatDate = (dateString: string) => {
                       {{ meter.meter_id }} | {{ meter.count }} Readings
                     </div>
                   </div>
-                  <UBadge color="neutral">
+                  <UiBadge color="neutral">
                     {{ meter.kategorie }} {{ meter.einheit || "-" }}
-                  </UBadge>
+                  </UiBadge>
                 </div>
               </template>
 
@@ -256,15 +256,15 @@ const formatDate = (dateString: string) => {
               <div v-else class="text-sm text-gray-500">
                 Für diesen Zähler liegen noch nicht genug Werte für eine Kurve vor.
               </div>
-            </UCard>
+            </UiCard>
           </div>
-        </UCard>
+        </UiCard>
       </div>
     </div>
 
     <div
-      class="flex-1 flex flex-col min-h-0 bg-white ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 shadow sm:rounded-lg overflow-hidden relative">
-      <UTable :data="readings" :columns="columns" :loading="loading" class="h-full">
+      class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+      <UiTable :data="readings" :columns="columns" :loading="loading" class="h-full">
         <template #timestamp-cell="{ row }">
           {{ formatDate(row.original.timestamp) }}
         </template>
@@ -292,10 +292,10 @@ const formatDate = (dateString: string) => {
         </template>
 
         <template #actions-cell="{ row }">
-          <UButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs"
+          <UiButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs"
             @click="deleteReading(row.original.id)" />
         </template>
-      </UTable>
+      </UiTable>
     </div>
   </div>
 </template>

@@ -1,22 +1,20 @@
 <template>
   <div class="mb-2 transition-all">
-    <UModal
+    <UiModal
       :open="history"
       :title="'Datenbankeintrag ' + history?.title + ' löschen?'"
       description="Möchtest du den ausgewählten Datenbankeintrag wirklich löschen?"
+      @update:open="(v) => { if (!v) history = null }"
     >
-      <template #body>
-        <UButton
-          active
-          color="neutral"
-          variant="outline"
-          active-color="error"
-          active-variant="solid"
-          @click="deleteDatabaseEntry"
-          >Löschen</UButton
-        >
+      <template #footer>
+        <button type="button" class="btn-dialog-cancel" @click="history = null">
+          Abbrechen
+        </button>
+        <button type="button" class="btn-dialog-danger" @click="deleteDatabaseEntry">
+          Löschen
+        </button>
       </template>
-    </UModal>
+    </UiModal>
     <div
       class="flex items-center justify-between p-4 border border-neutral-200 rounded-lg bg-white"
       :class="isExpanded ? 'rounded-t-lg rounded-b-none' : ''"
@@ -74,7 +72,7 @@
         class="flex items-center justify-between border-b border-neutral-200 py-2"
       >
         <div class="flex items-center gap-8">
-          <UCheckbox
+          <UiCheckbox
             :model-value="selectedEntries.includes(history.id)"
             @change="toggleSelection(history.id)"
             :label="history.id"
@@ -89,10 +87,10 @@
           <p class="text-sm">Quadratmeter: {{ history.squareMeters }} m²</p>
         </div>
         <button
-          class="rounded-lg border border-neutral-200 p-2 flex items-center justify-center hover:bg-neutral-200 hover:cursor-pointer"
+          class="rounded-none border border-neutral-200 p-2 flex items-center justify-center hover:bg-neutral-200 hover:cursor-pointer"
           @click="askForDatabaseEntryDeletion(history)"
         >
-          <UIcon name="i-lucide-trash-2" class="size-4" />
+          <UiIcon name="i-lucide-trash-2" class="size-4" />
         </button>
       </div>
     </div>

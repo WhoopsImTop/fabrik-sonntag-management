@@ -13,7 +13,7 @@
       </div>
       <button
         @click="router.push('/booking-system/subscriptions/new')"
-        class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors shadow-sm"
+        class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-none hover:bg-neutral-800 transition-colors shadow-sm"
       >
         <svg
           class="w-4 h-4 mr-2"
@@ -84,85 +84,33 @@
       </select>
     </div>
 
-    <div
-      class="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden"
-    >
-      <div v-if="loading" class="p-12 flex justify-center">
-        <svg
-          class="animate-spin w-8 h-8 text-neutral-400"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-      </div>
-
-      <div
-        v-else-if="filteredSubscriptions.length === 0"
-        class="p-12 text-center"
-      >
-        <h3 class="text-lg font-medium text-neutral-900">
-          Keine Abonnements vorhanden
-        </h3>
-        <p class="text-neutral-500 mt-1">
-          Erstellen Sie das erste Abo für wiederkehrende Zahlungen.
-        </p>
-      </div>
-
-      <table v-else class="min-w-full divide-y divide-neutral-200">
-        <thead class="bg-neutral-50/50">
-          <tr>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Beschreibung
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Kunde
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Intervall
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Nächste Abrechnung
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Status
-            </th>
-            <th
-              class="px-6 py-3 text-right text-xs font-semibold text-neutral-500 uppercase"
-            >
-              Aktion
-            </th>
+    <div class="w-full overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-neutral-200 text-neutral-500">
+            <th class="pb-3 pr-4 font-medium">Beschreibung</th>
+            <th class="pb-3 pr-4 font-medium">Kunde</th>
+            <th class="pb-3 pr-4 font-medium">Intervall</th>
+            <th class="pb-3 pr-4 font-medium">Nächste Abrechnung</th>
+            <th class="pb-3 pr-4 font-medium">Status</th>
+            <th class="pb-3 font-medium text-right">Aktion</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-neutral-200 bg-white">
+        <tbody>
+          <tr v-if="loading">
+            <td colspan="6" class="py-12 text-center text-neutral-500">Lädt…</td>
+          </tr>
+          <tr v-else-if="filteredSubscriptions.length === 0">
+            <td colspan="6" class="py-12 text-center text-neutral-500">
+              Keine Abonnements vorhanden
+            </td>
+          </tr>
           <tr
             v-for="sub in filteredSubscriptions"
             :key="sub.id"
-            class="hover:bg-neutral-50"
+            class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
           >
-            <td class="px-6 py-4 text-sm font-medium text-neutral-900">
+            <td class="py-4 pr-4 font-medium text-neutral-900">
               {{ sub.description || "Ohne Titel" }}
               <div
                 class="text-xs text-neutral-500 font-normal mt-0.5"
@@ -171,7 +119,7 @@
                 {{ sub.LineItems.length }} Positionen
               </div>
             </td>
-            <td class="px-6 py-4 text-sm text-neutral-900">
+            <td class="py-4 pr-4 text-neutral-900">
               {{
                 sub.User?.details?.company ||
                 `${sub.User?.details?.first_name ?? ""} ${sub.User?.details?.last_name ?? ""}`.trim() ||
@@ -179,61 +127,54 @@
               }}
               <div class="text-xs text-neutral-500">{{ sub.User?.email }}</div>
             </td>
-            <td class="px-6 py-4 text-sm text-neutral-900">
-              <span class="px-2 py-1 rounded bg-gray-100 text-xs">{{
-                sub.interval
-              }}</span>
+            <td class="py-4 pr-4 text-neutral-700">
+              {{ sub.interval }}
             </td>
-            <td class="px-6 py-4 text-sm text-neutral-900">
+            <td class="py-4 pr-4 text-neutral-900">
               {{ formatDate(sub.next_billing_date) }}
             </td>
-            <td class="px-6 py-4">
-              <span
-                :class="[
-                  'px-2.5 py-0.5 rounded-full text-xs font-medium border',
-                  getStatusClass(sub.status),
-                ]"
-              >
+            <td class="py-4 pr-4">
+              <span :class="getStatusClass(sub.status)">
                 {{ getStatusLabel(sub.status) }}
               </span>
             </td>
-            <td
-              class="px-6 py-4 text-right text-sm font-medium flex justify-end gap-2"
-            >
-              <button
-                @click="router.push(`/booking-system/subscriptions/${sub.id}`)"
-                class="text-neutral-600 hover:text-neutral-900"
-              >
-                Bearbeiten
-              </button>
-
-              <button
-                v-if="sub.status === 'ACTIVE'"
-                @click="cancelSubscription(sub)"
-                class="text-orange-600 hover:text-orange-800"
-                title="Abo beenden"
-              >
-                Beenden
-              </button>
-
-              <button
-                @click="deleteSubscription(sub.id)"
-                class="text-red-600 hover:text-red-800 ml-2"
-              >
-                <svg
-                  class="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <td class="py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button
+                  @click="router.push(`/booking-system/subscriptions/${sub.id}`)"
+                  class="text-brand-accent hover:underline"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+                  Bearbeiten
+                </button>
+
+                <button
+                  v-if="sub.status === 'ACTIVE'"
+                  @click="cancelSubscription(sub)"
+                  class="text-amber-600 hover:underline"
+                  title="Abo beenden"
+                >
+                  Beenden
+                </button>
+
+                <button
+                  @click="deleteSubscription(sub.id)"
+                  class="text-red-600 hover:text-red-700"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -299,11 +240,11 @@ const formatDate = (date: string) =>
 
 const getStatusClass = (status: string) => {
   const map: Record<string, string> = {
-    ACTIVE: "bg-green-50 text-green-700 border-green-200",
-    PAUSED: "bg-yellow-50 text-yellow-700 border-yellow-200",
-    CANCELLED: "bg-gray-100 text-gray-500 border-gray-200",
+    ACTIVE: "text-emerald-600",
+    PAUSED: "text-amber-600",
+    CANCELLED: "text-neutral-400",
   };
-  return map[status] || "bg-gray-50 text-gray-700";
+  return map[status] || "text-neutral-500";
 };
 
 const getStatusLabel = (status: string) => {

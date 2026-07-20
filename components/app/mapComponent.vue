@@ -22,38 +22,38 @@
     <div
       class="absolute bottom-2 right-2 flex items-center gap-2 bg-white shadow-sm rounded-lg p-2 z-10"
     >
-      <UTooltip text="Karte Editieren">
+      <UiTooltip text="Karte Editieren">
         <button
           @click="toggleEditingMode"
-          class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+          class="bg-white p-1 rounded-none border border-neutral-200 flex items-center justify-center aspect-square"
         >
-          <UIcon name="i-lucide-pencil" class="size-6"></UIcon>
+          <UiIcon name="i-lucide-pencil" class="size-6"></UiIcon>
         </button>
-      </UTooltip>
-      <UTooltip text="Eintrag in Karte hinzufügen">
+      </UiTooltip>
+      <UiTooltip text="Eintrag in Karte hinzufügen">
         <button
           v-if="isEditingMode"
           @click="handleCreateNew"
-          class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+          class="bg-white p-1 rounded-none border border-neutral-200 flex items-center justify-center aspect-square"
         >
-          <UIcon name="i-lucide-map-pin-plus" class="size-6"></UIcon>
+          <UiIcon name="i-lucide-map-pin-plus" class="size-6"></UiIcon>
         </button>
-      </UTooltip>
-      <UDropdownMenu :items="exportItems" :ui="{ content: 'w-48' }">
-        <UTooltip text="Karte als PDF exportieren">
+      </UiTooltip>
+      <UiDropdownMenu :items="exportItems" :ui="{ content: 'w-48' }">
+        <UiTooltip text="Karte als PDF exportieren">
           <button
-            class="bg-white p-1 rounded-md border border-neutral-200 flex items-center justify-center aspect-square"
+            class="bg-white p-1 rounded-none border border-neutral-200 flex items-center justify-center aspect-square"
             :disabled="isExporting"
           >
-            <UIcon
+            <UiIcon
               :name="isExporting ? 'i-lucide-loader-2' : 'i-lucide-download'"
               class="size-6"
               :class="{ 'animate-spin': isExporting }"
             >
-            </UIcon>
+            </UiIcon>
           </button>
-        </UTooltip>
-      </UDropdownMenu>
+        </UiTooltip>
+      </UiDropdownMenu>
     </div>
   </div>
 </template>
@@ -1008,12 +1008,8 @@ export default {
   }
 }
 
-/* Styling für das Modal (Beispiel) */
 .AppDialogPoi {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow-y: auto; /* Scrollbar, falls Inhalt zu lang */
-  max-height: calc(100% - 1rem); /* Verhindert, dass es aus dem Bild ragt */
+  overflow-y: auto;
+  max-height: calc(100% - 1rem);
 }
 </style>

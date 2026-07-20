@@ -1,22 +1,20 @@
 <template>
   <section>
-    <UModal
+    <UiModal
       :open="selectedImage"
       title="Bild löschen"
       description="Möchtest du das ausgewählte Bild wirklich löschen?"
+      @update:open="(v) => { if (!v) selectedImage = null }"
     >
-      <template #body>
-        <UButton
-          active
-          color="neutral"
-          variant="outline"
-          active-color="error"
-          active-variant="solid"
-          @click="deleteImage"
-          >Bild löschen</UButton
-        >
+      <template #footer>
+        <button type="button" class="btn-dialog-cancel" @click="selectedImage = null">
+          Abbrechen
+        </button>
+        <button type="button" class="btn-dialog-danger" @click="deleteImage">
+          Bild löschen
+        </button>
       </template>
-    </UModal>
+    </UiModal>
     <div v-if="imageDates">
       <div
         v-for="(date, i) in Object.keys(imageDates)"
@@ -39,10 +37,10 @@
             :key="image.name"
           >
             <button
-              class="bg-white border-none outline-none w-8 h-8 rounded-full absolute top-2 right-2 z-10 items-center justify-center hidden group-hover:flex"
+              class="bg-white border-none outline-none w-8 h-8 rounded-none absolute top-2 right-2 z-10 items-center justify-center hidden group-hover:flex"
               @click="selectedImage = image"
             >
-              <UIcon name="i-lucide-trash-2" class="size-4" />
+              <UiIcon name="i-lucide-trash-2" class="size-4" />
             </button>
             <img :src="imagesUrl + image.url" :alt="image.name" />
           </div>

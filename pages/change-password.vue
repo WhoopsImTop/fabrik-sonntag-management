@@ -49,7 +49,7 @@
         <button
           type="submit"
           :disabled="loading"
-          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg text-sm border border-black/10 shadow-sm disabled:opacity-50"
+          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded-none text-sm border border-black/10 shadow-sm disabled:opacity-50"
         >
           {{ loading ? "Speichere..." : "Passwort ändern" }}
         </button>

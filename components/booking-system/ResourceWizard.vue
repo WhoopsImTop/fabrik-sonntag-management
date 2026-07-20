@@ -1,44 +1,38 @@
 <template>
-  <div
-    class="bg-white rounded-xl border border-slate-200 shadow-sm max-w-4xl w-full mx-auto flex flex-col max-h-[90vh] overflow-hidden font-sans"
-  >
-    <div class="px-8 py-6 border-b border-slate-100 bg-white">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-xl font-semibold text-slate-900 tracking-tight">
-            Ressource erstellen
-          </h2>
-          <p class="text-sm text-slate-500 mt-1">
-            Konfigurieren Sie Details, Preise und Zusatzleistungen.
-          </p>
-        </div>
+  <div class="dialog-panel max-w-4xl w-full font-sans">
+    <div class="dialog-header">
+      <div class="min-w-0 flex-1">
+        <h2 class="dialog-title">Ressource erstellen</h2>
+        <p class="dialog-desc">
+          Konfigurieren Sie Details, Preise und Zusatzleistungen.
+        </p>
+      </div>
 
-        <div class="flex items-center space-x-2">
-          <div v-for="i in 3" :key="i" class="flex items-center">
-            <div
-              class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all duration-300 border"
-              :class="
-                step === i
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : step > i
-                  ? 'bg-green-500 text-white border-green-500'
-                  : 'bg-white text-slate-400 border-slate-200'
-              "
-            >
-              <span v-if="step > i">✓</span>
-              <span v-else>{{ i }}</span>
-            </div>
-            <div
-              v-if="i < 3"
-              class="w-8 h-[1px] mx-2"
-              :class="step > i ? 'bg-green-500' : 'bg-slate-200'"
-            ></div>
+      <div class="flex items-center space-x-2">
+        <div v-for="i in 3" :key="i" class="flex items-center">
+          <div
+            class="flex size-8 items-center justify-center border text-xs font-medium transition-all duration-300"
+            :class="
+              step === i
+                ? 'border-neutral-900 bg-neutral-900 text-white'
+                : step > i
+                  ? 'border-green-500 bg-green-500 text-white'
+                  : 'border-neutral-200 bg-white text-neutral-400'
+            "
+          >
+            <span v-if="step > i">✓</span>
+            <span v-else>{{ i }}</span>
           </div>
+          <div
+            v-if="i < 3"
+            class="mx-2 h-px w-8"
+            :class="step > i ? 'bg-green-500' : 'bg-neutral-200'"
+          ></div>
         </div>
       </div>
     </div>
 
-    <div class="p-8 overflow-y-auto flex-1 bg-slate-50/50">
+    <div class="dialog-body bg-neutral-50/50">
       <div
         v-if="step === 1"
         class="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
@@ -287,38 +281,40 @@
       </div>
     </div>
 
-    <div
-      class="px-8 py-4 bg-white border-t border-slate-100 flex justify-between items-center"
-    >
+    <div class="dialog-footer !justify-between">
       <button
+        type="button"
+        class="btn-dialog-cancel"
         @click="$emit('cancel')"
-        class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
       >
         Abbrechen
       </button>
 
-      <div class="flex space-x-4">
+      <div class="flex gap-3">
         <button
           v-if="step > 1"
+          type="button"
+          class="btn-dialog-cancel"
           @click="step--"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-10 px-4 py-2"
         >
           Zurück
         </button>
 
         <button
           v-if="step < 3"
+          type="button"
+          class="btn-dialog-primary"
           @click="nextStep"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 px-4 py-2"
         >
           Weiter
         </button>
 
         <button
           v-if="step === 3"
-          @click="submitWizard"
+          type="button"
+          class="btn-dialog-primary"
           :disabled="submitting"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-green-600 text-white hover:bg-green-700 h-10 px-6 py-2 shadow-sm"
+          @click="submitWizard"
         >
           <span v-if="submitting" class="mr-2">...</span>
           {{ submitting ? "Speichern" : "Ressource erstellen" }}

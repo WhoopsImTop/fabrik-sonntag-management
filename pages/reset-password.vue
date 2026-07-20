@@ -46,7 +46,7 @@
         <button
           type="submit"
           :disabled="loading || !token"
-          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-lg text-sm px-3 border border-black/10 shadow-sm w-full mb-2 disabled:opacity-50"
+          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-none text-sm px-3 border border-black/10 shadow-sm w-full mb-2 disabled:opacity-50"
         >
           {{ loading ? 'Speichere...' : 'Passwort setzen' }}
         </button>

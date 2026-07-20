@@ -4,7 +4,7 @@
       <div class="max-w-7xl mx-auto flex items-center gap-4">
         <button
           @click="$router.push('/booking-system/users')"
-          class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:opacity-50 ring-offset-white hover:bg-slate-100 hover:text-slate-900 h-9 px-3 py-2 border border-slate-200 bg-transparent text-slate-500"
+          class="inline-flex items-center justify-center rounded-none text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:opacity-50 ring-offset-white hover:bg-slate-100 hover:text-slate-900 h-9 px-3 py-2 border border-slate-200 bg-transparent text-slate-500"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -74,7 +74,7 @@
             </div>
           </div>
           <button
-            class="border border-slate-200 bg-white shadow-sm px-4 py-2 rounded-lg text-xs text-red-800 hover:bg-red-50 hover:cursor-pointer"
+            class="border border-slate-200 bg-white shadow-sm px-4 py-2 rounded-none text-xs text-red-800 hover:bg-red-50 hover:cursor-pointer"
             @click="handleDeleteUser()"
           >
             Benutzer Löschen
@@ -96,7 +96,7 @@
               :key="tab"
               @click="activeTab = tab"
               :class="[
-                'inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1',
+                'inline-flex items-center justify-center whitespace-nowrap rounded-none px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1',
                 activeTab === tab
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'hover:text-slate-900',
@@ -151,7 +151,7 @@
                 </div>
                 <button
                   @click="showMembershipModal = true"
-                  class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
+                  class="inline-flex items-center justify-center rounded-none bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -282,7 +282,7 @@
                 </div>
                 <button
                   @click="showQuotaModal = true"
-                  class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
+                  class="inline-flex items-center justify-center rounded-none bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -398,56 +398,40 @@
 
     <div
       v-if="showMembershipModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
+      class="dialog-overlay"
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0"
         @click="showMembershipModal = false"
       ></div>
-      <div
-        class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200"
-      >
-        <button
-          @click="showMembershipModal = false"
-          class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-4 w-4"
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h3 class="dialog-title">Mitgliedschaft zuweisen</h3>
+            <p class="dialog-desc">
+              Wählen Sie einen Typ und den Gültigkeitszeitraum.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="showMembershipModal = false"
           >
-            <path d="M18 6 6 18"></path>
-            <path d="m6 6 12 12"></path>
-          </svg>
-          <span class="sr-only">Schließen</span>
-        </button>
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
 
-        <div class="p-6">
-          <h3
-            class="text-lg font-semibold text-slate-900 leading-none tracking-tight mb-1"
-          >
-            Mitgliedschaft zuweisen
-          </h3>
-          <p class="text-sm text-slate-500 mb-6">
-            Wählen Sie einen Typ und den Gültigkeitszeitraum.
-          </p>
-
-          <form @submit.prevent="assignMembership" class="space-y-4">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Typ</label
-              >
+        <form @submit.prevent="assignMembership">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Typ</label>
               <select
                 v-model="newMembership.type_id"
                 required
-                class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                class="dialog-input"
               >
                 <option :value="null" disabled>Bitte wählen...</option>
                 <option
@@ -459,112 +443,90 @@
                 </option>
               </select>
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Gültig ab</label
-              >
+            <div>
+              <label class="dialog-label">Gültig ab</label>
               <input
                 type="date"
                 v-model="newMembership.valid_from"
                 required
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                class="dialog-input"
               />
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Gültig bis (Optional)</label
-              >
+            <div>
+              <label class="dialog-label">Gültig bis (Optional)</label>
               <input
                 type="date"
                 v-model="newMembership.valid_until"
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                class="dialog-input"
                 placeholder="Leer lassen für unbegrenzt"
               />
-              <p class="text-[0.8rem] text-slate-500">
+              <p class="mt-1 text-xs text-neutral-500">
                 Leer lassen für unbegrenzte Gültigkeit.
               </p>
             </div>
+          </div>
 
-            <div
-              class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 pt-4 border-t border-slate-100"
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn-dialog-cancel"
+              @click="showMembershipModal = false"
             >
-              <button
-                type="button"
-                @click="showMembershipModal = false"
-                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 sm:mt-0"
-              >
-                Abbrechen
-              </button>
-              <button
-                type="submit"
-                :disabled="!newMembership.type_id"
-                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none mb-2 sm:mb-0"
-              >
-                Zuweisen
-              </button>
-            </div>
-          </form>
-        </div>
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              class="btn-dialog-primary"
+              :disabled="!newMembership.type_id"
+            >
+              Zuweisen
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
     <div
       v-if="showQuotaModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0"
+      class="dialog-overlay"
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0"
         @click="showQuotaModal = false"
       ></div>
-      <div
-        class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200"
-      >
-        <button
-          @click="showQuotaModal = false"
-          class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-4 w-4"
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h3 class="dialog-title">Kontingent zuweisen</h3>
+            <p class="dialog-desc">
+              Kostenlos oder über ein bestehendes Kontingent-Paket mit Rechnung.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="showQuotaModal = false"
           >
-            <path d="M18 6 6 18"></path>
-            <path d="m6 6 12 12"></path>
-          </svg>
-          <span class="sr-only">Schließen</span>
-        </button>
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
 
-        <div class="p-6">
-          <h3
-            class="text-lg font-semibold text-slate-900 leading-none tracking-tight mb-1"
-          >
-            Kontingent zuweisen
-          </h3>
-          <p class="text-sm text-slate-500 mb-6">
-            Kostenlos oder über ein bestehendes Kontingent-Paket mit Rechnung.
-          </p>
-
-          <form @submit.prevent="assignQuota" class="space-y-4">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Art der Zuweisung</label
-              >
-              <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+        <form @submit.prevent="assignQuota">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Art der Zuweisung</label>
+              <div class="flex rounded-none border border-neutral-200 overflow-hidden">
                 <button
                   type="button"
                   @click="newQuota.mode = 'free'"
                   :class="[
                     'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                     newQuota.mode === 'free'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white text-slate-700 hover:bg-slate-50',
+                      ? 'bg-neutral-900 text-white'
+                      : 'bg-white text-neutral-700 hover:bg-neutral-50',
                   ]"
                 >
                   Kostenlos
@@ -575,8 +537,8 @@
                   :class="[
                     'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                     newQuota.mode === 'paid'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white text-slate-700 hover:bg-slate-50',
+                      ? 'bg-neutral-900 text-white'
+                      : 'bg-white text-neutral-700 hover:bg-neutral-50',
                   ]"
                 >
                   Kostenpflichtig
@@ -585,14 +547,12 @@
             </div>
 
             <template v-if="newQuota.mode === 'free'">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Ressource</label
-                >
+              <div>
+                <label class="dialog-label">Ressource</label>
                 <select
                   v-model="newQuota.resource_id"
                   required
-                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                  class="dialog-input"
                 >
                   <option :value="null" disabled>Bitte wählen...</option>
                   <option
@@ -604,74 +564,62 @@
                   </option>
                 </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Menge</label
-                >
+              <div>
+                <label class="dialog-label">Menge</label>
                 <input
                   type="number"
                   v-model.number="newQuota.quota_amount"
                   min="1"
                   required
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Einheit</label
-                >
+              <div>
+                <label class="dialog-label">Einheit</label>
                 <select
                   v-model="newQuota.quota_unit"
-                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                  class="dialog-input"
                 >
                   <option value="BOOKINGS">Buchungen</option>
                   <option value="HOURS">Stunden</option>
                   <option value="DAYS">Tage</option>
                 </select>
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Gültig ab</label
-                >
+              <div>
+                <label class="dialog-label">Gültig ab</label>
                 <input
                   type="date"
                   v-model="newQuota.valid_from"
                   required
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Gültig bis (Optional)</label
-                >
+              <div>
+                <label class="dialog-label">Gültig bis (Optional)</label>
                 <input
                   type="date"
                   v-model="newQuota.valid_until"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Notiz (Optional)</label
-                >
+              <div>
+                <label class="dialog-label">Notiz (Optional)</label>
                 <input
                   type="text"
                   v-model="newQuota.notes"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                   placeholder="z.B. Kulanz"
                 />
               </div>
             </template>
 
             <template v-else>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Kontingent-Paket</label
-                >
+              <div>
+                <label class="dialog-label">Kontingent-Paket</label>
                 <select
                   v-model="newQuota.pricing_plan_id"
                   required
-                  class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
+                  class="dialog-input"
                 >
                   <option :value="null" disabled>Bitte wählen...</option>
                   <option
@@ -683,32 +631,30 @@
                     {{ formatQuotaUnit(plan.quota_unit) }})
                   </option>
                 </select>
-                <p class="text-[0.8rem] text-slate-500">
+                <p class="mt-1 text-xs text-neutral-500">
                   Erstellt automatisch eine Rechnung als Entwurf.
                 </p>
               </div>
             </template>
+          </div>
 
-            <div
-              class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 pt-4 border-t border-slate-100"
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn-dialog-cancel"
+              @click="showQuotaModal = false"
             >
-              <button
-                type="button"
-                @click="showQuotaModal = false"
-                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 sm:mt-0"
-              >
-                Abbrechen
-              </button>
-              <button
-                type="submit"
-                :disabled="!canAssignQuota"
-                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none mb-2 sm:mb-0"
-              >
-                Zuweisen
-              </button>
-            </div>
-          </form>
-        </div>
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              class="btn-dialog-primary"
+              :disabled="!canAssignQuota"
+            >
+              Zuweisen
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

@@ -1,15 +1,15 @@
 <template>
   <AppAveragePrice :realEstateData="immobilienData" />
   <div class="flex items-center justify-between">
-    <UButton @click="openDownloadPage()">Excel herunterladen</UButton
-    ><UButton @click="openCleanedDownloadPage()"
-      >Excel aufgeräumt herunterladen</UButton
+    <UiButton @click="openDownloadPage()">Excel herunterladen</UiButton
+    ><UiButton @click="openCleanedDownloadPage()"
+      >Excel aufgeräumt herunterladen</UiButton
     >
-    <UButton
+    <UiButton
       :disabled="selectedEntriesFromParent.length === 0"
       @click="deleteSelectedEntries()"
       color="error"
-      >Ausgewählte löschen</UButton
+      >Ausgewählte löschen</UiButton
     >
   </div>
   <hr class="my-4 border border-neutral-100" />
@@ -40,7 +40,7 @@
       </div>
     </div>
   </div>
-  <!-- <UTable
+  <!-- <UiTable
     v-if="immobilienData"
     :columns="columns"
     :data="immobilienDataAsArray"

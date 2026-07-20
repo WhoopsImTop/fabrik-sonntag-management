@@ -9,20 +9,18 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: "Fabrik Sonntag Management"
-    }
+      title: "Fabrik Sonntag Management",
+      link: [
+        {
+          rel: "stylesheet",
+          href: "https://use.typekit.net/gqu3pfc.css",
+        },
+      ],
+    },
   },
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
-  modules: ["@nuxt/ui"],
   css: ['~/assets/css/main.css'],
-  ui: {
-    fonts: false,
-    colorMode: false,
-    theme: {
-      colors: ['primary', 'error']
-    }
-  },
   vite: {
     plugins: [tailwindcss()],
   },

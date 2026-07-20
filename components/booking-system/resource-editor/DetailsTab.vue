@@ -55,8 +55,9 @@
 
     <div class="flex items-center justify-between border-t border-slate-100 pt-6">
       <button 
+        type="button"
+        class="btn-dialog-danger"
         @click="$emit('delete')" 
-        class="text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-md transition-colors flex items-center gap-2"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
         Ressource löschen
@@ -65,7 +66,7 @@
       <button 
         @click="save" 
         :disabled="saving"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 bg-slate-900 text-white hover:bg-slate-900/90 h-9 px-4 py-2 shadow disabled:opacity-50"
+        class="btn-dialog-primary h-9"
       >
         <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Änderungen speichern' }}

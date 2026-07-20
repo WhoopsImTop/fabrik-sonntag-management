@@ -7,7 +7,7 @@
     </div>
 
     <!-- Profile Card -->
-    <div class="bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden">
+    <div class="bg-white rounded-none border border-neutral-200 shadow-sm overflow-hidden">
       <div v-if="loading" class="flex justify-center py-12">
         <svg class="animate-spin w-10 h-10 text-neutral-400" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -40,7 +40,7 @@
               <button
                 v-if="!editMode"
                 @click="editMode = true"
-                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center gap-2"
+                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-none hover:bg-gray-50 transition-colors inline-flex items-center gap-2"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -146,13 +146,13 @@
               <div class="flex justify-end space-x-2 pt-4">
                 <button
                   @click="cancelEdit"
-                  class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                  class="px-4 py-2 bg-gray-200 text-gray-800 rounded-none hover:bg-gray-300 transition-colors"
                 >
                   Abbrechen
                 </button>
                 <button
                   @click="saveProfile"
-                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-none hover:bg-blue-700 transition-colors"
                 >
                   Speichern
                 </button>

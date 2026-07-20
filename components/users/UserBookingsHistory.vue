@@ -1,49 +1,40 @@
 <template>
   <div class="flex flex-col h-full">
-    <div class="px-6 py-4 border-b border-slate-100">
-      <h3 class="font-semibold text-slate-900">Buchungshistorie</h3>
+    <div class="px-6 py-4 border-b border-neutral-100">
+      <h3 class="font-semibold text-neutral-900">Buchungshistorie</h3>
     </div>
 
-    <div
-      v-if="!bookings || bookings.length === 0"
-      class="p-8 text-center text-slate-500"
-    >
-      Keine Buchungen vorhanden.
-    </div>
-
-    <div v-else class="overflow-x-auto">
-      <table class="w-full text-sm text-left">
-        <thead
-          class="bg-slate-50 text-slate-500 font-medium border-b border-slate-200"
-        >
-          <tr>
-            <th class="px-6 py-3">Ressource</th>
-            <th class="px-6 py-3">Datum</th>
-            <th class="px-6 py-3">Status</th>
+    <div class="w-full overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-neutral-200 text-neutral-500">
+            <th class="pb-3 pr-4 font-medium">Ressource</th>
+            <th class="pb-3 pr-4 font-medium">Datum</th>
+            <th class="pb-3 font-medium text-right">Status</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-100">
+        <tbody>
+          <tr v-if="!bookings || bookings.length === 0">
+            <td colspan="3" class="py-12 text-center text-neutral-500">
+              Keine Buchungen vorhanden.
+            </td>
+          </tr>
           <tr
             v-for="b in bookings"
             :key="b.id"
-            class="hover:bg-slate-50/50 transition-colors"
+            class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
           >
-            <td class="px-6 py-3 font-medium text-slate-900">
+            <td class="py-4 pr-4 font-medium text-neutral-900">
               {{ b.Resource?.name || "Gelöscht" }}
             </td>
-            <td class="px-6 py-3 text-slate-600">
+            <td class="py-4 pr-4 text-neutral-700">
               {{ formatDate(b.start_at) }}
-              <span class="text-xs text-slate-400 block"
+              <span class="text-xs text-neutral-400 block"
                 >{{ formatTime(b.start_at) }} - {{ formatTime(b.end_at) }}</span
               >
             </td>
-            <td class="px-6 py-3">
-              <span
-                :class="[
-                  'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                  getStatusClasses(b.status),
-                ]"
-              >
+            <td class="py-4 text-right">
+              <span :class="getStatusClasses(b.status)">
                 {{ getStatusTranslation(b.status) }}
               </span>
             </td>
@@ -65,19 +56,20 @@ const formatTime = (iso: string) =>
   });
 
 const getStatusClasses = (status: string) => {
-  if (status === "CONFIRMED") return "bg-emerald-50 text-emerald-700";
-  if (status === "PENDING") return "bg-amber-50 text-amber-700";
-  return "bg-slate-100 text-slate-500";
+  if (status === "CONFIRMED") return "text-emerald-600";
+  if (status === "PENDING") return "text-amber-600";
+  if (status === "CANCELLED") return "text-neutral-400";
+  return "text-neutral-500";
 };
 
 const getStatusTranslation = (status: string) => {
   switch (status) {
     case "CONFIRMED":
-      return "BESTÄTIGT";
+      return "Bestätigt";
     case "PENDING":
-      return "ANGEFRAGT";
+      return "Angefragt";
     case "CANCELLED":
-      return "STORNIERT";
+      return "Storniert";
     default:
       return status;
   }

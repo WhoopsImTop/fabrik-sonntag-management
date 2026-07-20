@@ -2,7 +2,7 @@
   <div
     role="region"
     aria-label="Fabrik Sonntag Widget"
-    class="w-[385px] max-w-full bg-white text-neutral-900 p-4 rounded-lg border border-neutral-200 relative shadow-sm sm:w-[385px]"
+    class="w-[385px] max-w-full bg-white text-neutral-900 p-4 rounded-none border border-neutral-200 relative shadow-sm sm:w-[385px]"
   >
     <main class="pt-1">
       <div v-if="!success">
@@ -18,7 +18,7 @@
               <select
                 v-model="form.type"
                 aria-label="Anfrage für"
-                class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs placeholder-neutral-400 bg-white"
+                class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs placeholder-neutral-400 bg-white"
               >
                 <option>Coworking Space</option>
                 <option>Teamoffice</option>
@@ -36,7 +36,7 @@
                   placeholder="Max"
                   autofocus
                   @input="clearError('firstName')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.firstName" class="mt-1 text-xs text-red-600">
                   {{ errors.firstName }}
@@ -49,7 +49,7 @@
                   required
                   placeholder="Mustermann"
                   @input="clearError('lastName')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.lastName" class="mt-1 text-xs text-red-600">
                   {{ errors.lastName }}
@@ -65,7 +65,7 @@
                 required
                 placeholder="name@beispiel.de"
                 @input="clearError('email')"
-                class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
               />
               <p v-if="errors.email" class="mt-1 text-xs text-red-600">
                 {{ errors.email }}
@@ -93,7 +93,7 @@
                   required
                   placeholder="Musterstraße"
                   @input="clearError('street')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.street" class="mt-1 text-xs text-red-600">
                   {{ errors.street }}
@@ -106,7 +106,7 @@
                   required
                   placeholder="12a"
                   @input="clearError('houseNumber')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.houseNumber" class="mt-1 text-xs text-red-600">
                   {{ errors.houseNumber }}
@@ -122,7 +122,7 @@
                   required
                   placeholder="12345"
                   @input="clearError('zip')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.zip" class="mt-1 text-xs text-red-600">
                   {{ errors.zip }}
@@ -135,7 +135,7 @@
                   required
                   placeholder="Stadt"
                   @input="clearError('city')"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
                 <p v-if="errors.city" class="mt-1 text-xs text-red-600">
                   {{ errors.city }}
@@ -149,7 +149,7 @@
                 v-model="form.message"
                 rows="3"
                 placeholder="Wie können wir helfen?"
-                class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
               ></textarea>
             </label>
 
@@ -172,7 +172,7 @@
                 <input
                   v-model="form.start"
                   type="datetime-local"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
               </label>
               <label class="block text-xs text-neutral-700"
@@ -180,7 +180,7 @@
                 <input
                   v-model="form.end"
                   type="datetime-local"
-                  class="mt-1 block w-full rounded-md border border-neutral-200 px-3 py-2 text-xs"
+                  class="mt-1 block w-full rounded-none border border-neutral-200 px-3 py-2 text-xs"
                 />
               </label>
             </div>

@@ -367,7 +367,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition-colors"
+            class="bg-slate-900 text-white px-4 py-2 rounded-none text-sm font-medium hover:bg-slate-800 transition-colors"
           >
             {{ loading ? "Speichert..." : "Speichern" }}
           </button>

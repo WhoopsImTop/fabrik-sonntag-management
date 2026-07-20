@@ -207,22 +207,22 @@ const executeImport = async () => {
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Zählerverwaltung (AES Keys)</h1>
       <div class="flex gap-2">
-        <UButton color="neutral" variant="solid" icon="i-lucide-upload" @click="openImportModal">
+        <UiButton color="neutral" variant="solid" icon="i-lucide-upload" @click="openImportModal">
           Mass Import
-        </UButton>
-        <UButton color="primary" variant="solid" icon="i-lucide-plus" @click="openCreateModal">
+        </UiButton>
+        <UiButton color="primary" variant="solid" icon="i-lucide-plus" @click="openCreateModal">
           Neuer Zähler
-        </UButton>
+        </UiButton>
       </div>
     </div>
 
-    <UCard class="mb-6">
+    <UiCard class="mb-6">
       <template #header>
         <div class="flex justify-between items-center">
           <h2 class="font-semibold">Meter-Gruppen</h2>
-          <UButton color="primary" variant="solid" icon="i-lucide-plus" size="xs" @click="openCreateGroupModal">
+          <UiButton color="primary" variant="solid" icon="i-lucide-plus" size="xs" @click="openCreateGroupModal">
             Neue Gruppe
-          </UButton>
+          </UiButton>
         </div>
       </template>
       <div v-if="groups.length === 0" class="text-sm text-gray-500">
@@ -235,185 +235,227 @@ const executeImport = async () => {
             <div class="text-xs text-gray-500">{{ group.name || 'Ohne Name' }}</div>
           </div>
           <div class="flex gap-1">
-            <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs" @click="openEditGroupModal(group)" />
-            <UButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs" @click="deleteGroup(group)" />
+            <UiButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs" @click="openEditGroupModal(group)" />
+            <UiButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs" @click="deleteGroup(group)" />
           </div>
         </div>
       </div>
-    </UCard>
+    </UiCard>
 
-    <div
-      class="flex-1 flex flex-col min-h-0 bg-white ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 shadow sm:rounded-lg overflow-hidden relative">
-      <UTable :data="meters" :columns="columns" :loading="loading" class="h-full">
+    <div class="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+      <UiTable :data="meters" :columns="columns" :loading="loading" class="h-full">
         <template #group-cell="{ row }">
           <span class="text-sm">
             {{ row.original.group?.code || 'Ohne Gruppe' }}
           </span>
         </template>
         <template #active-cell="{ row }">
-          <UBadge :color="row.original.active ? 'primary' : 'error'">
+          <UiBadge :color="row.original.active ? 'primary' : 'error'">
             {{ row.original.active ? 'Aktiv' : 'Inaktiv' }}
-          </UBadge>
+          </UiBadge>
         </template>
         <template #aes_key-cell="{ row }">
           <span class="font-mono text-xs">{{ row.original.aes_key }}</span>
         </template>
         <template #actions-cell="{ row }">
           <div class="flex items-center gap-2">
-            <UButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs"
+            <UiButton color="neutral" variant="ghost" icon="i-lucide-pencil" size="xs"
               @click="openEditModal(row.original)" />
-            <UButton color="neutral" variant="ghost" icon="i-lucide-download" size="xs"
+            <UiButton color="neutral" variant="ghost" icon="i-lucide-download" size="xs"
               @click="downloadCSV(row.original.meter_id)" />
-            <UButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs"
+            <UiButton color="error" variant="ghost" icon="i-lucide-trash-2" size="xs"
               @click="deleteMeter(row.original.meter_id)" />
           </div>
         </template>
-      </UTable>
+      </UiTable>
     </div>
 
     <!-- Single Create/Edit Modal -->
-    <UModal :open="isModalOpen" @update:open="isModalOpen = $event">
+    <UiModal :open="isModalOpen" @update:open="isModalOpen = $event">
       <template #content>
-        <div
-          class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
-          <div class="flex items-center justify-between p-4 sm:px-6">
-            <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+        <div class="dialog-panel max-w-lg pointer-events-auto">
+          <div class="dialog-header">
+            <h3 class="dialog-title">
               {{ isEditing ? 'Zähler bearbeiten' : 'Zähler anlegen' }}
             </h3>
-            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
-              @click="isModalOpen = false" />
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="Schließen"
+              @click="isModalOpen = false"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
           </div>
-          <form @submit.prevent="saveMeter" class="space-y-4 p-4 sm:px-6 pb-6 opacity-100 z-50 pointer-events-auto">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">
-                Meter ID <span class="text-red-500">*</span>
-              </label>
-              <input v-model="formState.meter_id" placeholder="12345678" :disabled="isEditing" required
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Bezeichnung</label>
-              <input v-model="formState.label" placeholder="Heizung EG"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Medium Code</label>
-              <input v-model="formState.medium_code" placeholder="z.b. 04 für Wärme"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">AES Key</label>
-              <input v-model="formState.aes_key" placeholder="32 Zeichen Hex..." 
-                class="font-mono flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-xs shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Liegenschaftsnummer</label>
-              <input v-model="formState.estate_number" placeholder="Bsp: 1234.56"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Liegenschaftsbeschreibung</label>
-              <input v-model="formState.estate_description" placeholder="Bsp: Wohnhaus Nord"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Gruppe</label>
-              <select v-model="formState.meter_group_id"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 dark:border-gray-800 dark:focus-visible:ring-gray-300">
-                <option :value="null">Ohne Gruppe</option>
-                <option v-for="group in groups" :key="group.id" :value="group.id">
-                  {{ group.code }}{{ group.name ? ` - ${group.name}` : '' }}
-                </option>
-              </select>
-            </div>
-
-            <div class="flex flex-row items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 p-3 shadow-sm">
-              <div class="space-y-0.5">
-                <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Aktiv</label>
-                <p class="text-[0.8rem] text-gray-500 dark:text-gray-400">Dieser Zähler wird aktiv verwendet</p>
+          <form @submit.prevent="saveMeter">
+            <div class="dialog-body space-y-4">
+              <div>
+                <label class="dialog-label">
+                  Meter ID <span class="text-red-500">*</span>
+                </label>
+                <input
+                  v-model="formState.meter_id"
+                  placeholder="12345678"
+                  :disabled="isEditing"
+                  required
+                  class="dialog-input"
+                />
               </div>
-              <UToggle v-model="formState.active" />
+
+              <div>
+                <label class="dialog-label">Bezeichnung</label>
+                <input
+                  v-model="formState.label"
+                  placeholder="Heizung EG"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div>
+                <label class="dialog-label">Medium Code</label>
+                <input
+                  v-model="formState.medium_code"
+                  placeholder="z.b. 04 für Wärme"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div>
+                <label class="dialog-label">AES Key</label>
+                <input
+                  v-model="formState.aes_key"
+                  placeholder="32 Zeichen Hex..."
+                  class="dialog-input font-mono text-xs"
+                />
+              </div>
+
+              <div>
+                <label class="dialog-label">Liegenschaftsnummer</label>
+                <input
+                  v-model="formState.estate_number"
+                  placeholder="Bsp: 1234.56"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div>
+                <label class="dialog-label">Liegenschaftsbeschreibung</label>
+                <input
+                  v-model="formState.estate_description"
+                  placeholder="Bsp: Wohnhaus Nord"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div>
+                <label class="dialog-label">Gruppe</label>
+                <select v-model="formState.meter_group_id" class="dialog-input">
+                  <option :value="null">Ohne Gruppe</option>
+                  <option v-for="group in groups" :key="group.id" :value="group.id">
+                    {{ group.code }}{{ group.name ? ` - ${group.name}` : '' }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="flex flex-row items-center justify-between rounded-none border border-neutral-200 p-3">
+                <div class="space-y-0.5">
+                  <label class="text-sm font-medium text-neutral-900">Aktiv</label>
+                  <p class="dialog-desc !mt-0">Dieser Zähler wird aktiv verwendet</p>
+                </div>
+                <UiToggle v-model="formState.active" />
+              </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-              <button type="button" @click="isModalOpen = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-transparent hover:bg-gray-100 hover:text-gray-900 h-9 px-4 py-2 dark:border-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-50 shadow-sm">Abbrechen</button>
-              <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 shadow">Speichern</button>
+            <div class="dialog-footer">
+              <button type="button" @click="isModalOpen = false" class="btn-dialog-cancel">Abbrechen</button>
+              <button type="submit" class="btn-dialog-primary">Speichern</button>
             </div>
           </form>
         </div>
       </template>
-    </UModal>
+    </UiModal>
 
-    <UModal :open="groupModalOpen" @update:open="groupModalOpen = $event">
+    <UiModal :open="groupModalOpen" @update:open="groupModalOpen = $event">
       <template #content>
-        <div class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
-          <div class="flex items-center justify-between p-4 sm:px-6">
-            <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
+        <div class="dialog-panel max-w-lg pointer-events-auto">
+          <div class="dialog-header">
+            <h3 class="dialog-title">
               {{ isEditingGroup ? 'Gruppe bearbeiten' : 'Gruppe anlegen' }}
             </h3>
-            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
-              @click="groupModalOpen = false" />
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="Schließen"
+              @click="groupModalOpen = false"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
           </div>
-          <form @submit.prevent="saveGroup" class="space-y-4 p-4 sm:px-6 pb-6">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">
-                Gruppen-Code <span class="text-red-500">*</span>
-              </label>
-              <input v-model="groupForm.code" placeholder="301.05.002" required
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
+          <form @submit.prevent="saveGroup">
+            <div class="dialog-body space-y-4">
+              <div>
+                <label class="dialog-label">
+                  Gruppen-Code <span class="text-red-500">*</span>
+                </label>
+                <input
+                  v-model="groupForm.code"
+                  placeholder="301.05.002"
+                  required
+                  class="dialog-input"
+                />
+              </div>
+              <div>
+                <label class="dialog-label">Name</label>
+                <input
+                  v-model="groupForm.name"
+                  placeholder="Optional"
+                  class="dialog-input"
+                />
+              </div>
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">Name</label>
-              <input v-model="groupForm.name" placeholder="Optional"
-                class="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300" />
-            </div>
-            <div class="flex justify-end gap-3 mt-6">
-              <button type="button" @click="groupModalOpen = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-gray-200 bg-transparent hover:bg-gray-100 h-9 px-4 py-2 dark:border-gray-800 dark:hover:bg-gray-800 shadow-sm">Abbrechen</button>
-              <button type="submit" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 shadow">Speichern</button>
+            <div class="dialog-footer">
+              <button type="button" @click="groupModalOpen = false" class="btn-dialog-cancel">Abbrechen</button>
+              <button type="submit" class="btn-dialog-primary">Speichern</button>
             </div>
           </form>
         </div>
       </template>
-    </UModal>
+    </UiModal>
 
-    <UModal :open="isImportModalOpen" @update:open="isImportModalOpen = $event">
+    <UiModal :open="isImportModalOpen" @update:open="isImportModalOpen = $event">
       <template #content>
-        <div
-          class="sm:max-w-lg w-full bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden flex flex-col pointer-events-auto">
-          <div class="flex items-center justify-between p-4 sm:px-6">
-            <h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white">
-              Zähler Massenimport
-            </h3>
-            <UButton color="neutral" variant="ghost" icon="i-heroicons-x-mark-20-solid" class="-my-1"
-              @click="isImportModalOpen = false" />
+        <div class="dialog-panel max-w-lg pointer-events-auto">
+          <div class="dialog-header">
+            <h3 class="dialog-title">Zähler Massenimport</h3>
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="Schließen"
+              @click="isImportModalOpen = false"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
           </div>
-          <div class="space-y-4 p-4 sm:px-6 pb-6 opacity-100 z-50 pointer-events-auto">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-gray-900 dark:text-gray-100">
-                Daten (JSON/CSV)
-              </label>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Daten (JSON/CSV)</label>
+              <p class="dialog-desc mb-2">
                 Fügen Sie ein JSON Array oder CSV Format (meter_id,aes_key,medium_code,label,estate_number,estate_description) ein.
               </p>
-              <textarea v-model="importText" 
-                class="flex min-h-[200px] w-full rounded-md border border-gray-200 bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:placeholder:text-gray-400 dark:focus-visible:ring-gray-300"
-                placeholder="meter_id, aes_key, medium_code, label, estate_number, estate_description\n..."></textarea>
+              <textarea
+                v-model="importText"
+                class="dialog-input min-h-[200px]"
+                placeholder="meter_id, aes_key, medium_code, label, estate_number, estate_description\n..."
+              ></textarea>
             </div>
-
-            <div class="flex justify-end gap-3 mt-6">
-              <button type="button" @click="isImportModalOpen = false" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 bg-transparent hover:bg-gray-100 hover:text-gray-900 h-9 px-4 py-2 dark:border-gray-800 dark:hover:bg-gray-800 dark:hover:text-gray-50 shadow-sm">Abbrechen</button>
-              <button type="button" @click="executeImport" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 bg-gray-900 text-gray-50 hover:bg-gray-900/90 h-9 px-4 py-2 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 shadow">Importieren</button>
-            </div>
+          </div>
+          <div class="dialog-footer">
+            <button type="button" @click="isImportModalOpen = false" class="btn-dialog-cancel">Abbrechen</button>
+            <button type="button" @click="executeImport" class="btn-dialog-primary">Importieren</button>
           </div>
         </div>
       </template>
-    </UModal>
+    </UiModal>
 
   </div>
 </template>

@@ -6,8 +6,9 @@
         <p class="text-xs text-slate-500">Definieren Sie unterschiedliche Tarife (z.B. Stunden- vs. Tagespreis).</p>
       </div>
       <button 
+        type="button"
+        class="btn-dialog-cancel"
         @click="addPlan"
-        class="text-xs font-medium bg-white hover:bg-slate-50 text-slate-900 px-3 py-1.5 rounded-md transition-colors border border-slate-200 shadow-sm"
       >
         + Neuer Plan
       </button>
@@ -25,7 +26,7 @@
       >
         <button 
           @click="removePlan(index, plan.id)"
-          class="absolute -top-2 -right-2 bg-white rounded-full p-1 text-slate-400 hover:text-red-600 shadow-sm border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity"
+          class="absolute -top-2 -right-2 bg-white rounded-none p-1 text-slate-400 hover:text-red-600 shadow-sm border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity"
           title="Plan entfernen"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -70,7 +71,7 @@
       <button 
         @click="save" 
         :disabled="saving"
-        class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-white hover:bg-slate-900/90 h-9 px-4 py-2 shadow disabled:opacity-50"
+        class="btn-dialog-primary h-9"
       >
         <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Preise aktualisieren' }}

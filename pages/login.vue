@@ -11,7 +11,7 @@
         <img src="../public/fabrik-sonntag_logo.png" class="h-16" />
       </div>
       <h2 class="text-2xl font-bold text-center">Willkommen!</h2>
-      <p class="text-sm text-neutral-600 text-center">
+      <p class=" text-neutral-600 text-center">
         Melden Sie sich in der Administrationsoberfläche an.
       </p>
       <form
@@ -19,39 +19,39 @@
         class="w-full max-w-xs flex flex-col items-center mt-16"
       >
         <div class="w-full flex flex-col gap-3 mb-4">
-          <label class="flex flex-col text-xs text-neutral-600 gap-1"
+          <label class="flex flex-col text-neutral-600 gap-1"
             >E-Mail-Adresse
             <input
               v-model="username"
               type="text"
               placeholder="E-Mail-Adresse"
-              class="p-2 border border-black/10 shadow-sm rounded-lg bg-white"
+              class="px-3 py-2 border border-black/10 shadow-sm rounded-lg bg-white"
               required
           /></label>
-          <label class="flex flex-col text-xs text-neutral-600 gap-1"
+          <label class="flex flex-col text-neutral-600 gap-1"
             >Passwort
             <input
               v-model="password"
               type="password"
               placeholder="Passwort"
-              class="p-2 border border-black/10 shadow-sm rounded-lg bg-white"
+              class="px-3 py-2 border border-black/10 shadow-sm rounded-lg bg-white"
               required
             />
           </label>
         </div>
         <button
           type="submit"
-          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-lg text-sm px-3 border border-black/10 shadow-sm w-full mb-2"
+          class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-none  px-3 border border-black/10 shadow-sm w-full mb-2"
         >
           Anmelden
         </button>
         <NuxtLink
           to="/request-password-reset"
-          class="text-xs text-neutral-500 hover:text-neutral-700"
+          class=" text-neutral-500 hover:text-neutral-700"
         >
           Passwort vergessen?
         </NuxtLink>
-        <p v-if="error" class="text-red-500 text-xs">{{ error }}</p>
+        <p v-if="error" class="text-red-500 ">{{ error }}</p>
       </form>
     </div>
   </div>

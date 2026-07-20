@@ -6,143 +6,148 @@
         <p class="text-slate-500 mt-1">Verwalten Sie Status-Level und automatische Rabattregeln.</p>
       </div>
       <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-none bg-brand-accent px-4 py-2 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95"
         @click="openTypeModal()"
-        class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
       >
-        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <UiIcon name="i-lucide-plus" class="size-4" />
         Neuer Typ
       </button>
     </div>
 
-    <div v-if="loading" class="flex justify-center items-center py-20">
-      <svg class="animate-spin h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-    </div>
-
-    <div v-else-if="types.length === 0" class="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-slate-200 border-dashed">
-      <div class="rounded-full bg-slate-50 p-3 mb-4">
-        <svg class="h-6 w-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-      </div>
-      <h3 class="text-lg font-semibold text-slate-900">Keine Mitgliedschaften</h3>
-      <p class="text-slate-500 max-w-sm mt-1">Legen Sie Status-Level an, um Kunden Rabatte zu gewähren.</p>
-    </div>
-
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div
-        v-for="type in types"
-        :key="type.id"
-        class="group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col"
-      >
-        <div class="p-6 border-b border-slate-100 bg-slate-50/50 rounded-t-xl">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-lg font-bold text-slate-900">{{ type.name }}</h3>
-              <p class="text-sm text-slate-500 mt-1 line-clamp-2">{{ type.description || 'Keine Beschreibung' }}</p>
-            </div>
-            <div class="flex gap-1">
-              <button 
-                @click="openTypeModal(type)"
-                class="text-slate-400 hover:text-slate-900 p-1 rounded transition-colors"
-                title="Bearbeiten"
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-neutral-200 text-neutral-500">
+            <th class="pb-3 pr-4 font-medium">Name</th>
+            <th class="pb-3 pr-4 font-medium">Beschreibung</th>
+            <th class="pb-3 pr-4 font-medium">Rabatte</th>
+            <th class="pb-3 font-medium text-right">Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="loading">
+            <td colspan="4" class="py-12 text-center text-neutral-500">Lädt…</td>
+          </tr>
+          <tr v-else-if="types.length === 0">
+            <td colspan="4" class="py-12 text-center text-neutral-500">
+              Keine Mitgliedschaften. Legen Sie Status-Level an, um Kunden Rabatte zu gewähren.
+            </td>
+          </tr>
+          <tr
+            v-for="type in types"
+            :key="type.id"
+            class="group border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
+          >
+            <td class="py-4 pr-4 font-medium text-neutral-900">
+              {{ type.name }}
+            </td>
+            <td class="max-w-xs truncate py-4 pr-4 text-neutral-600">
+              {{ type.description || "—" }}
+            </td>
+            <td class="py-4 pr-4">
+              <div
+                v-if="type.DiscountRules?.length"
+                class="flex flex-col gap-1"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-              </button>
-              <button 
-                @click="deleteType(type)"
-                class="text-slate-400 hover:text-red-600 p-1 rounded transition-colors"
-                title="Löschen"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="p-6 flex-1 flex flex-col">
-          <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Aktive Rabatte</h4>
-          
-          <div v-if="type.DiscountRules && type.DiscountRules.length > 0" class="space-y-2 flex-1">
-            <div
-              v-for="rule in type.DiscountRules"
-              :key="rule.id"
-              class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors group/rule"
-            >
-              <div class="flex items-center gap-2">
-                 <div class="p-1.5 bg-emerald-100 text-emerald-700 rounded-md">
-                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
-                 </div>
-                 <span class="text-sm font-medium text-slate-700">
-                    {{ getCategoryName(rule.target_resource_category_id) }}
-                 </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold px-2 py-1 rounded-full bg-white border border-slate-200 text-slate-900 shadow-sm">
-                   {{ rule.discount_percent ? `-${rule.discount_percent * 100}%` : `-€${rule.discount_fixed}` }}
-                </span>
-                <button 
-                  @click="deleteRule(rule.id)"
-                  class="text-slate-300 hover:text-red-500 opacity-0 group-hover/rule:opacity-100 transition-all"
-                  title="Regel entfernen"
+                <div
+                  v-for="rule in type.DiscountRules"
+                  :key="rule.id"
+                  class="inline-flex items-center gap-2 text-neutral-700"
                 >
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  <span>{{ getCategoryName(rule.target_resource_category_id) }}</span>
+                  <span class="font-medium text-neutral-900">
+                    {{
+                      rule.discount_percent
+                        ? `-${rule.discount_percent * 100}%`
+                        : `-€${rule.discount_fixed}`
+                    }}
+                  </span>
+                  <button
+                    type="button"
+                    class="text-neutral-400 opacity-0 transition-opacity hover:text-red-600 group-hover:opacity-100"
+                    title="Regel entfernen"
+                    @click="deleteRule(rule.id)"
+                  >
+                    <UiIcon name="i-lucide-x" class="size-3.5" />
+                  </button>
+                </div>
+              </div>
+              <span v-else class="text-neutral-400">Keine Regeln</span>
+            </td>
+            <td class="py-4 text-right">
+              <div class="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  class="font-medium text-brand-accent hover:underline"
+                  @click="openRuleModal(type)"
+                >
+                  Regel +
+                </button>
+                <button
+                  type="button"
+                  class="text-neutral-500 hover:text-neutral-900"
+                  title="Bearbeiten"
+                  @click="openTypeModal(type)"
+                >
+                  <IconEdit class="size-3" />
+                </button>
+                <button
+                  type="button"
+                  class="text-neutral-400 hover:text-red-600"
+                  title="Löschen"
+                  @click="deleteType(type)"
+                >
+                  <UiIcon name="i-lucide-trash-2" class="size-3.5" />
                 </button>
               </div>
-            </div>
-          </div>
-          
-          <div v-else class="flex-1 flex items-center justify-center py-4 border border-dashed border-slate-200 rounded-lg">
-            <p class="text-xs text-slate-400 italic">Keine Rabattregeln definiert</p>
-          </div>
-
-          <button
-            @click="openRuleModal(type)"
-            class="mt-4 w-full inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 bg-white hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
-          >
-            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            Regel hinzufügen
-          </button>
-        </div>
-      </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div v-if="showTypeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog">
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="showTypeModal = false"></div>
-      
-      <div class="z-10 w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 class="text-lg font-bold text-slate-900">
+    <div v-if="showTypeModal" class="dialog-overlay" role="dialog" aria-modal="true">
+      <div class="absolute inset-0" @click="showTypeModal = false"></div>
+
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <h3 class="dialog-title">
             {{ isEditingType ? 'Mitgliedschaft bearbeiten' : 'Neuer Mitgliedschaftstyp' }}
           </h3>
-          <button @click="showTypeModal = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100">
-             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          <button type="button" class="dialog-close" aria-label="Schließen" @click="showTypeModal = false">
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
-        
-        <form @submit.prevent="saveType" class="p-6 space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Bezeichnung</label>
-            <input
-              v-model="typeForm.name"
-              type="text"
-              placeholder="z.B. Premium Member"
-              required
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
-            />
+
+        <form @submit.prevent="saveType">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Bezeichnung</label>
+              <input
+                v-model="typeForm.name"
+                type="text"
+                placeholder="z.B. Premium Member"
+                required
+                class="dialog-input"
+              />
+            </div>
+            <div>
+              <label class="dialog-label">Beschreibung</label>
+              <textarea
+                v-model="typeForm.description"
+                rows="3"
+                placeholder="Vorteile dieser Mitgliedschaft..."
+                class="dialog-input min-h-[80px]"
+              ></textarea>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Beschreibung</label>
-            <textarea
-              v-model="typeForm.description"
-              rows="3"
-              placeholder="Vorteile dieser Mitgliedschaft..."
-              class="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
-            ></textarea>
-          </div>
-          
-          <div class="flex justify-end pt-2">
-             <button
-              type="submit"
-              class="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors shadow-sm"
-            >
+
+          <div class="dialog-footer">
+            <button type="button" class="btn-dialog-cancel" @click="showTypeModal = false">
+              Abbrechen
+            </button>
+            <button type="submit" class="btn-dialog-primary">
               {{ isEditingType ? 'Speichern' : 'Erstellen' }}
             </button>
           </div>
@@ -150,73 +155,76 @@
       </div>
     </div>
 
-    <div v-if="showRuleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog">
-      <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" @click="showRuleModal = false"></div>
-      
-      <div class="z-10 w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-          <h3 class="text-lg font-bold text-slate-900">Rabatt hinzufügen</h3>
-          <button @click="showRuleModal = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100">
-             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div v-if="showRuleModal" class="dialog-overlay" role="dialog" aria-modal="true">
+      <div class="absolute inset-0" @click="showRuleModal = false"></div>
+
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h3 class="dialog-title">Rabatt hinzufügen</h3>
+            <p class="dialog-desc">
+              Für Mitgliedschaft: <span class="font-semibold text-neutral-900">{{ selectedType?.name }}</span>
+            </p>
+          </div>
+          <button type="button" class="dialog-close" aria-label="Schließen" @click="showRuleModal = false">
+            <UiIcon name="i-lucide-x" class="size-5" />
           </button>
         </div>
 
-        <div class="px-6 py-2 bg-slate-50/30 border-b border-slate-100 text-sm text-slate-600">
-           Für Mitgliedschaft: <span class="font-semibold text-slate-900">{{ selectedType?.name }}</span>
-        </div>
-        
-        <form @submit.prevent="createRule" class="p-6 space-y-5">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1.5">Kategorie</label>
-            <select
-              v-model="newRule.target_resource_category_id"
-              required
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
-            >
-              <option :value="null">Bitte wählen...</option>
-              <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-            </select>
-            <p class="mt-1 text-xs text-slate-500">Auf welche Ressourcen-Kategorie gilt der Rabatt?</p>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
+        <form @submit.prevent="createRule">
+          <div class="dialog-body space-y-5">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Prozentual (%)</label>
-              <div class="relative">
+              <label class="dialog-label">Kategorie</label>
+              <select
+                v-model="newRule.target_resource_category_id"
+                required
+                class="dialog-input"
+              >
+                <option :value="null">Bitte wählen...</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+              </select>
+              <p class="mt-1 text-xs text-neutral-500">Auf welche Ressourcen-Kategorie gilt der Rabatt?</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="dialog-label">Prozentual (%)</label>
+                <div class="relative">
+                  <input
+                    v-model.number="newRule.discount_percent"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="1"
+                    placeholder="0.10"
+                    class="dialog-input"
+                  />
+                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span class="text-neutral-400 text-xs">%</span>
+                  </div>
+                </div>
+                <p class="text-[10px] text-neutral-400 mt-1">z.B. 0.10 für 10%</p>
+              </div>
+              <div>
+                <label class="dialog-label">Fixbetrag (€)</label>
                 <input
-                  v-model.number="newRule.discount_percent"
+                  v-model.number="newRule.discount_fixed"
                   type="number"
                   step="0.01"
                   min="0"
-                  max="1"
-                  placeholder="0.10"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                  placeholder="5.00"
+                  class="dialog-input"
                 />
-                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <span class="text-gray-400 text-xs">%</span>
-                </div>
+                <p class="text-[10px] text-neutral-400 mt-1">Absoluter Abzug</p>
               </div>
-              <p class="text-[10px] text-slate-400 mt-1">z.B. 0.10 für 10%</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5">Fixbetrag (€)</label>
-              <input
-                v-model.number="newRule.discount_fixed"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="5.00"
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
-              />
-              <p class="text-[10px] text-slate-400 mt-1">Absoluter Abzug</p>
             </div>
           </div>
-          
-          <div class="flex justify-end pt-2">
-             <button
-              type="submit"
-              class="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-md hover:bg-slate-800 transition-colors shadow-sm"
-            >
+
+          <div class="dialog-footer">
+            <button type="button" class="btn-dialog-cancel" @click="showRuleModal = false">
+              Abbrechen
+            </button>
+            <button type="submit" class="btn-dialog-primary">
               Regel speichern
             </button>
           </div>

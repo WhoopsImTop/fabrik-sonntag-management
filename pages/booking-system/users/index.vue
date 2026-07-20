@@ -9,77 +9,70 @@
           Verwalten Sie alle Benutzer und deren Status.
         </p>
       </div>
-      <button @click="showAddModal = true"
-        class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-        </svg>
+      <button
+        type="button"
+        class="inline-flex items-center justify-center gap-2 rounded-none bg-brand-accent px-4 py-2.5 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95"
+        @click="showAddModal = true"
+      >
+        <UiIcon name="i-lucide-plus" class="size-4" />
         Benutzer hinzufügen
       </button>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-      <div class="flex flex-col md:flex-row md:items-center gap-4">
-        <div class="relative flex-1">
-          <svg class="absolute left-3 top-2.5 h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input v-model="searchQuery" type="text" placeholder="Suchen nach Name oder E-Mail..."
-            class="flex h-10 w-full rounded-md border border-slate-200 bg-white pl-10 pr-3 py-2 text-sm placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
-        </div>
-        <select v-model="statusFilter"
-          class="h-10 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2">
-          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <div class="relative flex-1">
+        <UiIcon
+          name="i-lucide-search"
+          class="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400"
+        />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Suchen nach Name oder E-Mail…"
+          class="w-full rounded-none border border-neutral-200 bg-white py-2 pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-400"
+        />
       </div>
+      <select
+        v-model="statusFilter"
+        class="rounded-none border border-neutral-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-400"
+      >
+        <option
+          v-for="option in statusOptions"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </option>
+      </select>
     </div>
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div v-if="loading" class="flex justify-center py-12">
-        <svg class="animate-spin w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-          </path>
-        </svg>
+    <div class="overflow-x-auto">
+      <div v-if="loading" class="py-12 text-center text-neutral-500">Lädt…</div>
+      <div v-else-if="filteredUsers.length === 0" class="py-12 text-center text-neutral-500">
+        Keine Benutzer gefunden
       </div>
-
-      <div v-else-if="filteredUsers.length === 0" class="text-center py-12">
-        <p class="text-slate-500">Keine Benutzer gefunden</p>
-      </div>
-
-      <table v-else class="min-w-full divide-y divide-slate-200">
-        <thead class="bg-slate-50/50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Benutzer
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Email
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Rolle
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Status
-            </th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-              Aktionen
-            </th>
+      <table v-else class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-neutral-200 text-neutral-500">
+            <th class="pb-3 pr-4 font-medium">Benutzer</th>
+            <th class="pb-3 pr-4 font-medium">Email</th>
+            <th class="pb-3 pr-4 font-medium">Rolle</th>
+            <th class="pb-3 pr-4 font-medium">Status</th>
+            <th class="pb-3 font-medium text-right">Aktionen</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-slate-200">
-          <tr v-for="user in filteredUsers" :key="user.id"
-            class="hover:bg-slate-50/50 transition-colors cursor-pointer group" @click="viewUser(user)">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
+        <tbody>
+          <tr
+            v-for="user in filteredUsers"
+            :key="user.id"
+            class="cursor-pointer border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
+            @click="viewUser(user)"
+          >
+            <td class="py-4 pr-4">
+              <div class="flex items-center gap-3">
                 <div
-                  class="flex-shrink-0 h-10 w-10 bg-slate-900 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  class="flex size-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white"
+                >
                   {{
                     getInitials(
                       user.details?.first_name || user.username,
@@ -87,17 +80,20 @@
                     )
                   }}
                 </div>
-                <div class="ml-4">
-                  <div class="text-sm font-medium text-slate-900">
+                <div>
+                  <div class="font-medium text-neutral-900">
                     {{
                       user.details?.first_name && user.details?.last_name
                         ? `${user.details.first_name} ${user.details.last_name}`
                         : user.username
                     }}
                   </div>
-                  <div class="text-xs text-slate-500">
-                    <span v-if="user.details?.user_type === 'COMPANY'"
-                      class="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 mr-1">Firma</span>
+                  <div class="text-xs text-neutral-500">
+                    <span
+                      v-if="user.details?.user_type === 'COMPANY'"
+                      class="mr-1 text-brand-accent"
+                      >Firma</span
+                    >
                     {{
                       user?.details?.company ||
                       `${user?.details?.first_name ?? ""} ${user?.details?.last_name ?? ""}`.trim() ||
@@ -107,35 +103,33 @@
                 </div>
               </div>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="text-sm text-slate-600">{{ user.email }}</div>
+            <td class="py-4 pr-4">
+              <a
+                :href="`mailto:${user.email}`"
+                class="text-brand-accent hover:underline"
+                @click.stop
+              >
+                {{ user.email }}
+              </a>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+            <td class="py-4 pr-4 text-neutral-700">
+              {{ getRoleLabel(user.role) }}
+            </td>
+            <td class="py-4 pr-4">
               <span
-                class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 capitalize">
-                {{ getRoleLabel(user.role) }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span :class="[
-                'inline-flex items-center rounded-full px-2 py-1 text-xs font-medium',
-                user.isActive
-                  ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'
-                  : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
-              ]">
-                <svg v-if="user.isActive" class="h-1.5 w-1.5 fill-emerald-500 mr-1.5" viewBox="0 0 6 6"
-                  aria-hidden="true">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
-                <svg v-else class="h-1.5 w-1.5 fill-red-500 mr-1.5" viewBox="0 0 6 6" aria-hidden="true">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
+                :class="
+                  user.isActive ? 'text-emerald-600' : 'text-red-600'
+                "
+              >
                 {{ user.isActive ? "Aktiv" : "Inaktiv" }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button @click.stop="viewUser(user)"
-                class="text-slate-900 hover:text-slate-700 font-medium hover:underline transition-all">
+            <td class="py-4 text-right">
+              <button
+                type="button"
+                class="font-medium text-brand-accent hover:underline"
+                @click.stop="viewUser(user)"
+              >
                 Details
               </button>
             </td>
@@ -144,98 +138,88 @@
       </table>
     </div>
 
-    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" @click="showAddModal = false"></div>
+    <div v-if="showAddModal" class="dialog-overlay" role="dialog" aria-modal="true">
+      <div class="absolute inset-0" @click="showAddModal = false"></div>
 
-      <div
-        class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
-        <button @click="showAddModal = false"
-          class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
-            <path d="M18 6 6 18"></path>
-            <path d="m6 6 12 12"></path>
-          </svg>
-          <span class="sr-only">Schließen</span>
-        </button>
+      <div class="dialog-panel max-w-lg">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h2 class="dialog-title">Neuen Benutzer anlegen</h2>
+            <p class="dialog-desc">
+              Erstellen Sie einen neuen Kunden- oder Admin-Account.
+            </p>
+          </div>
+          <button type="button" class="dialog-close" aria-label="Schließen" @click="showAddModal = false">
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
 
-        <div class="p-6">
-          <h2 class="text-lg font-semibold text-slate-900 leading-none tracking-tight mb-1">
-            Neuen Benutzer anlegen
-          </h2>
-          <p class="text-sm text-slate-500 mb-6">
-            Erstellen Sie einen neuen Kunden- oder Admin-Account.
-          </p>
-
-          <form @submit.prevent="createUser" class="space-y-4">
+        <form @submit.prevent="createUser">
+          <div class="dialog-body space-y-4">
             <div>
-              <label class="text-sm font-medium leading-none text-slate-700 mb-2 block">Kontotyp</label>
-              <div class="flex rounded-lg border border-slate-200 overflow-hidden">
+              <label class="dialog-label">Kontotyp</label>
+              <div class="flex rounded-none border border-neutral-200 overflow-hidden">
                 <button type="button" @click="newUser.details.user_type = 'PERSON'"
-                  :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', newUser.details.user_type === 'PERSON' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50']">Person</button>
+                  :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', newUser.details.user_type === 'PERSON' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Person</button>
                 <button type="button" @click="newUser.details.user_type = 'COMPANY'"
-                  :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', newUser.details.user_type === 'COMPANY' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-50']">Firma</button>
+                  :class="['flex-1 px-4 py-2 text-sm font-medium transition-colors', newUser.details.user_type === 'COMPANY' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Firma</button>
               </div>
             </div>
 
-            <div v-if="newUser.details.user_type === 'COMPANY'" class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700">Firmenname</label>
+            <div v-if="newUser.details.user_type === 'COMPANY'">
+              <label class="dialog-label">Firmenname</label>
               <input v-model="newUser.details.company" type="text" required
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                class="dialog-input"
                 placeholder="Muster GmbH" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Vorname</label>
+              <div>
+                <label class="dialog-label">Vorname</label>
                 <input v-model="newUser.details.first_name" type="text" :required="newUser.details.user_type === 'PERSON'"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
+                  class="dialog-input" />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Nachname</label>
+              <div>
+                <label class="dialog-label">Nachname</label>
                 <input v-model="newUser.details.last_name" type="text" :required="newUser.details.user_type === 'PERSON'"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
+                  class="dialog-input" />
               </div>
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700">Username</label>
+            <div>
+              <label class="dialog-label">Username</label>
               <input v-model="newUser.username" type="text" required
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
+                class="dialog-input" />
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700">E-Mail</label>
+            <div>
+              <label class="dialog-label">E-Mail</label>
               <input v-model="newUser.email" type="email" required
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2" />
+                class="dialog-input" />
             </div>
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700">Rolle</label>
-              <select v-model="newUser.role"
-                class="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2">
+            <div>
+              <label class="dialog-label">Rolle</label>
+              <select v-model="newUser.role" class="dialog-input">
                 <option value="user">User (Kunde)</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
+          </div>
 
-            <div
-              class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 pt-4 border-t border-slate-100">
-              <button type="button" @click="showAddModal = false"
-                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 sm:mt-0">
-                Abbrechen
-              </button>
-              <button type="submit" :disabled="createLoading"
-                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 mb-2 sm:mb-0">
-                <svg v-if="createLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                  </path>
-                </svg>
-                {{ createLoading ? "Wird erstellt..." : "Benutzer erstellen" }}
-              </button>
-            </div>
-          </form>
-        </div>
+          <div class="dialog-footer">
+            <button type="button" class="btn-dialog-cancel" @click="showAddModal = false">
+              Abbrechen
+            </button>
+            <button type="submit" class="btn-dialog-primary" :disabled="createLoading">
+              <svg v-if="createLoading" class="animate-spin -ml-1 mr-2 h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              {{ createLoading ? "Wird erstellt..." : "Benutzer erstellen" }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

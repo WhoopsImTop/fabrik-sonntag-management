@@ -2,39 +2,31 @@
   <Teleport to="body">
   <div>
   <div
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    class="dialog-overlay"
     v-if="modelValue"
+    role="dialog"
+    aria-modal="true"
   >
-    <div
-      class="bg-white rounded-xl p-5 w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">
-          {{ editingRenter ? "Mieter bearbeiten" : "Neuer Mieter" }}
-        </h3>
+    <div class="dialog-panel max-w-2xl">
+      <div class="dialog-header">
+        <div class="min-w-0 flex-1">
+          <h3 class="dialog-title">
+            {{ editingRenter ? "Mieter bearbeiten" : "Neuer Mieter" }}
+          </h3>
+        </div>
         <button
           type="button"
           @click="closeModal"
-          class="p-2 rounded-md hover:bg-neutral-100"
+          class="dialog-close"
+          aria-label="Schließen"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <UiIcon name="i-lucide-x" class="size-5" />
         </button>
       </div>
 
-      <div class="space-y-5">
+      <div class="dialog-body space-y-5">
         <div class="space-y-4">
-          <div class="rounded-lg border border-neutral-200 p-4 space-y-4 bg-neutral-50/40">
+          <div class="rounded-none border border-neutral-200 p-4 space-y-4 bg-neutral-50/40">
             <div>
               <h4 class="text-sm font-semibold text-neutral-900">Stammdaten</h4>
               <p class="text-xs text-neutral-500">
@@ -42,15 +34,15 @@
               </p>
             </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Name</label>
+            <label class="dialog-label">Name</label>
             <input
               v-model="form.name"
               type="text"
               required
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
-          <div class="rounded-md border border-neutral-200 bg-white p-3">
+          <div class="rounded-none border border-neutral-200 bg-white p-3">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <label class="text-sm font-medium text-neutral-900"
@@ -74,63 +66,63 @@
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Betreiber</label>
+            <label class="dialog-label">Betreiber</label>
             <input
               v-model="form.operator"
               type="text"
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Adresse</label>
+            <label class="dialog-label">Adresse</label>
             <textarea
               v-model="form.address"
               rows="2"
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             ></textarea>
           </div>
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium mb-1">Telefon</label>
+              <label class="dialog-label">Telefon</label>
               <input
                 v-model="form.phone"
                 type="tel"
-                class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+                class="dialog-input"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium mb-1">E-Mail</label>
+              <label class="dialog-label">E-Mail</label>
               <input
                 v-model="form.email"
                 type="email"
-                class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+                class="dialog-input"
               />
             </div>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Website</label>
+            <label class="dialog-label">Website</label>
             <input
               v-model="form.website"
               type="url"
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Beschreibung</label>
+            <label class="dialog-label">Beschreibung</label>
             <textarea
               rows="3"
               v-model="form.description"
               type="url"
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             />
           </div>
 
           <div>
-            <label class="block text-sm font-medium mb-1">Haus</label>
+            <label class="dialog-label">Haus</label>
             <select
               @change="updateAreaPoiRelation(form.area.id, selectedHouseId)"
               v-model="selectedHouseId"
-              class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+              class="dialog-input"
             >
               <option
                 v-for="house in allHouses"
@@ -142,7 +134,7 @@
             </select>
           </div>
           <div>
-            <label class="block text-sm font-medium mb-1">Öffnungszeiten</label>
+            <label class="dialog-label">Öffnungszeiten</label>
             <app-custom-input-opening-hours
               :openingHoursProp="form.openingHours"
               class="w-full"
@@ -153,7 +145,7 @@
 
           <!-- Logo Selection -->
           <div>
-            <label class="block text-sm font-medium mb-1">Logo</label>
+            <label class="dialog-label">Logo</label>
             <div class="flex items-center gap-4">
               <div v-if="form.logoId" class="relative w-20 h-20 bg-neutral-200">
                 <img
@@ -164,15 +156,15 @@
                 <button
                   type="button"
                   @click="form.logoId = null"
-                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 w-6 h-6 flex items-center justify-center"
+                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 w-6 h-6 flex items-center justify-center"
                 >
-                  <UIcon name="i-lucide-x" size="16" />
+                  <UiIcon name="i-lucide-x" size="16" />
                 </button>
               </div>
               <button
                 type="button"
                 @click="showLogoSelector = true"
-                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+                class="btn-dialog-primary"
               >
                 {{ form.logoId ? "Logo ändern" : "Logo auswählen" }}
               </button>
@@ -181,9 +173,7 @@
 
           <!-- Marketing Images -->
           <div>
-            <label class="block text-sm font-medium mb-1"
-              >Marketing Bilder</label
-            >
+            <label class="dialog-label">Marketing Bilder</label>
             <div class="space-y-4">
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 <div
@@ -199,16 +189,16 @@
                   <button
                     type="button"
                     @click="removeMarketingImage(imageId)"
-                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center h-6 w-6"
+                    class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 flex items-center justify-center h-6 w-6"
                   >
-                    <UIcon name="i-lucide-x" size="16"> </UIcon>
+                    <UiIcon name="i-lucide-x" size="16"> </UiIcon>
                   </button>
                 </div>
               </div>
               <button
                 type="button"
                 @click="showMarketingImagesSelector = true"
-                class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+                class="btn-dialog-primary"
               >
                 Marketing Bilder hinzufügen
               </button>
@@ -216,7 +206,7 @@
           </div>
         </div>
 
-        <div class="pt-4 border-t">
+        <div class="pt-4 border-t border-neutral-200">
           <div class="flex items-center gap-2 mb-4">
             <h4 class="text-sm font-medium">Flächen Informationen</h4>
             <label class="relative inline-flex items-center cursor-pointer">
@@ -234,23 +224,21 @@
           <div v-if="form.hasArea" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium mb-1"
-                  >Fläche (m²)</label
-                >
+                <label class="dialog-label">Fläche (m²)</label>
                 <input
                   v-model.number="form.area.squaremeters"
                   type="number"
                   step="0.01"
-                  class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+                  class="dialog-input"
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium mb-1">Kosten (€)</label>
+                <label class="dialog-label">Kosten (€)</label>
                 <input
                   v-model.number="form.area.costs"
                   type="number"
                   step="0.01"
-                  class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
+                  class="dialog-input"
                 />
               </div>
             </div>
@@ -263,25 +251,25 @@
               >
                 <button
                   @click="startDrawing"
-                  class="p-2 rounded-md border"
+                  class="p-2 rounded-none border"
                   :class="{ 'bg-yellow-100 border-yellow-500': isDrawing }"
                 >
-                  <UIcon name="i-lucide-pencil" size="24" />
+                  <UiIcon name="i-lucide-pencil" size="24" />
                 </button>
                 <button
                   v-if="isDrawing"
                   @click="confirmDrawing"
-                  class="p-2 rounded-md border bg-green-100 border-green-500 hover:bg-green-200"
+                  class="p-2 rounded-none border bg-green-100 border-green-500 hover:bg-green-200"
                   title="Zeichnung bestätigen"
                 >
-                  <UIcon name="i-lucide-check" size="24" />
+                  <UiIcon name="i-lucide-check" size="24" />
                 </button>
                 <button
                   @click="deleteArea"
-                  class="p-2 rounded-md border hover:bg-red-50 hover:border-red-500"
+                  class="p-2 rounded-none border hover:bg-red-50 hover:border-red-500"
                   v-if="form.area.areaGeoJson"
                 >
-                  <UIcon name="i-lucide-trash" size="24" />
+                  <UiIcon name="i-lucide-trash" size="24" />
                 </button>
               </div>
             </div>
@@ -293,7 +281,7 @@
                 <button
                   type="button"
                   @click="showFloorForm = true"
-                  class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
+                  class="btn-dialog-primary"
                 >
                   Etage hinzufügen
                 </button>
@@ -320,15 +308,15 @@
                     <div class="flex gap-2">
                       <div
                         @click="editFloor(floor)"
-                        class="p-1.5 rounded-md border border-neutral-200 hover:bg-neutral-50"
+                        class="p-1.5 rounded-none border border-neutral-200 hover:bg-neutral-50"
                       >
-                        <UIcon name="i-lucide-edit" size="16" />
+                        <UiIcon name="i-lucide-edit" size="16" />
                       </div>
                       <div
                         @click.stop="deleteFloor(floor.id)"
-                        class="p-1.5 rounded-md border border-neutral-200 hover:bg-neutral-50 text-red-500"
+                        class="p-1.5 rounded-none border border-neutral-200 hover:bg-neutral-50 text-red-500"
                       >
-                        <UIcon name="i-lucide-trash" size="16" />
+                        <UiIcon name="i-lucide-trash" size="16" />
                       </div>
                     </div>
                   </div>
@@ -342,63 +330,72 @@
             <!-- Floor Form Modal -->
             <div
               v-if="showFloorForm"
-              class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+              class="dialog-overlay z-[60]"
+              role="dialog"
+              aria-modal="true"
             >
-              <div class="bg-white rounded-lg p-4 w-full max-w-md">
-                <h3 class="text-lg font-semibold mb-4">
-                  {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
-                </h3>
+              <div class="dialog-panel max-w-md">
+                <div class="dialog-header">
+                  <h3 class="dialog-title">
+                    {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
+                  </h3>
+                  <button
+                    type="button"
+                    class="dialog-close"
+                    aria-label="Schließen"
+                    @click="showFloorForm = false"
+                  >
+                    <UiIcon name="i-lucide-x" class="size-5" />
+                  </button>
+                </div>
 
-                <div @submit.prevent="saveFloor" class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium mb-1">Name</label>
-                    <input
-                      v-model="floorForm.name"
-                      type="text"
-                      required
-                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
-                      placeholder="z.B. Erdgeschoss"
-                    />
-                  </div>
+                <form @submit.prevent="saveFloor">
+                  <div class="dialog-body space-y-4">
+                    <div>
+                      <label class="dialog-label">Name</label>
+                      <input
+                        v-model="floorForm.name"
+                        type="text"
+                        required
+                        class="dialog-input"
+                        placeholder="z.B. Erdgeschoss"
+                      />
+                    </div>
 
-                  <div>
-                    <label class="block text-sm font-medium mb-1">Level</label>
-                    <input
-                      v-model.number="floorForm.level"
-                      type="number"
-                      required
-                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
-                      placeholder="z.B. 0 für EG, 1 für 1.OG, -1 für UG"
-                    />
-                  </div>
+                    <div>
+                      <label class="dialog-label">Level</label>
+                      <input
+                        v-model.number="floorForm.level"
+                        type="number"
+                        required
+                        class="dialog-input"
+                        placeholder="z.B. 0 für EG, 1 für 1.OG, -1 für UG"
+                      />
+                    </div>
 
-                  <div>
-                    <label class="block text-sm font-medium mb-1"
-                      >Beschreibung</label
-                    >
-                    <textarea
-                      v-model="floorForm.description"
-                      rows="3"
-                      class="w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 border-neutral-300"
-                      placeholder="Optionale Beschreibung der Etage"
-                    ></textarea>
+                    <div>
+                      <label class="dialog-label">Beschreibung</label>
+                      <textarea
+                        v-model="floorForm.description"
+                        rows="3"
+                        class="dialog-input"
+                        placeholder="Optionale Beschreibung der Etage"
+                      ></textarea>
+                    </div>
                   </div>
-                  <div class="flex justify-end gap-3">
+                  <div class="dialog-footer">
                     <button
                       type="button"
                       @click="showFloorForm = false"
-                      class="px-3 py-1.5 text-sm bg-neutral-100 rounded-md hover:bg-neutral-200"
+                      class="btn-dialog-cancel"
                     >
                       Abbrechen
                     </button>
-                    <button
-                      type="submit"
-                      class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
-                    >
+                    <button type="submit" class="btn-dialog-primary">
                       {{ editingFloor ? "Speichern" : "Hinzufügen" }}
                     </button>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
 
@@ -431,21 +428,23 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            @click="closeModal"
-            class="px-3 py-1.5 text-sm bg-neutral-100 rounded-md hover:bg-neutral-200"
-          >
-            Abbrechen
-          </button>
-          <button
-            @click="saveRenter"
-            class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
-          >
-            {{ editingRenter ? "Speichern" : "Hinzufügen" }}
-          </button>
-        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button
+          type="button"
+          @click="closeModal"
+          class="btn-dialog-cancel"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="button"
+          @click="saveRenter"
+          class="btn-dialog-primary"
+        >
+          {{ editingRenter ? "Speichern" : "Hinzufügen" }}
+        </button>
       </div>
     </div>
   </div>
@@ -453,70 +452,58 @@
   <!-- Logo Selector Modal -->
   <div
     v-if="showLogoSelector"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+    class="dialog-overlay z-[60]"
+    role="dialog"
+    aria-modal="true"
   >
-    <div
-        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">Logo auswählen</h3>
+    <div class="dialog-panel max-w-4xl">
+      <div class="dialog-header">
+        <h3 class="dialog-title">Logo auswählen</h3>
         <button
           type="button"
           @click="showLogoSelector = false"
-          class="p-2 rounded-md hover:bg-neutral-100"
+          class="dialog-close"
+          aria-label="Schließen"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <UiIcon name="i-lucide-x" class="size-5" />
         </button>
       </div>
-      <MediaLibrary
-        :is-multi-select="false"
-        :initial-selection="form.logoId ? [form.logoId] : []"
-        @images-selected="handleLogoSelection"
-      />
+      <div class="dialog-body">
+        <MediaLibrary
+          :is-multi-select="false"
+          :initial-selection="form.logoId ? [form.logoId] : []"
+          @images-selected="handleLogoSelection"
+        />
+      </div>
     </div>
   </div>
 
   <!-- Marketing Images Selector Modal -->
   <div
     v-if="showMarketingImagesSelector"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]"
+    class="dialog-overlay z-[60]"
+    role="dialog"
+    aria-modal="true"
   >
-    <div
-        class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] overflow-y-auto shadow-xl border border-neutral-200"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold">Marketing Bilder auswählen</h3>
+    <div class="dialog-panel max-w-4xl">
+      <div class="dialog-header">
+        <h3 class="dialog-title">Marketing Bilder auswählen</h3>
         <button
           type="button"
           @click="showMarketingImagesSelector = false"
-          class="p-2 rounded-md hover:bg-neutral-100"
+          class="dialog-close"
+          aria-label="Schließen"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <UiIcon name="i-lucide-x" class="size-5" />
         </button>
       </div>
-      <MediaLibrary
-        :is-multi-select="true"
-        :initial-selection="form.marketingImageIds"
-        @images-selected="handleMarketingImagesSelection"
-      />
+      <div class="dialog-body">
+        <MediaLibrary
+          :is-multi-select="true"
+          :initial-selection="form.marketingImageIds"
+          @images-selected="handleMarketingImagesSelection"
+        />
+      </div>
     </div>
   </div>
   </div>

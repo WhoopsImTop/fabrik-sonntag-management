@@ -1,6 +1,69 @@
-@import "tailwindcss" theme(static);
-@import "@nuxt/ui";
+@import "tailwindcss";
+:root {
+  --ui-primary: hsl(0, 0%, 9%);
+  --ui-text-muted: #6b7280;
+  --ui-border: rgb(229 231 235);
+  --brand-accent: #f5af06;
+}
+
+@theme {
+  --font-sans: "futura-pt", sans-serif;
+  --color-brand-accent: #f5af06;
+}
 
 .btn {
-  @apply text-xs font-bold px-2 py-1.5 rounded-md bg-neutral-900 hover:bg-neutral-700 text-neutral-200 shadow-sm;
+  @apply px-2 py-1.5 text-xs font-bold rounded-none bg-neutral-900 text-neutral-200 shadow-sm hover:bg-neutral-700;
+}
+
+/* Unified dialog system */
+.dialog-overlay {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 p-4 backdrop-blur-sm;
+}
+
+.dialog-panel {
+  @apply relative z-10 flex max-h-[90vh] w-full flex-col overflow-hidden border border-neutral-200 bg-white shadow-xl;
+}
+
+.dialog-header {
+  @apply flex shrink-0 items-start justify-between gap-4 border-b border-neutral-200 px-6 py-4;
+}
+
+.dialog-title {
+  @apply text-lg font-semibold text-neutral-900;
+}
+
+.dialog-desc {
+  @apply mt-0.5 text-sm text-neutral-500;
+}
+
+.dialog-body {
+  @apply flex-1 overflow-y-auto px-6 py-5;
+}
+
+.dialog-footer {
+  @apply flex shrink-0 justify-end gap-3 border-t border-neutral-200 px-6 py-4;
+}
+
+.dialog-close {
+  @apply rounded-none p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700;
+}
+
+.dialog-label {
+  @apply mb-1.5 block text-sm font-medium text-neutral-700;
+}
+
+.dialog-input {
+  @apply w-full rounded-none border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400;
+}
+
+.btn-dialog-cancel {
+  @apply inline-flex items-center justify-center rounded-none border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-50;
+}
+
+.btn-dialog-primary {
+  @apply inline-flex items-center justify-center rounded-none bg-brand-accent px-4 py-2 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95 disabled:opacity-50;
+}
+
+.btn-dialog-danger {
+  @apply inline-flex items-center justify-center rounded-none bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-50;
 }

@@ -2,29 +2,22 @@
   <div>
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-50 overflow-y-auto"
+      class="dialog-overlay overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
       <div
-        class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0"
         @click="$emit('close')"
       ></div>
 
-      <div
-        class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0"
-      >
-        <div
-          class="relative bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-lg w-full border border-slate-100"
-        >
-          <div
-            class="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex justify-between items-center"
-          >
-            <div>
-              <h3 class="text-lg font-semibold text-slate-900">
+      <div class="dialog-panel max-w-lg my-8">
+          <div class="dialog-header">
+            <div class="min-w-0 flex-1">
+              <h3 class="dialog-title">
                 {{ isEdit ? "Buchung bearbeiten" : "Neue Buchung" }}
               </h3>
-              <p class="text-xs text-slate-500 mt-0.5">
+              <p class="dialog-desc">
                 {{
                   isEdit
                     ? "Zeitraum oder Details ändern."
@@ -33,36 +26,23 @@
               </p>
             </div>
             <button
+              type="button"
+              class="dialog-close"
+              aria-label="Schließen"
               @click="$emit('close')"
-              class="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
             >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <UiIcon name="i-lucide-x" class="size-5" />
             </button>
           </div>
 
-          <div class="px-6 py-6 space-y-5">
+          <div class="dialog-body space-y-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label
-                  class="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide"
-                  >Ressource</label
-                >
+                <label class="dialog-label">Ressource</label>
                 <select
                   v-model="form.resourceId"
                   :disabled="isEdit"
-                  class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2.5 disabled:bg-slate-50 disabled:text-slate-500"
+                  class="dialog-input disabled:bg-neutral-50 disabled:text-neutral-500"
                 >
                   <option value="">Wählen...</option>
                   <option
@@ -75,10 +55,7 @@
                 </select>
               </div>
               <div>
-                <label
-                  class="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide"
-                  >Nutzer</label
-                >
+                <label class="dialog-label">Nutzer</label>
                 <div
                   v-if="form.user_id"
                   class="flex items-center justify-between p-2 border border-neutral-200 rounded-md bg-neutral-50"
@@ -119,7 +96,7 @@
                     v-model="userSearchQuery"
                     @input="handleUserSearch"
                     placeholder="Name oder E-Mail suchen..."
-                    class="block w-full text-sm border border-gray-300 rounded-md focus:ring-neutral-900 focus:border-neutral-900 py-2 px-3"
+                    class="dialog-input"
                   />
                   <div
                     v-if="userSearchResults.length > 0"
@@ -173,29 +150,25 @@
             </div>
 
             <div
-              class="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4"
+              class="bg-neutral-50 p-4 rounded-none border border-neutral-200 space-y-4"
             >
               <div class="grid grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-medium text-slate-700 mb-1"
-                    >Startzeit</label
-                  >
+                  <label class="dialog-label">Startzeit</label>
                   <input
                     :value="form.start_at"
                     @input="handleStartChange"
                     type="datetime-local"
-                    class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2 font-mono"
+                    class="dialog-input font-mono"
                   />
                 </div>
                 <div>
-                  <label class="block text-xs font-medium text-slate-700 mb-1"
-                    >Endzeit</label
-                  >
+                  <label class="dialog-label">Endzeit</label>
                   <input
                     :value="form.end_at"
                     @input="handleEndChange"
                     type="datetime-local"
-                    class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2 font-mono"
+                    class="dialog-input font-mono"
                   />
                 </div>
               </div>
@@ -205,27 +178,27 @@
                   <button
                     @click="shiftTime(1, 'day')"
                     type="button"
-                    class="text-xs bg-white border border-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-100 text-slate-600 transition-colors flex items-center gap-1"
+                    class="flex items-center gap-1 border border-neutral-200 bg-white px-2.5 py-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-100"
                   >
                     <span>+1 Tag</span>
                   </button>
                   <button
                     @click="shiftTime(1, 'week')"
                     type="button"
-                    class="text-xs bg-white border border-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-100 text-slate-600 transition-colors flex items-center gap-1"
+                    class="flex items-center gap-1 border border-neutral-200 bg-white px-2.5 py-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-100"
                   >
                     <span>+1 Woche</span>
                   </button>
                   <button
                     @click="shiftTime(1, 'hour')"
                     type="button"
-                    class="text-xs bg-white border border-slate-200 px-2.5 py-1.5 rounded hover:bg-slate-100 text-slate-600 transition-colors flex items-center gap-1"
+                    class="flex items-center gap-1 border border-neutral-200 bg-white px-2.5 py-1.5 text-xs text-neutral-600 transition-colors hover:bg-neutral-100"
                   >
                     <span>+1 Std</span>
                   </button>
                 </div>
                 <div
-                  class="text-xs font-medium text-slate-500 bg-slate-200/50 px-2 py-1 rounded"
+                  class="text-xs font-medium text-neutral-500 bg-neutral-200/50 px-2 py-1 rounded-md"
                 >
                   Dauer: {{ durationString }}
                 </div>
@@ -237,12 +210,12 @@
                 <div class="flex items-center gap-2 text-xs">
                   <span
                     :class="[
-                      'px-2 py-1 rounded-full border text-[11px] font-medium',
+                      'px-2 py-1 rounded-md border text-[11px] font-medium',
                       availabilityStatus === 'available'
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                         : availabilityStatus === 'unavailable'
                           ? 'bg-red-50 text-red-600 border-red-200'
-                          : 'bg-slate-50 text-slate-500 border-slate-200',
+                          : 'bg-neutral-50 text-neutral-500 border-neutral-200',
                     ]"
                   >
                     <span v-if="checkingAvailability">Pruefung...</span>
@@ -254,7 +227,7 @@
                     >
                     <span v-else>Verfuegbarkeit</span>
                   </span>
-                  <span class="text-slate-500" v-if="availabilityMessage">{{
+                  <span class="text-neutral-500" v-if="availabilityMessage">{{
                     availabilityMessage
                   }}</span>
                 </div>
@@ -263,14 +236,11 @@
 
             <div class="space-y-3">
               <div>
-                <label
-                  class="block text-xs font-medium text-slate-700 mb-1.5 uppercase tracking-wide"
-                  >Tarif</label
-                >
+                <label class="dialog-label">Tarif</label>
                 <select
                   v-model="form.pricingPlanId"
                   @change="tariffManuallySelected = true"
-                  class="w-full bg-white border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-slate-900 focus:border-slate-900 block p-2.5"
+                  class="dialog-input"
                 >
                   <option value="">Standard (Manuell)</option>
                   <option v-for="p in availablePlans" :key="p.id" :value="p.id">
@@ -279,7 +249,7 @@
                 </select>
                 <p
                   v-if="suggestedPlanLabel"
-                  class="text-xs text-slate-500 mt-1"
+                  class="text-xs text-neutral-500 mt-1"
                 >
                   Vorschlag nach Dauer: {{ suggestedPlanLabel }}
                 </p>
@@ -288,15 +258,13 @@
 
             <div
               v-if="isEdit"
-              class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100"
+              class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-200"
             >
               <div>
-                <label class="block text-xs font-medium text-slate-700 mb-1"
-                  >Status</label
-                >
+                <label class="dialog-label">Status</label>
                 <select
                   v-model="form.status"
-                  class="w-full border border-slate-200 rounded-lg text-sm p-2 focus:ring-slate-900 focus:border-slate-900"
+                  class="dialog-input"
                 >
                   <option value="CONFIRMED">Bestätigt</option>
                   <option value="PENDING">Ausstehend</option>
@@ -304,32 +272,30 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-700 mb-1"
-                  >Preis (Override)</label
-                >
+                <label class="dialog-label">Preis (Override)</label>
                 <input
                   v-model.number="form.manual_price"
                   type="number"
                   step="0.01"
-                  class="w-full border border-slate-200 rounded-lg text-sm p-2"
+                  class="dialog-input"
                 />
               </div>
             </div>
           </div>
 
-          <div
-            class="bg-slate-50 px-6 py-4 flex justify-end gap-3 border-t border-slate-100"
-          >
+          <div class="dialog-footer">
             <button
+              type="button"
+              class="btn-dialog-cancel"
               @click="$emit('close')"
-              class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
             >
               Abbrechen
             </button>
             <button
-              @click="submit"
+              type="button"
+              class="btn-dialog-primary"
               :disabled="!canSubmit"
-              class="px-4 py-2 text-sm font-medium text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              @click="submit"
             >
               <span
                 v-if="loading"
@@ -339,219 +305,180 @@
             </button>
           </div>
         </div>
-      </div>
     </div>
 
     <div
       v-if="showAddModal"
-      class="fixed inset-0 z-90 flex items-center justify-center p-4 sm:p-0"
+      class="dialog-overlay z-[90]"
+      role="dialog"
+      aria-modal="true"
     >
       <div
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        class="absolute inset-0"
         @click="showAddModal = false"
       ></div>
 
-      <div
-        class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200"
-      >
-        <button
-          @click="showAddModal = false"
-          class="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="h-4 w-4"
+      <div class="dialog-panel max-w-lg">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h2 class="dialog-title">Neuen Benutzer anlegen</h2>
+            <p class="dialog-desc">Erstellen Sie einen neuen Benutzer.</p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="showAddModal = false"
           >
-            <path d="M18 6 6 18"></path>
-            <path d="m6 6 12 12"></path>
-          </svg>
-          <span class="sr-only">Schließen</span>
-        </button>
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
 
-        <div class="p-6">
-          <h2
-            class="text-lg font-semibold text-slate-900 leading-none tracking-tight mb-1"
-          >
-            Neuen Benutzer anlegen
-          </h2>
-          <p class="text-sm text-slate-500 mb-6">
-            Erstellen Sie einen neuen Benutzer.
-          </p>
-
-          <form @submit.prevent="createUser" class="space-y-4">
+        <form @submit.prevent="createUser">
+          <div class="dialog-body space-y-4">
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Vorname</label
-                >
+              <div>
+                <label class="dialog-label">Vorname</label>
                 <input
                   v-model="newUser.details.first_name"
                   type="text"
                   placeholder="Vorname"
                   required
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Nachname</label
-                >
+              <div>
+                <label class="dialog-label">Nachname</label>
                 <input
                   v-model="newUser.details.last_name"
                   type="text"
                   placeholder="Nachname"
                   required
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >E-Mail</label
-                >
+              <div>
+                <label class="dialog-label">E-Mail</label>
                 <input
                   v-model="newUser.email"
                   type="email"
                   placeholder="Email"
                   required
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Handynummer</label
-                >
+              <div>
+                <label class="dialog-label">Handynummer</label>
                 <input
                   v-model="newUser.details.mobile_number"
                   type="text"
                   placeholder="+49152"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Straße</label
-                >
+              <div>
+                <label class="dialog-label">Straße</label>
                 <input
                   v-model="newUser.details.street"
                   type="text"
-                  placeholder="Kiefernweg"                  
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  placeholder="Kiefernweg"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Hausnummer</label
-                >
+              <div>
+                <label class="dialog-label">Hausnummer</label>
                 <input
                   v-model="newUser.details.house_number"
                   type="text"
                   placeholder="12"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Plz</label
-                >
+              <div>
+                <label class="dialog-label">Plz</label>
                 <input
                   v-model="newUser.details.zip_code"
                   type="text"
                   placeholder="79183"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Stadt</label
-                >
+              <div>
+                <label class="dialog-label">Stadt</label>
                 <input
                   v-model="newUser.details.city"
                   type="text"
                   placeholder="Waldkirch"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700"
-                  >Land</label
-                >
+              <div>
+                <label class="dialog-label">Land</label>
                 <input
                   v-model="newUser.details.country"
                   type="text"
                   placeholder="Deutschland"
-                  class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                  class="dialog-input"
                 />
               </div>
             </div>
 
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-slate-700"
-                >Unternehmen</label
-              >
+            <div>
+              <label class="dialog-label">Unternehmen</label>
               <input
                 v-model="newUser.details.company"
                 type="text"
                 placeholder="Firma"
-                class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2"
+                class="dialog-input"
               />
             </div>
+          </div>
 
-            <div
-              class="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6 pt-4 border-t border-slate-100"
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn-dialog-cancel"
+              @click="showAddModal = false"
             >
-              <button
-                type="button"
-                @click="showAddModal = false"
-                class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 sm:mt-0"
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              class="btn-dialog-primary"
+              :disabled="createLoading"
+            >
+              <svg
+                v-if="createLoading"
+                class="animate-spin -ml-1 mr-2 h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
               >
-                Abbrechen
-              </button>
-              <button
-                type="submit"
-                :disabled="createLoading"
-                class="inline-flex items-center justify-center rounded-md bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:opacity-50 mb-2 sm:mb-0"
-              >
-                <svg
-                  v-if="createLoading"
-                  class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    class="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                  ></circle>
-                  <path
-                    class="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                {{ createLoading ? "Wird erstellt..." : "Benutzer erstellen" }}
-              </button>
-            </div>
-          </form>
-        </div>
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              {{ createLoading ? "Wird erstellt..." : "Benutzer erstellen" }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -567,6 +494,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits(["close", "saved"]);
 const api = useBookingApi();
+const { confirm } = useConfirm();
 
 const loading = ref(false);
 const checkingAvailability = ref(false);
@@ -1167,6 +1095,48 @@ const submit = async () => {
     alert("Der gewählte Zeitraum ist nicht verfügbar.");
     return;
   }
+
+  const resourceName =
+    resources.value.find((r: any) => r.id == form.value.resourceId)?.name ||
+    "Buchung";
+  const startLabel = form.value.start_at
+    ? new Date(form.value.start_at).toLocaleString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+  const endLabel = form.value.end_at
+    ? new Date(form.value.end_at).toLocaleString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+  const rangeLabel =
+    startLabel && endLabel ? `${startLabel} – ${endLabel}` : startLabel;
+
+  const confirmed = await confirm(
+    isEdit.value
+      ? {
+          title: "Änderungen speichern?",
+          message: `Änderungen an „${resourceName}“ (${rangeLabel}) wirklich speichern?`,
+          confirmLabel: "Speichern",
+          variant: "warning",
+        }
+      : {
+          title: "Buchung anlegen?",
+          message: `Neue Buchung für „${resourceName}“ am ${rangeLabel} speichern?`,
+          confirmLabel: "Anlegen",
+          variant: "default",
+        },
+  );
+  if (!confirmed) return;
+
   loading.value = true;
   try {
     if (isEdit.value) {

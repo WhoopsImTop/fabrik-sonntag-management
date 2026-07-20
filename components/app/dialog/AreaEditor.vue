@@ -1,44 +1,36 @@
 <template>
   <div
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+    class="dialog-overlay"
     v-if="modelValue"
+    role="dialog"
+    aria-modal="true"
   >
-    <div
-      class="bg-white rounded-xl p-5 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden shadow-xl border border-neutral-200"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-lg font-semibold">Fläche bearbeiten</h3>
-          <p class="text-sm text-neutral-500">{{ poi?.name }}</p>
+    <div class="dialog-panel max-w-4xl">
+      <div class="dialog-header">
+        <div class="min-w-0 flex-1">
+          <h3 class="dialog-title">Fläche bearbeiten</h3>
+          <p class="dialog-desc">{{ poi?.name }}</p>
         </div>
         <button
           type="button"
           @click="closeModal"
-          class="p-2 rounded-md hover:bg-neutral-100"
+          class="dialog-close"
+          aria-label="Schließen"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-5 h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <UiIcon name="i-lucide-x" class="size-5" />
         </button>
       </div>
 
-      <div class="flex gap-4 flex-1 min-h-0">
+      <div class="dialog-body flex gap-4 min-h-0 !overflow-hidden">
         <!-- Map Area -->
-        <div class="flex-1 border rounded-lg overflow-hidden relative">
+        <div class="flex-1 border rounded-lg overflow-hidden relative min-h-[400px]">
           <div ref="mapContainer" class="w-full h-full"></div>
 
           <!-- Drawing Controls -->
           <div class="absolute top-4 right-4 flex gap-2">
             <button
               @click="startDrawing"
-              class="p-2 bg-white rounded-md shadow hover:bg-neutral-50"
+              class="p-2 bg-white rounded-none shadow hover:bg-neutral-50"
               :class="{ 'bg-yellow-100': isDrawing }"
             >
               <svg
@@ -58,7 +50,7 @@
             <button
               v-if="hasArea"
               @click="deleteArea"
-              class="p-2 bg-white rounded-md shadow hover:bg-red-50 text-red-500"
+              class="p-2 bg-white rounded-none shadow hover:bg-red-50 text-red-500"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -83,12 +75,10 @@
 
           <!-- Floor Selection -->
           <div class="mb-4">
-            <label class="block text-sm font-medium mb-2"
-              >Etage auswählen</label
-            >
+            <label class="dialog-label">Etage auswählen</label>
             <select
               v-model="selectedFloorId"
-              class="w-full p-2 border rounded-md"
+              class="dialog-input"
               @change="handleFloorSelection"
             >
               <option value="">Keine Etage ausgewählt</option>
@@ -157,7 +147,7 @@
 
           <button
             @click="showFloorForm = true"
-            class="mt-4 w-full py-2 px-4 bg-yellow-400 rounded-md hover:bg-yellow-500 text-sm font-medium"
+            class="btn-dialog-primary mt-4 w-full"
           >
             Etage hinzufügen
           </button>
@@ -168,60 +158,69 @@
     <!-- Floor Form Modal -->
     <div
       v-if="showFloorForm"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      class="dialog-overlay z-[60]"
+      role="dialog"
+      aria-modal="true"
     >
-      <div
-        class="bg-white rounded-xl p-5 w-full max-w-md shadow-xl border border-neutral-200 max-h-[92vh] overflow-y-auto"
-      >
-        <h3 class="text-lg font-semibold mb-4">
-          {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
-        </h3>
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <h3 class="dialog-title">
+            {{ editingFloor ? "Etage bearbeiten" : "Neue Etage" }}
+          </h3>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="showFloorForm = false"
+          >
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
 
-        <form @submit.prevent="saveFloor" class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Name</label>
-            <input
-              v-model="floorForm.name"
-              type="text"
-              required
-              class="w-full p-2 border rounded-md"
-              placeholder="z.B. Erdgeschoss"
-            />
+        <form @submit.prevent="saveFloor">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Name</label>
+              <input
+                v-model="floorForm.name"
+                type="text"
+                required
+                class="dialog-input"
+                placeholder="z.B. Erdgeschoss"
+              />
+            </div>
+
+            <div>
+              <label class="dialog-label">Level</label>
+              <input
+                v-model.number="floorForm.level"
+                type="number"
+                required
+                class="dialog-input"
+                placeholder="z.B. 0 für EG, 1 für 1.OG, -1 für UG"
+              />
+            </div>
+
+            <div>
+              <label class="dialog-label">Beschreibung</label>
+              <textarea
+                v-model="floorForm.description"
+                rows="3"
+                class="dialog-input"
+                placeholder="Optionale Beschreibung der Etage"
+              ></textarea>
+            </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1">Level</label>
-            <input
-              v-model.number="floorForm.level"
-              type="number"
-              required
-              class="w-full p-2 border rounded-md"
-              placeholder="z.B. 0 für EG, 1 für 1.OG, -1 für UG"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium mb-1">Beschreibung</label>
-            <textarea
-              v-model="floorForm.description"
-              rows="3"
-              class="w-full p-2 border rounded-md"
-              placeholder="Optionale Beschreibung der Etage"
-            ></textarea>
-          </div>
-
-          <div class="flex justify-end gap-3">
+          <div class="dialog-footer">
             <button
               type="button"
               @click="showFloorForm = false"
-              class="px-3 py-1.5 text-sm bg-neutral-100 rounded-md hover:bg-neutral-200"
+              class="btn-dialog-cancel"
             >
               Abbrechen
             </button>
-            <button
-              type="submit"
-              class="px-3 py-1.5 text-sm bg-yellow-400 rounded-md hover:bg-yellow-500"
-            >
+            <button type="submit" class="btn-dialog-primary">
               {{ editingFloor ? "Speichern" : "Hinzufügen" }}
             </button>
           </div>

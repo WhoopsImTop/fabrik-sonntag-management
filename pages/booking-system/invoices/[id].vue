@@ -1,25 +1,25 @@
 <template>
   <div v-if="loading" class="flex justify-center flex-col gap-4 items-center min-h-[50vh]">
-    <svg class="animate-spin w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24">
+    <svg class="animate-spin w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
       <path class="opacity-75" fill="currentColor"
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
       </path>
     </svg>
-    <p class="text-sm font-medium text-slate-500 animate-pulse">Lade Daten...</p>
+    <p class="text-sm font-medium text-neutral-500 animate-pulse">Lade Daten...</p>
   </div>
 
   <div v-else-if="!invoice" class="text-center py-12">
-    <h2 class="text-xl font-semibold text-slate-900">Rechnung nicht gefunden</h2>
-    <button @click="router.back()" class="mt-4 text-blue-600 hover:underline">Zurück</button>
+    <h2 class="text-xl font-semibold text-neutral-900">Rechnung nicht gefunden</h2>
+    <button @click="router.back()" class="mt-4 text-brand-accent underline underline-offset-2 hover:brightness-90">Zurück</button>
   </div>
 
-  <div v-else class="max-w-7xl mx-auto space-y-6 pb-24 font-sans text-slate-900">
+  <div v-else class="max-w-7xl mx-auto space-y-6 pb-24 font-sans text-neutral-900">
     <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <button @click="router.back()"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-slate-100 text-slate-500 transition-colors">
+            class="inline-flex h-8 w-8 items-center justify-center rounded-none hover:bg-neutral-100 text-neutral-500 transition-colors">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -27,7 +27,7 @@
           <div class="flex items-center gap-3">
             <h2 class="text-2xl font-semibold tracking-tight">{{ invoice.invoice_number }}</h2>
             <span :class="[
-              'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+              'inline-flex items-center rounded-none border px-2.5 py-0.5 text-xs font-semibold transition-colors',
               getStatusClass(invoice.status),
             ]">
               {{ getStatusLabel(invoice.status) }}
@@ -38,13 +38,11 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <template v-if="isEditing && isDraft">
-          <button @click="toggleEditMode"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50">
+          <button type="button" class="btn-dialog-cancel" @click="toggleEditMode">
             Abbrechen
           </button>
-          <button @click="saveInvoice" :disabled="saving"
-            class="inline-flex h-9 items-center justify-center rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-slate-50 shadow transition-colors hover:bg-slate-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 gap-2">
-            <svg v-if="saving" class="animate-spin h-4 w-4" viewBox="0 0 24 24">
+          <button type="button" class="btn-dialog-primary" :disabled="saving" @click="saveInvoice">
+            <svg v-if="saving" class="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor"
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
@@ -54,32 +52,51 @@
           </button>
         </template>
         <template v-else>
-          <button @click="handleDownload"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 gap-2">
+          <button type="button" class="btn-dialog-cancel gap-2" @click="handleDownload">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             PDF Laden
           </button>
-          <button v-if="!isStorno" @click="sendInvoiceEmail"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950">
+          <button
+            v-if="!isStorno"
+            type="button"
+            class="btn-dialog-primary"
+            @click="openEmailPreview"
+          >
             Email senden
           </button>
-          <button v-if="isLockedAfterSend && invoice.status !== 'PAID'" @click="markInvoicePaid"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-800 shadow-sm transition-colors hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500">
+          <button
+            v-if="isLockedAfterSend && invoice.status !== 'PAID'"
+            type="button"
+            class="btn-dialog-cancel border-emerald-200 text-emerald-800 hover:bg-emerald-50"
+            @click="markInvoicePaid"
+          >
             Als bezahlt markieren
           </button>
-          <button v-if="canStornoInvoice" @click="stornoInvoice"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-amber-200 bg-white px-4 py-2 text-sm font-medium text-amber-900 shadow-sm transition-colors hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500">
+          <button
+            v-if="canStornoInvoice"
+            type="button"
+            class="btn-dialog-cancel border-amber-200 text-amber-900 hover:bg-amber-50"
+            @click="stornoInvoice"
+          >
             Stornieren
           </button>
-          <button v-if="isDraft" @click="toggleEditMode"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950">
+          <button
+            v-if="isDraft"
+            type="button"
+            class="btn-dialog-cancel"
+            @click="toggleEditMode"
+          >
             Bearbeiten
           </button>
-          <button v-if="canDeleteInvoice" @click="handleDelete"
-            class="inline-flex h-9 items-center justify-center rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm transition-colors hover:bg-red-50 hover:text-red-700 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500">
+          <button
+            v-if="canDeleteInvoice"
+            type="button"
+            class="btn-dialog-danger"
+            @click="handleDelete"
+          >
             Löschen
           </button>
         </template>
@@ -87,17 +104,17 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      <div class="lg:col-span-1 border border-slate-200 bg-white text-slate-950 shadow-sm rounded-lg">
+      <div class="lg:col-span-1 border border-neutral-200 bg-white text-neutral-950 ">
         <div class="flex flex-col space-y-1.5 p-6 pb-4">
           <div class="flex items-center justify-between">
             <h3 class="font-semibold leading-none tracking-tight">Kunde</h3>
             <span v-if="form.user_id || invoice.User"
-              class="inline-flex items-center rounded-md border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 transition-colors">Ausgewählt</span>
+              class="inline-flex items-center rounded-none border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 transition-colors">Ausgewählt</span>
             <span v-else
-              class="inline-flex items-center rounded-md border border-slate-200 px-2.5 py-0.5 text-xs font-semibold bg-slate-100 text-slate-500 transition-colors">Gast
+              class="inline-flex items-center rounded-none border border-neutral-200 px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500 transition-colors">Gast
               / Manuell</span>
           </div>
-          <p class="text-sm text-slate-500">
+          <p class="text-sm text-neutral-500">
             {{ isEditing && isDraft ? 'Kundenkonto auswählen oder entfernen.' : 'Zugewiesener Kunde dieser Rechnung.' }}
           </p>
         </div>
@@ -109,41 +126,41 @@
                 Kunden suchen
               </label>
               <div v-if="form.user_id"
-                class="flex items-center justify-between p-2 rounded-md border border-slate-200 bg-slate-50">
+                class="flex items-center justify-between p-2 rounded-none border border-neutral-200 bg-neutral-50">
                 <div class="flex flex-col overflow-hidden">
                   <span class="text-sm font-medium truncate">{{ form.user_preview?.username || "User ID: " +
                     form.user_id }}</span>
-                  <span class="text-xs text-slate-500 truncate">{{ form.user_preview?.email || "..." }}</span>
+                  <span class="text-xs text-neutral-500 truncate">{{ form.user_preview?.email || "..." }}</span>
                 </div>
                 <button @click="removeUser"
-                  class="text-slate-400 hover:text-red-500 p-1 rounded-md hover:bg-red-50 transition-colors">
+                  class="text-neutral-400 hover:text-red-500 p-1 rounded-none hover:bg-red-50 transition-colors">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               <div v-else class="relative group">
-                <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" fill="none" stroke="currentColor"
+                <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
                   viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input type="text" v-model="userSearchQuery" @input="handleUserSearch"
-                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 pl-9 text-sm shadow-sm transition-colors placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm shadow-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Name oder E-Mail..." />
 
                 <div v-if="userSearchResults.length > 0"
-                  class="absolute z-50 mt-1 w-[calc(100%-0rem)] rounded-md border border-slate-200 bg-white text-slate-950 shadow-md outline-none">
+                  class="absolute z-50 mt-1 w-[calc(100%-0rem)] rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
                   <div class="max-h-60 overflow-y-auto p-1">
                     <div v-for="user in userSearchResults" :key="user.id" @click="selectUser(user)"
-                      class="relative flex cursor-pointer select-none flex-col rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 hover:text-slate-900">
+                      class="relative flex cursor-pointer select-none flex-col rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                       <span class="font-medium">{{ user.username }}</span>
-                      <span class="text-xs text-slate-500">{{ user.email }}</span>
+                      <span class="text-xs text-neutral-500">{{ user.email }}</span>
                     </div>
                   </div>
                 </div>
                 <div v-if="isSearchingUsers" class="absolute right-3 top-2.5">
-                  <svg class="animate-spin w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24">
+                  <svg class="animate-spin w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor"
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
@@ -156,15 +173,15 @@
           <template v-else>
             <div v-if="invoice.User" class="flex items-center gap-3">
               <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-900">
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-900">
                 {{ invoice.User.username?.substring(0, 2).toUpperCase() }}
               </div>
               <div class="overflow-hidden">
-                <p class="text-sm font-medium text-slate-900 truncate">{{ invoice.User.username }}</p>
-                <p class="text-xs text-slate-500 truncate">{{ invoice.User.email }}</p>
+                <p class="text-sm font-medium text-neutral-900 truncate">{{ invoice.User.username }}</p>
+                <p class="text-xs text-neutral-500 truncate">{{ invoice.User.email }}</p>
               </div>
             </div>
-            <div v-else class="text-sm text-slate-500 italic">
+            <div v-else class="text-sm text-neutral-500 italic">
               Gast / Manuell
             </div>
           </template>
@@ -172,53 +189,53 @@
       </div>
 
       <div class="lg:col-span-2 space-y-6">
-        <div class="border border-slate-200 bg-white text-slate-950 shadow-sm rounded-lg">
-          <div class="flex flex-col space-y-1.5 p-6 pb-4 border-b border-slate-100">
+        <div class="border border-neutral-200 bg-white text-neutral-950 ">
+          <div class="flex flex-col space-y-1.5 p-6 pb-4 border-b border-neutral-100">
             <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
           </div>
           <div class="p-6 space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Status</label>
+                <label class="text-sm font-medium leading-none text-neutral-700">Status</label>
                 <select v-if="isEditing && isDraft" v-model="form.status"
-                  class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50">
+                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
                   <option value="DRAFT">Entwurf</option>
                   <option value="SENT">Versendet</option>
                   <option value="PAID">Bezahlt</option>
                   <option value="OVERDUE">Überfällig</option>
                 </select>
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500 shadow-sm">
                   {{ getStatusLabel(invoice.status) }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Rechnungsdatum</label>
+                <label class="text-sm font-medium leading-none text-neutral-700">Rechnungsdatum</label>
                 <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
-                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
                   {{ formatDate(invoice.invoice_date || invoice.createdAt) }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Fälligkeitsdatum</label>
+                <label class="text-sm font-medium leading-none text-neutral-700">Fälligkeitsdatum</label>
                 <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
-                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
                   {{ formatDate(invoice.due_date) }}
                 </div>
               </div>
 
               <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-slate-700">Zahlungsziel (Tage)</label>
+                <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel (Tage)</label>
                 <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
-                  class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
                   {{ invoice.days_to_pay ?? form.days_to_pay }}
                 </div>
               </div>
@@ -227,11 +244,11 @@
           </div>
         </div>
 
-        <div class="border border-slate-200 bg-white text-slate-950 shadow-sm rounded-lg">
-          <div class="flex items-center justify-between p-6 pb-4 border-b border-slate-100">
+        <div class="border border-neutral-200 bg-white text-neutral-950 ">
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
             <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
             <button v-if="isEditing && isDraft" @click="addItem"
-              class="inline-flex h-8 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-xs font-medium shadow-sm transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 gap-1.5">
+              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium shadow-sm transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -241,73 +258,73 @@
 
           <div class="w-full">
             <table class="w-full caption-bottom text-sm">
-              <thead class="[&_tr]:border-b border-slate-200">
-                <tr class="border-b transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
-                  <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-slate-500 w-[35%]">Beschreibung</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-1 text-left align-middle font-medium text-slate-500 w-[15%]">Einheit</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-slate-500 w-[14%]">MwSt.</th>
-                  <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-slate-500 w-[14%]">Gesamt</th>
+              <thead class="[&_tr]:border-b border-neutral-200">
+                <tr class="border-b transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
+                  <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[35%]">Beschreibung</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[10%]">Menge</th>
+                  <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[15%]">Einheit</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]">Preis (€)</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[14%]">MwSt.</th>
+                  <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-neutral-500 w-[14%]">Gesamt</th>
                   <th v-if="isEditing && isDraft" class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
-                  <tr class="transition-colors hover:bg-slate-50/50 group">
+                  <tr class="transition-colors hover:bg-neutral-50/50 group">
                     <td class="pl-4 pr-1 py-2 align-middle relative">
                       <div v-if="isEditing && isDraft" class="relative">
                         <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
-                          class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-slate-400 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                          class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                           placeholder="Leistung eingeben..." />
 
                         <div v-if="focusedRowIndex === index && suggestions.length > 0"
-                          class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-md border border-slate-200 bg-white shadow-md outline-none"
+                          class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-none border border-neutral-200 bg-white shadow-md outline-none"
                           @mousedown.prevent>
                           <div class="p-1 max-h-60 overflow-y-auto">
                             <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
-                              class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-slate-100 hover:text-slate-900">
+                              class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                               <div class="flex flex-col">
                                 <span class="font-medium">{{ sugg.label }}</span>
-                                <span class="text-[10px] text-slate-500 uppercase">{{ sugg.type }}</span>
+                                <span class="text-[10px] text-neutral-500 uppercase">{{ sugg.type }}</span>
                               </div>
-                              <span class="font-medium text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded">{{
+                              <span class="font-medium text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded">{{
                                 formatMoney(sugg.price) }} €</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <span v-else class="font-medium text-slate-900 block">{{ item.description }}</span>
+                      <span v-else class="font-medium text-neutral-900 block">{{ item.description }}</span>
                     </td>
 
                     <td class="p-1 align-middle text-right">
                       <input v-if="isEditing && isDraft" type="number" v-model="item.quantity" min="1"
-                        class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white" />
-                      <span v-else class="text-slate-600 block">{{ item.quantity }}</span>
+                        class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white" />
+                      <span v-else class="text-neutral-600 block">{{ item.quantity }}</span>
                     </td>
 
                     <td class="p-1 align-middle text-left">
                       <input v-if="isEditing && isDraft" type="text" v-model="item.unit"
-                        class="flex h-9 w-full rounded-md border border-neutral-200 px-3 py-1 text-sm text-slate-500 focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm text-neutral-500 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
-                      <span v-else class="text-slate-500 block">{{ item.unit || '-' }}</span>
+                      <span v-else class="text-neutral-500 block">{{ item.unit || '-' }}</span>
                     </td>
 
                     <td class="p-1 align-middle text-right">
                       <input v-if="isEditing && isDraft" type="number" v-model="item.amount" step="0.01"
-                        class="flex h-9 w-full text-right rounded-md border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-slate-300 focus:bg-white"
+                        class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                         placeholder="0.00" />
-                      <span v-else class="text-slate-900 block">{{ formatMoney(item.amount) }} €</span>
+                      <span v-else class="text-neutral-900 block">{{ formatMoney(item.amount) }} €</span>
                     </td>
 
                     <td class="p-1 align-middle text-right">
                       <select v-if="isEditing && isDraft" v-model="item.vat_rate"
-                        class="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-950">
+                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
                         <option :value="0">0%</option>
                         <option :value="0.07">7%</option>
                         <option :value="0.19">19%</option>
                       </select>
-                      <span v-else class="text-slate-600 block">{{ formatVatPercent(parseVatRateFromApi(item.vat_rate))
+                      <span v-else class="text-neutral-600 block">{{ formatVatPercent(parseVatRateFromApi(item.vat_rate))
                         }}%</span>
                     </td>
 
@@ -317,7 +334,7 @@
 
                     <td v-if="isEditing && isDraft" class="p-4 align-middle text-center relative">
                       <button @click="removeItem(index)"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-none text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                         title="Löschen">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -328,15 +345,15 @@
                   </tr>
 
                   <tr v-if="(isEditing && isDraft) || item.long_description"
-                    class="border-b border-slate-100 transition-colors hover:bg-slate-50/50">
+                    class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/50">
                     <td :colspan="(isEditing && isDraft) ? 7 : 6" class="px-4 pb-1 pt-0">
                       <div>
                         <textarea v-if="isEditing && isDraft" v-model="item.long_description"
                           placeholder="Zusätzliche Beschreibung (optional)..."
-                          class="w-full rounded-md border border-slate-200 bg-white/50 p-2 text-sm text-slate-600 focus-visible:outline-none focus:border-slate-300 focus:bg-white transition-all"
+                          class="w-full rounded-none border border-neutral-200 bg-white/50 p-2 text-sm text-neutral-600 focus-visible:outline-none focus:border-neutral-300 focus:bg-white transition-all"
                           rows="2"></textarea>
                         <p v-else-if="item.long_description"
-                          class="text-xs text-slate-500 whitespace-pre-wrap leading-relaxed">
+                          class="text-xs text-neutral-500 whitespace-pre-wrap leading-relaxed">
                           {{ item.long_description }}
                         </p>
                       </div>
@@ -345,29 +362,29 @@
                 </template>
 
                 <tr v-if="isEditing && isDraft && form.items.length === 0">
-                  <td colspan="7" class="p-8 text-center text-sm text-slate-500">
+                  <td colspan="7" class="p-8 text-center text-sm text-neutral-500">
                     Keine Positionen vorhanden. <button @click="addItem"
-                      class="text-slate-900 font-medium hover:underline">Erste Zeile hinzufügen</button>
+                      class="text-neutral-900 font-medium hover:underline">Erste Zeile hinzufügen</button>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="bg-slate-50 border-t border-slate-200 p-4 pb-6 rounded-b-lg">
+          <div class="border-t border-neutral-200 bg-neutral-50 p-4 pb-6">
             <div class="flex justify-end pr-10">
               <div class="w-full max-w-md space-y-2">
-                <div class="flex justify-between text-sm text-slate-500">
+                <div class="flex justify-between text-sm text-neutral-500">
                   <span>Netto</span>
-                  <span class="font-medium text-slate-900">{{ formatMoney(totals.net) }} €</span>
+                  <span class="font-medium text-neutral-900">{{ formatMoney(totals.net) }} €</span>
                 </div>
                 <div v-for="row in totals.taxByRate" :key="row.rate"
-                  class="flex justify-between gap-3 text-sm text-slate-500">
+                  class="flex justify-between gap-3 text-sm text-neutral-500">
                   <span class="text-left leading-snug">Umsatzsteuer {{ formatVatPercent(row.rate) }}% (aus {{
                     formatMoney(row.net) }} € netto)</span>
-                  <span class="font-medium text-slate-900 shrink-0">{{ formatMoney(row.amount) }} €</span>
+                  <span class="font-medium text-neutral-900 shrink-0">{{ formatMoney(row.amount) }} €</span>
                 </div>
-                <div class="flex justify-between pt-2 border-t border-slate-200 mt-2 font-semibold text-base">
+                <div class="flex justify-between pt-2 border-t border-neutral-200 mt-2 font-semibold text-base">
                   <span>Gesamtbetrag</span>
                   <span>{{ formatMoney(totals.gross) }} €</span>
                 </div>
@@ -378,6 +395,89 @@
       </div>
     </div>
   </div>
+
+  <!-- Email send dialog with PDF preview -->
+  <Teleport to="body">
+    <div
+      v-if="showEmailPreview"
+      class="dialog-overlay z-[100]"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="absolute inset-0" @click="closeEmailPreview" />
+      <div class="dialog-panel max-w-3xl">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h3 class="dialog-title">Rechnung per E-Mail senden</h3>
+            <p class="dialog-desc">
+              Vorschau der PDF-Rechnung vor dem Versand an
+              <strong class="text-neutral-900">{{ emailRecipientLabel }}</strong>
+            </p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="closeEmailPreview"
+          >
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
+
+        <div class="dialog-body !py-4">
+          <div
+            v-if="emailPreviewLoading"
+            class="flex min-h-[420px] flex-col items-center justify-center gap-3 text-sm text-neutral-500"
+          >
+            <svg class="h-8 w-8 animate-spin text-neutral-400" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            PDF wird geladen…
+          </div>
+          <div
+            v-else-if="emailPreviewError"
+            class="flex min-h-[200px] items-center justify-center border border-red-200 bg-red-50 px-4 py-6 text-sm text-red-700"
+          >
+            {{ emailPreviewError }}
+          </div>
+          <iframe
+            v-else-if="emailPreviewUrl"
+            :src="emailPreviewUrl"
+            title="Rechnungsvorschau"
+            class="h-[60vh] w-full border border-neutral-200 bg-neutral-50"
+          />
+        </div>
+
+        <div class="dialog-footer">
+          <button
+            type="button"
+            class="btn-dialog-cancel"
+            :disabled="emailSending"
+            @click="closeEmailPreview"
+          >
+            Abbrechen
+          </button>
+          <button
+            type="button"
+            class="btn-dialog-primary"
+            :disabled="emailSending || emailPreviewLoading || !!emailPreviewError"
+            @click="confirmSendInvoiceEmail"
+          >
+            <span
+              v-if="emailSending"
+              class="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
+            />
+            {{ emailSending ? "Wird gesendet…" : "Jetzt senden" }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -503,9 +603,9 @@ const getStatusClass = (s: string) =>
     PARTIALLY_PAID: "border-purple-200 bg-purple-100 text-purple-800",
     SENT: "border-blue-200 bg-blue-100 text-blue-800",
     OVERDUE: "border-red-200 bg-red-100 text-red-800",
-    DELETED: "border-slate-200 bg-slate-100 text-slate-800",
-    DRAFT: "border-slate-200 bg-slate-100 text-slate-800",
-  })[s] || "border-slate-200 bg-slate-100 text-slate-800";
+    DELETED: "border-neutral-200 bg-neutral-100 text-neutral-800",
+    DRAFT: "border-neutral-200 bg-neutral-100 text-neutral-800",
+  })[s] || "border-neutral-200 bg-neutral-100 text-neutral-800";
 
 const formatDate = (dateString: string) => {
   if (!dateString) return "-";
@@ -869,27 +969,67 @@ const handleDelete = async () => {
   }
 };
 
-const sendInvoiceEmail = async () => {
-  const recipientEmail = invoice.value.User?.email || "den Kunden";
-  const confirmed = await confirm({
-    title: "Rechnung per E-Mail senden",
-    message: `Rechnung jetzt per E-Mail an ${recipientEmail} senden?`,
-    variant: "default",
-    confirmLabel: "Ja, senden",
-    icon: "i-heroicons-envelope-20-solid",
-  });
-  if (!confirmed) return;
+const showEmailPreview = ref(false);
+const emailPreviewUrl = ref<string | null>(null);
+const emailPreviewLoading = ref(false);
+const emailPreviewError = ref("");
+const emailSending = ref(false);
 
+const emailRecipientLabel = computed(
+  () => invoice.value?.User?.email || "den Kunden",
+);
+
+const revokeEmailPreviewUrl = () => {
+  if (emailPreviewUrl.value) {
+    window.URL.revokeObjectURL(emailPreviewUrl.value);
+    emailPreviewUrl.value = null;
+  }
+};
+
+const closeEmailPreview = () => {
+  showEmailPreview.value = false;
+  emailPreviewError.value = "";
+  emailPreviewLoading.value = false;
+  emailSending.value = false;
+  revokeEmailPreviewUrl();
+};
+
+const openEmailPreview = async () => {
+  if (!invoice.value?.id) return;
+  showEmailPreview.value = true;
+  emailPreviewError.value = "";
+  emailPreviewLoading.value = true;
+  revokeEmailPreviewUrl();
+
+  try {
+    const blob = await api.sales.downloadInvoice(invoice.value.id);
+    emailPreviewUrl.value = window.URL.createObjectURL(blob);
+  } catch (e) {
+    console.error(e);
+    emailPreviewError.value =
+      "PDF-Vorschau konnte nicht geladen werden. Bitte später erneut versuchen.";
+  } finally {
+    emailPreviewLoading.value = false;
+  }
+};
+
+const confirmSendInvoiceEmail = async () => {
+  emailSending.value = true;
   try {
     const res = await api.sales.sendEmail(Number(invoiceId));
     if (!res) return;
+    closeEmailPreview();
     alert("E-Mail wurde erfolgreich versendet.");
     await loadInvoice();
   } catch (e: any) {
     console.error(e);
     alert("Fehler beim Senden der E-Mail: " + (e.message || ""));
+  } finally {
+    emailSending.value = false;
   }
 };
+
+const sendInvoiceEmail = openEmailPreview;
 
 const markInvoicePaid = async () => {
   try {
