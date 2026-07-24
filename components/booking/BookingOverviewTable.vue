@@ -119,7 +119,10 @@ const canEdit = (booking: any) => booking.status !== "CANCELLED";
             </span>
           </td>
           <td class="py-4 pr-4">
-            <template v-if="getBookingTodoSummary(booking).allDone">
+            <template v-if="!getBookingTodoSummary(booking).hasTodos">
+              <span class="text-neutral-400">—</span>
+            </template>
+            <template v-else-if="getBookingTodoSummary(booking).allDone">
               <span class="text-neutral-900">Alles erledigt!</span>
             </template>
             <NuxtLink

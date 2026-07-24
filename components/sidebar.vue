@@ -87,9 +87,7 @@ const settingsItem = ref<NavItem>({
   to: "/booking-system/settings",
   defaultOpen: false,
   children: [
-    { label: "Buchungssystem", to: "/booking-system/settings" },
-    { label: "Rechnungszähler", to: "/settings" },
-    { label: "Mietpreisanalyse", to: "/mietpreisanalyse" },
+    { label: "Unternehmen", to: "/booking-system/settings" },
     { label: "Passwort ändern", to: "/change-password" },
   ],
 });

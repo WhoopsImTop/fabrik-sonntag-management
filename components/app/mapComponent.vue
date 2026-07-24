@@ -2,7 +2,7 @@
   <div class="relative h-full w-full">
     <AppDialogPoi
       v-if="isModalVisible"
-      class="absolute top-2 left-2 bottom-2 z-10 w-96"
+      class="absolute top-2 left-2 bottom-2 z-20"
       :poiToEdit="editingObj"
       :isGeometryEditMode="isGeometryEditMode"
       :all-pois="allPoisData"
@@ -1008,8 +1008,4 @@ export default {
   }
 }
 
-.AppDialogPoi {
-  overflow-y: auto;
-  max-height: calc(100% - 1rem);
-}
 </style>

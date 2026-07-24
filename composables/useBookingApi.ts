@@ -1,77 +1,24 @@
+import {
+  getAuthHeaders,
+  handleApiError,
+  apiCall as runApiCall,
+} from "~/utils/apiClientHelpers";
+
 export const useBookingApi = () => {
   const config = useRuntimeConfig();
   const baseURL = import.meta.env.VITE_INTERNAL_API_URL || "/api";
   const router = useRouter();
   const toast = useToast();
 
-  // Helper function to get auth token
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem("jwt");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
-  // Central error handler
   const handleError = (error: any, context: string) => {
-    console.error(`Error in ${context}:`, error);
-
-    // Check if it's a 401 Unauthorized error
-    if (error.status === 401 || error.statusCode === 401) {
-      localStorage.removeItem("jwt");
-      toast.add({
-        title: "Sitzung abgelaufen",
-        description: "Bitte melden Sie sich erneut an.",
-        color: "red",
-      });
-      router.push("/login");
-      return;
-    }
-
-    // Handle other HTTP errors
-    if (error.status || error.statusCode) {
-      const status = error.status || error.statusCode;
-      const errorMessages: Record<number, string> = {
-        400: "Ungültige Anfrage. Bitte überprüfen Sie Ihre Eingaben.",
-        403: "Sie haben keine Berechtigung für diese Aktion.",
-        404: "Die angeforderte Ressource wurde nicht gefunden.",
-        409: "Konflikt: Diese Aktion kann nicht ausgeführt werden.",
-        422: "Die Daten konnten nicht verarbeitet werden.",
-        500: "Ein Serverfehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-        503: "Der Service ist vorübergehend nicht verfügbar.",
-      };
-
-      const message =
-        errorMessages[status] || `Ein Fehler ist aufgetreten (${status}).`;
-      toast.add({ title: "Fehler", description: message, color: "red" });
-      return;
-    }
-
-    // Network or unknown errors
-    if (error.message?.includes("fetch")) {
-      toast.add({
-        title: "Netzwerkfehler",
-        description: "Bitte überprüfen Sie Ihre Internetverbindung.",
-        color: "red",
-      });
-    } else {
-      toast.add({
-        title: "Fehler",
-        description: "Ein unerwarteter Fehler ist aufgetreten.",
-        color: "red",
-      });
-    }
+    handleApiError(error, context, toast, router, { toastColor: "red" });
   };
 
-  // Wrapper for API calls with error handling
   const apiCall = async <T>(
     fn: () => Promise<T>,
     context: string,
   ): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch (error) {
-      handleError(error, context);
-      return null;
-    }
+    return runApiCall(fn, context, toast, router, { toastColor: "red" });
   };
 
   // 1. User Management

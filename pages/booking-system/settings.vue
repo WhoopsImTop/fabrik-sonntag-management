@@ -1,361 +1,340 @@
 <template>
-  <div class="max-w-4xl mx-auto py-8 px-4">
-    <h1 class="text-2xl font-bold text-slate-900 mb-6">
-      Unternehmenseinstellungen
-    </h1>
+  <div class="mx-auto max-w-4xl space-y-6 pb-20">
+    <div class="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
+          Unternehmenseinstellungen
+        </h1>
+        <p class="mt-1 text-neutral-500">
+          Firmendaten, Rechnungsdesign und Bankverbindung für das Buchungssystem.
+        </p>
+      </div>
+      <button
+        type="button"
+        class="btn-dialog-primary"
+        :disabled="loading"
+        @click="save"
+      >
+        {{ loading ? "Speichert…" : "Einstellungen speichern" }}
+      </button>
+    </div>
 
-    <div
-      class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-8"
-    >
-      <div class="flex items-start gap-6 border-b border-slate-100 pb-6">
-        <div class="flex-1">
-          <label class="block text-sm font-medium text-slate-700 mb-2"
-            >Firmenlogo</label
+    <!-- Firmenlogo -->
+    <section class="border border-neutral-200 bg-white">
+      <div class="border-b border-neutral-200 px-6 py-4">
+        <h2 class="text-lg font-semibold text-neutral-900">Firmenlogo</h2>
+        <p class="mt-0.5 text-sm text-neutral-500">
+          Wird auf Rechnungen und in der Kommunikation verwendet.
+        </p>
+      </div>
+      <div class="px-6 py-5">
+        <div class="flex items-center gap-4">
+          <div
+            class="relative flex h-24 w-24 items-center justify-center overflow-hidden border border-neutral-200 bg-neutral-50"
           >
-          <div class="flex items-center gap-4">
-            <div
-              class="h-24 w-24 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden relative"
+            <img
+              v-if="form.logo_url"
+              :src="getImageUrl(form.logo_url)"
+              class="h-full w-full object-contain"
+              alt="Firmenlogo"
+            />
+            <span v-else class="text-xs text-neutral-400">Kein Logo</span>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              class="text-left text-sm font-medium text-neutral-900 underline-offset-2 hover:underline"
+              @click="openMediaModal('logo_url')"
             >
-              <img
-                v-if="form.logo_url"
-                :src="getImageUrl(form.logo_url)"
-                class="w-full h-full object-contain"
-              />
-              <span v-else class="text-xs text-slate-400">Kein Logo</span>
-            </div>
-            <div class="flex flex-col gap-2">
-              <button
-                type="button"
-                @click="openMediaModal('logo_url')"
-                class="text-sm font-medium text-blue-600 hover:text-blue-700 text-left"
-              >
-                Logo auswählen
-              </button>
-              <button
-                v-if="form.logo_url"
-                type="button"
-                @click="form.logo_url = null"
-                class="text-sm font-medium text-red-600 hover:text-red-700 text-left"
-              >
-                Löschen
-              </button>
-            </div>
+              Logo auswählen
+            </button>
+            <button
+              v-if="form.logo_url"
+              type="button"
+              class="text-left text-sm font-medium text-red-600 hover:text-red-700"
+              @click="form.logo_url = null"
+            >
+              Löschen
+            </button>
           </div>
         </div>
       </div>
+    </section>
 
-      <div>
-        <h3 class="text-lg font-medium text-slate-900 mb-4">
-          Rechnungsdesign & Einstellungen
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <!-- Rechnungsdesign -->
+    <section class="border border-neutral-200 bg-white">
+      <div class="border-b border-neutral-200 px-6 py-4">
+        <h2 class="text-lg font-semibold text-neutral-900">
+          Rechnungsdesign & Nummerierung
+        </h2>
+        <p class="mt-0.5 text-sm text-neutral-500">
+          Briefpapier und Zähler für PDF-Rechnungen.
+        </p>
+      </div>
+      <div class="space-y-6 px-6 py-5">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2"
-              >Briefpapier (Vorderseite / Seite 1)</label
-            >
-            <div class="flex items-center gap-4">
+            <label class="dialog-label">Briefpapier (Vorderseite / Seite 1)</label>
+            <div class="mt-1.5 flex items-center gap-4">
               <div
-                class="h-32 w-24 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden relative"
+                class="relative flex h-32 w-24 items-center justify-center overflow-hidden border border-neutral-200 bg-neutral-50"
               >
                 <img
                   v-if="form.invoice_background_first"
                   :src="getImageUrl(form.invoice_background_first)"
-                  class="w-full h-full object-cover opacity-75"
+                  class="h-full w-full object-cover opacity-75"
+                  alt="Briefpapier Seite 1"
                 />
-                <span v-else class="text-xs text-slate-400 text-center px-2"
+                <span v-else class="px-2 text-center text-xs text-neutral-400"
                   >Kein Bild</span
                 >
               </div>
               <div class="flex flex-col gap-2">
                 <button
                   type="button"
+                  class="text-left text-sm font-medium text-neutral-900 underline-offset-2 hover:underline"
                   @click="openMediaModal('invoice_background_first')"
-                  class="text-sm font-medium text-blue-600 hover:text-blue-700 text-left"
                 >
                   Bild auswählen
                 </button>
                 <button
                   v-if="form.invoice_background_first"
                   type="button"
+                  class="text-left text-sm font-medium text-red-600 hover:text-red-700"
                   @click="form.invoice_background_first = null"
-                  class="text-sm font-medium text-red-600 hover:text-red-700 text-left"
                 >
                   Entfernen
                 </button>
               </div>
             </div>
-            <p class="text-xs text-slate-500 mt-2">
+            <p class="mt-2 text-xs text-neutral-500">
               Hintergrundbild für die erste Seite der PDF-Rechnung (A4).
             </p>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2"
-              >Briefpapier (Folgeseiten)</label
-            >
-            <div class="flex items-center gap-4">
+            <label class="dialog-label">Briefpapier (Folgeseiten)</label>
+            <div class="mt-1.5 flex items-center gap-4">
               <div
-                class="h-32 w-24 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden relative"
+                class="relative flex h-32 w-24 items-center justify-center overflow-hidden border border-neutral-200 bg-neutral-50"
               >
                 <img
                   v-if="form.invoice_background_other"
                   :src="getImageUrl(form.invoice_background_other)"
-                  class="w-full h-full object-cover opacity-75"
+                  class="h-full w-full object-cover opacity-75"
+                  alt="Briefpapier Folgeseiten"
                 />
-                <span v-else class="text-xs text-slate-400 text-center px-2"
+                <span v-else class="px-2 text-center text-xs text-neutral-400"
                   >Kein Bild</span
                 >
               </div>
               <div class="flex flex-col gap-2">
                 <button
                   type="button"
+                  class="text-left text-sm font-medium text-neutral-900 underline-offset-2 hover:underline"
                   @click="openMediaModal('invoice_background_other')"
-                  class="text-sm font-medium text-blue-600 hover:text-blue-700 text-left"
                 >
                   Bild auswählen
                 </button>
                 <button
                   v-if="form.invoice_background_other"
                   type="button"
+                  class="text-left text-sm font-medium text-red-600 hover:text-red-700"
                   @click="form.invoice_background_other = null"
-                  class="text-sm font-medium text-red-600 hover:text-red-700 text-left"
                 >
                   Entfernen
                 </button>
               </div>
             </div>
-            <p class="text-xs text-slate-500 mt-2">
+            <p class="mt-2 text-xs text-neutral-500">
               Hintergrundbild für alle weiteren Seiten.
             </p>
           </div>
         </div>
 
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-          <label class="block text-sm font-medium text-slate-700 mb-1"
-            >Nächste Rechnungsnummer (Zähler)</label
-          >
-          <div class="flex items-center gap-3">
+        <div class="border border-neutral-200 bg-neutral-50 p-4">
+          <label class="dialog-label">Nächste Rechnungsnummer (Zähler)</label>
+          <div class="mt-1.5 flex flex-wrap items-center gap-3">
             <input
               v-model="form.invoice_number_counter"
               type="number"
               min="1"
               step="1"
-              class="w-32 border-slate-300 rounded-md shadow-sm p-2 border"
+              class="dialog-input w-32"
             />
-            <span class="text-sm text-slate-500">
+            <span class="text-sm text-neutral-500">
               Vorschau: RE-IL-FS-{{
                 new Date().getFullYear().toString().slice(-2)
               }}-{{ form.invoice_number_counter }}
             </span>
           </div>
-          <p class="text-xs text-red-500 mt-1">
+          <p class="mt-1.5 text-xs text-red-600">
             Achtung: Ändere dies nur, wenn du Lücken in der Nummerierung
             korrigieren musst.
           </p>
         </div>
       </div>
+    </section>
 
-      <hr class="border-slate-100" />
-
-      <div>
-        <h3 class="text-lg font-medium text-slate-900 mb-4">
+    <!-- Steuer & Bank -->
+    <section class="border border-neutral-200 bg-white">
+      <div class="border-b border-neutral-200 px-6 py-4">
+        <h2 class="text-lg font-semibold text-neutral-900">
           Steuer & Bankverbindung
-        </h3>
-        <p class="text-sm text-slate-500 mb-4">
-          Diese Angaben werden für ZUGFeRD/E-Rechnungen und Zahlungsinformationen
-          im XML verwendet.
+        </h2>
+        <p class="mt-0.5 text-sm text-neutral-500">
+          Für ZUGFeRD/E-Rechnungen und Zahlungsinformationen im XML.
         </p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-medium text-slate-700"
-              >USt-IdNr.</label
-            >
-            <input
-              v-model="form.vat_id"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-              placeholder="DE123456789"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700"
-              >Steuernummer</label
-            >
-            <input
-              v-model="form.tax_number"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700">IBAN</label>
-            <input
-              v-model="form.iban"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border font-mono"
-              placeholder="DE89 3704 0044 0532 0130 00"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700">BIC</label>
-            <input
-              v-model="form.bic"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border font-mono"
-              placeholder="COBADEFFXXX"
-            />
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-slate-700"
-              >Bank / Kontoinhaber</label
-            >
-            <input
-              v-model="form.bank_name"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-              placeholder="Commerzbank / Fabrik Sonntag GmbH"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700"
-              >Land</label
-            >
-            <input
-              v-model="form.country"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-              placeholder="Deutschland"
-            />
-          </div>
+      </div>
+      <div class="grid grid-cols-1 gap-5 px-6 py-5 md:grid-cols-2">
+        <div>
+          <label class="dialog-label">USt-IdNr.</label>
+          <input
+            v-model="form.vat_id"
+            class="dialog-input"
+            placeholder="DE123456789"
+          />
+        </div>
+        <div>
+          <label class="dialog-label">Steuernummer</label>
+          <input v-model="form.tax_number" class="dialog-input" />
+        </div>
+        <div>
+          <label class="dialog-label">IBAN</label>
+          <input
+            v-model="form.iban"
+            class="dialog-input font-mono"
+            placeholder="DE89 3704 0044 0532 0130 00"
+          />
+        </div>
+        <div>
+          <label class="dialog-label">BIC</label>
+          <input
+            v-model="form.bic"
+            class="dialog-input font-mono"
+            placeholder="COBADEFFXXX"
+          />
+        </div>
+        <div class="md:col-span-2">
+          <label class="dialog-label">Bank / Kontoinhaber</label>
+          <input
+            v-model="form.bank_name"
+            class="dialog-input"
+            placeholder="Commerzbank / Fabrik Sonntag GmbH"
+          />
+        </div>
+        <div>
+          <label class="dialog-label">Land</label>
+          <input
+            v-model="form.country"
+            class="dialog-input"
+            placeholder="Deutschland"
+          />
         </div>
       </div>
+    </section>
 
-      <hr class="border-slate-100" />
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Firmendaten -->
+    <section class="border border-neutral-200 bg-white">
+      <div class="border-b border-neutral-200 px-6 py-4">
+        <h2 class="text-lg font-semibold text-neutral-900">Firmendaten</h2>
+        <p class="mt-0.5 text-sm text-neutral-500">
+          Stammdaten für Rechnungen, E-Mails und Fußzeilen.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 gap-5 px-6 py-5 md:grid-cols-2">
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Firmenname</label
-          >
-          <input
-            v-model="form.company_name"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">Firmenname</label>
+          <input v-model="form.company_name" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >E-Mail (Absender)</label
-          >
-          <input
-            v-model="form.email"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">E-Mail (Absender)</label>
+          <input v-model="form.email" type="email" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Straße & Hausnr.</label
-          >
-          <input
-            v-model="form.street"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">Straße & Hausnr.</label>
+          <input v-model="form.street" class="dialog-input" />
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-slate-700">PLZ</label>
-            <input
-              v-model="form.zip_code"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-            />
+            <label class="dialog-label">PLZ</label>
+            <input v-model="form.zip_code" class="dialog-input" />
           </div>
           <div>
-            <label class="block text-sm font-medium text-slate-700"
-              >Stadt</label
-            >
-            <input
-              v-model="form.city"
-              class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-            />
+            <label class="dialog-label">Stadt</label>
+            <input v-model="form.city" class="dialog-input" />
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Footer Text</label
-          >
-          <input
-            v-model="form.footer_text"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">Footer Text</label>
+          <input v-model="form.footer_text" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Telefon</label
-          >
-          <input
-            v-model="form.phone"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">Telefon</label>
+          <input v-model="form.phone" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Webseite</label
-          >
-          <input
-            v-model="form.website"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
-          />
+          <label class="dialog-label">Webseite</label>
+          <input v-model="form.website" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Benachrichtigungs-Emails</label
-          >
+          <label class="dialog-label">Benachrichtigungs-Emails</label>
           <input
             v-model="form.notification_emails"
-            class="w-full mt-1 border-slate-300 rounded-md shadow-sm p-2 border"
+            class="dialog-input"
             placeholder="email@example.com"
           />
         </div>
       </div>
+    </section>
 
-      <div class="flex justify-between pt-4 items-center">
-        <button
-          @click="triggerCron"
-          class="text-sm text-slate-500 hover:text-slate-800 underline"
-        >
-          Rechnungslauf jetzt testen (Cron)
-        </button>
-
-        <button
-          @click="save"
-          :disabled="loading"
-          class="bg-slate-900 text-white px-6 py-2 rounded-none font-medium hover:bg-slate-800 transition-colors"
-        >
-          {{ loading ? "Speichert..." : "Einstellungen speichern" }}
-        </button>
-      </div>
+    <div class="flex flex-col items-start justify-between gap-4 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center">
+      <button
+        type="button"
+        class="text-sm text-neutral-500 underline-offset-2 hover:text-neutral-800 hover:underline"
+        @click="triggerCron"
+      >
+        Rechnungslauf jetzt testen (Cron)
+      </button>
+      <button
+        type="button"
+        class="btn-dialog-primary"
+        :disabled="loading"
+        @click="save"
+      >
+        {{ loading ? "Speichert…" : "Einstellungen speichern" }}
+      </button>
     </div>
 
-    <div
-      v-if="showMediaModal"
-      class="dialog-overlay"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="absolute inset-0" @click="showMediaModal = false" />
-      <div class="dialog-panel max-w-4xl">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Bild auswählen</h3>
-          <button
-            type="button"
-            class="dialog-close"
-            aria-label="Schließen"
-            @click="showMediaModal = false"
-          >
-            <UiIcon name="i-lucide-x" class="size-5" />
-          </button>
-        </div>
-        <div class="dialog-body bg-neutral-50">
-          <MediaLibrary
-            :is-multi-select="false"
-            @images-selected="handleImageSelection"
-          />
+    <Teleport to="body">
+      <div
+        v-if="showMediaModal"
+        class="dialog-overlay"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="absolute inset-0" @click="showMediaModal = false" />
+        <div class="dialog-panel max-w-4xl">
+          <div class="dialog-header">
+            <h3 class="dialog-title">Bild auswählen</h3>
+            <button
+              type="button"
+              class="dialog-close"
+              aria-label="Schließen"
+              @click="showMediaModal = false"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
+          </div>
+          <div class="dialog-body bg-neutral-50">
+            <MediaLibrary
+              :is-multi-select="false"
+              @images-selected="handleImageSelection"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -364,6 +343,7 @@ import { ref, onMounted } from "vue";
 import MediaLibrary from "@/components/app/MediaLibrary.vue";
 
 const api = useBookingApi();
+const toast = useToast();
 const loading = ref(false);
 const form = ref<any>({});
 const showMediaModal = ref(false);
@@ -379,9 +359,9 @@ onMounted(async () => {
   try {
     const res = await api.company.get();
     form.value = res;
-    // Default Counter falls null
-    if (!form.value.invoice_number_counter)
+    if (!form.value.invoice_number_counter) {
       form.value.invoice_number_counter = 1;
+    }
   } catch (e) {}
 });
 
@@ -390,14 +370,19 @@ const save = async () => {
   try {
     const counter = Number(form.value.invoice_number_counter);
     if (!Number.isInteger(counter) || counter < 1) {
-      alert("Die Rechnungsnummer muss eine ganze Zahl ab 1 sein.");
-      loading.value = false;
+      toast.add({
+        title: "Ungültige Rechnungsnummer",
+        description: "Die Rechnungsnummer muss eine ganze Zahl ab 1 sein.",
+        color: "error",
+      });
       return;
     }
     await api.company.update(form.value);
-    alert("Gespeichert");
   } catch (e) {
-    alert("Fehler beim Speichern");
+    toast.add({
+      title: "Fehler beim Speichern",
+      color: "error",
+    });
   } finally {
     loading.value = false;
   }
@@ -428,7 +413,7 @@ const handleImageSelection = async (ids: number[]) => {
     }
   } catch (e) {
     console.error(e);
-    alert("Fehler beim Auswählen");
+    toast.add({ title: "Fehler beim Auswählen", color: "error" });
   }
 };
 
@@ -449,9 +434,12 @@ const triggerCron = async () => {
       },
     );
     const data = await res.json();
-    alert(data.message || "Lauf beendet");
+    toast.add({
+      title: data.message || "Lauf beendet",
+      color: "green",
+    });
   } catch (e) {
-    alert("Fehler beim Starten des Laufs");
+    toast.add({ title: "Fehler beim Starten des Laufs", color: "error" });
   }
 };
 </script>

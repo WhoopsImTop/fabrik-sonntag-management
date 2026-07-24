@@ -4,46 +4,30 @@ export type BookingTodoSummary = {
   open: number;
   label: string;
   allDone: boolean;
+  hasTodos: boolean;
 };
 
 function getBookingTasks(booking: any): any[] {
   return booking?.BookingTasks || booking?.bookingTasks || [];
 }
 
-/** Derive checklist progress from booking tasks when present, else from legacy fields. */
+/** Checklist progress from booking tasks only — empty when the booking has no todos. */
 export function getBookingTodoSummary(booking: any): BookingTodoSummary {
   const tasks = getBookingTasks(booking);
 
-  if (tasks.length > 0) {
-    const total = tasks.length;
-    const done = tasks.filter((t: any) => !!t.is_completed).length;
-    const open = total - done;
-    const allDone = open === 0;
-
+  if (tasks.length === 0) {
     return {
-      done,
-      total,
-      open,
-      allDone,
-      label: allDone ? "Alles erledigt!" : `${open}/${total} offen`,
+      done: 0,
+      total: 0,
+      open: 0,
+      allDone: false,
+      hasTodos: false,
+      label: "",
     };
   }
 
-  const checks = [
-    booking.status === "CONFIRMED" || booking.status === "CANCELLED",
-    !!(booking.Invoice || booking.invoice_id || booking.invoice),
-    ["PAID"].includes(
-      booking.Invoice?.status || booking.invoice?.status || "",
-    ),
-    !!(
-      booking.welcome_email_sent ||
-      booking.has_communication ||
-      booking.communications?.length
-    ),
-  ];
-
-  const total = checks.length;
-  const done = checks.filter(Boolean).length;
+  const total = tasks.length;
+  const done = tasks.filter((t: any) => !!t.is_completed).length;
   const open = total - done;
   const allDone = open === 0;
 
@@ -52,6 +36,7 @@ export function getBookingTodoSummary(booking: any): BookingTodoSummary {
     total,
     open,
     allDone,
+    hasTodos: true,
     label: allDone ? "Alles erledigt!" : `${open}/${total} offen`,
   };
 }

@@ -1,53 +1,30 @@
+import {
+  getAuthHeaders,
+  handleApiError,
+  apiCall as runApiCall,
+} from "~/utils/apiClientHelpers";
+
 export const useMeterApi = () => {
   const baseURL = import.meta.env.VITE_INTERNAL_API_URL || "/api";
   const router = useRouter();
   const toast = useToast();
 
-  const getAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem("jwt");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const meterErrorOptions = {
+    toastColor: "error",
+    statusMessages: {
+      409: "Diese Meter ID existiert bereits.",
+    },
   };
 
   const handleError = (error: any, context: string) => {
-    console.error(`Error in ${context}:`, error);
-
-    if (error.status === 401 || error.statusCode === 401) {
-      localStorage.removeItem("jwt");
-      toast.add({
-        title: "Sitzung abgelaufen",
-        description: "Bitte melden Sie sich erneut an.",
-        color: "error",
-      });
-      router.push("/login");
-      return;
-    }
-
-    if (error.status || error.statusCode) {
-      const status = error.status || error.statusCode;
-      let message = `Ein Fehler ist aufgetreten (${status}).`;
-      if (status === 409) message = "Diese Meter ID existiert bereits.";
-
-      toast.add({ title: "Fehler", description: message, color: "error" });
-      return;
-    }
-
-    toast.add({
-      title: "Fehler",
-      description: "Ein unerwarteter Fehler ist aufgetreten.",
-      color: "error",
-    });
+    handleApiError(error, context, toast, router, meterErrorOptions);
   };
 
   const apiCall = async <T>(
     fn: () => Promise<T>,
     context: string,
   ): Promise<T | null> => {
-    try {
-      return await fn();
-    } catch (error) {
-      handleError(error, context);
-      return null;
-    }
+    return runApiCall(fn, context, toast, router, meterErrorOptions);
   };
 
   return {

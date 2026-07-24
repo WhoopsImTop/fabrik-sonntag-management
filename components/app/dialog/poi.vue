@@ -1,6 +1,9 @@
 <template>
-  <div
-    class="dialog-panel flex max-h-full flex-col gap-0 overflow-auto border border-neutral-200"
+  <aside
+    class="dialog-drawer"
+    role="dialog"
+    aria-modal="false"
+    aria-label="POI bearbeiten"
   >
     <div class="dialog-header">
       <h2 class="dialog-title">
@@ -308,67 +311,71 @@
       :allPois="allPois"
       @renter-saved="handleRenterSaved"
     />
-    <!-- Media Library Modals -->
-    <div
-      v-if="showMarketingMediaLibrary"
-      class="dialog-overlay z-[60]"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="dialog-panel max-w-4xl">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Marketing Bilder auswählen</h3>
-          <button
-            type="button"
-            @click="showMarketingMediaLibrary = false"
-            class="dialog-close"
-            aria-label="Schließen"
-          >
-            <UiIcon name="i-lucide-x" class="size-5" />
-          </button>
-        </div>
-        <div class="dialog-body">
-          <MediaLibrary
-            :is-multi-select="true"
-            :initial-selection="formData.marketingImages"
-            @images-selected="handleMarketingMediaSelected"
-          />
-        </div>
-      </div>
-    </div>
 
-    <div
-      v-if="showIconMediaLibrary"
-      class="dialog-overlay z-[60]"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div class="dialog-panel max-w-4xl">
-        <div class="dialog-header">
-          <h3 class="dialog-title">Icon auswählen</h3>
-          <button
-            type="button"
-            @click="showIconMediaLibrary = false"
-            class="dialog-close"
-            aria-label="Schließen"
-          >
-            <UiIcon name="i-lucide-x" class="size-5" />
-          </button>
-        </div>
-        <div class="dialog-body">
-          <MediaLibrary
-            :is-multi-select="false"
-            :initial-selection="
-              formData.iconId && !isPredefinedIcon(formData.iconId)
-                ? [formData.iconId]
-                : []
-            "
-            @images-selected="handleIconMediaSelected"
-          />
+    <Teleport to="body">
+      <div
+        v-if="showMarketingMediaLibrary"
+        class="dialog-overlay z-[60]"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="absolute inset-0" @click="showMarketingMediaLibrary = false" />
+        <div class="dialog-panel max-w-4xl">
+          <div class="dialog-header">
+            <h3 class="dialog-title">Marketing Bilder auswählen</h3>
+            <button
+              type="button"
+              @click="showMarketingMediaLibrary = false"
+              class="dialog-close"
+              aria-label="Schließen"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
+          </div>
+          <div class="dialog-body">
+            <MediaLibrary
+              :is-multi-select="true"
+              :initial-selection="formData.marketingImages"
+              @images-selected="handleMarketingMediaSelected"
+            />
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+
+      <div
+        v-if="showIconMediaLibrary"
+        class="dialog-overlay z-[60]"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div class="absolute inset-0" @click="showIconMediaLibrary = false" />
+        <div class="dialog-panel max-w-4xl">
+          <div class="dialog-header">
+            <h3 class="dialog-title">Icon auswählen</h3>
+            <button
+              type="button"
+              @click="showIconMediaLibrary = false"
+              class="dialog-close"
+              aria-label="Schließen"
+            >
+              <UiIcon name="i-lucide-x" class="size-5" />
+            </button>
+          </div>
+          <div class="dialog-body">
+            <MediaLibrary
+              :is-multi-select="false"
+              :initial-selection="
+                formData.iconId && !isPredefinedIcon(formData.iconId)
+                  ? [formData.iconId]
+                  : []
+              "
+              @images-selected="handleIconMediaSelected"
+            />
+          </div>
+        </div>
+      </div>
+    </Teleport>
+  </aside>
 </template>
 
 <script setup>
