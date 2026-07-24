@@ -43,6 +43,7 @@ const mainGroups = ref<NavItem[][]>([
       children: [
         { label: "Übersicht", to: "/booking-system/resources" },
         { label: "Services", to: "/booking-system/services" },
+        { label: "Tasks", to: "/booking-system/tasks" },
         { label: "Preise", to: "/booking-system/pricing" },
         { label: "Mitgliedschaften", to: "/booking-system/memberships" },
       ],

@@ -11,6 +11,15 @@
       @success="handleWelcomeEmailSuccess"
     />
 
+    <CommunicationComposeEmailModal
+      v-if="showComposeEmailModal"
+      :initial-email="selectedBooking?.User?.email || ''"
+      :user-id="selectedBooking?.user_id"
+      :booking-id="selectedBooking?.id"
+      @close="showComposeEmailModal = false"
+      @success="handleComposeEmailSuccess"
+    />
+
     <header class="z-20 shrink-0 border-b border-neutral-200 pb-6">
       <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
@@ -154,6 +163,7 @@
             @delete="handleDeletion"
             @update-status="refreshData"
             @welcome-email="showVoucherModal = true"
+            @compose-email="showComposeEmailModal = true"
           />
         </div>
       </transition>
@@ -190,10 +200,16 @@ const draggedBooking = ref<any | null>(null);
 const createDate = ref<Date | null>(null);
 const route = useRoute();
 const showVoucherModal = ref(false);
+const showComposeEmailModal = ref(false);
 const bookingDetailsRef = ref<InstanceType<typeof BookingDetails> | null>(null);
 
 const handleWelcomeEmailSuccess = () => {
   showVoucherModal.value = false;
+  bookingDetailsRef.value?.reloadCommunications?.();
+};
+
+const handleComposeEmailSuccess = () => {
+  showComposeEmailModal.value = false;
   bookingDetailsRef.value?.reloadCommunications?.();
 };
 

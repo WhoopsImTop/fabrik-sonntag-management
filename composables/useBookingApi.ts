@@ -860,6 +860,72 @@ export const useBookingApi = () => {
         toast.add({ title: "Erfolg", description: "", color: "green" });
       return result;
     },
+
+    updateTask: async (
+      bookingId: number,
+      taskId: number,
+      data: { is_completed: boolean },
+    ) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/bookings/${bookingId}/tasks/${taskId}`, {
+            method: "PATCH",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "updateBookingTask",
+      );
+      return result;
+    },
+
+    uploadTaskFile: async (bookingId: number, taskId: number, file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/bookings/${bookingId}/tasks/${taskId}/files`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: formData,
+          }),
+        "uploadBookingTaskFile",
+      );
+      if (result)
+        toast.add({
+          title: "Erfolg",
+          description: "Nachweis hochgeladen",
+          color: "green",
+        });
+      return result;
+    },
+
+    deleteTaskFile: async (
+      bookingId: number,
+      taskId: number,
+      fileId: number,
+    ) => {
+      const result = await apiCall(
+        () =>
+          $fetch(
+            `${baseURL}/bookings/${bookingId}/tasks/${taskId}/files/${fileId}`,
+            {
+              method: "DELETE",
+              headers: getAuthHeaders(),
+            },
+          ),
+        "deleteBookingTaskFile",
+      );
+      if (result !== null)
+        toast.add({
+          title: "Erfolg",
+          description: "Datei gelöscht",
+          color: "green",
+        });
+      return result;
+    },
   };
 
   /**
@@ -1166,6 +1232,103 @@ export const useBookingApi = () => {
     },
   };
 
+  const tasks = {
+    getAll: async () => {
+      return await apiCall(
+        () => $fetch(`${baseURL}/tasks`, { headers: getAuthHeaders() }),
+        "getTasks",
+      );
+    },
+
+    getById: async (id: number) => {
+      return await apiCall(
+        () => $fetch(`${baseURL}/tasks/${id}`, { headers: getAuthHeaders() }),
+        "getTask",
+      );
+    },
+
+    create: async (data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/tasks`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "createTask",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "Task angelegt", color: "green" });
+      return result;
+    },
+
+    update: async (id: number, data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/tasks/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "updateTask",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "Task gespeichert", color: "green" });
+      return result;
+    },
+
+    delete: async (id: number) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/tasks/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "deleteTask",
+      );
+      if (result !== null)
+        toast.add({ title: "Erfolg", description: "Task gelöscht", color: "green" });
+      return result;
+    },
+
+    uploadFile: async (id: number, file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/tasks/${id}/files`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: formData,
+          }),
+        "uploadTaskFile",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "Datei hochgeladen", color: "green" });
+      return result;
+    },
+
+    deleteFile: async (id: number, fileId: number) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/tasks/${id}/files/${fileId}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "deleteTaskFile",
+      );
+      if (result !== null)
+        toast.add({ title: "Erfolg", description: "Datei gelöscht", color: "green" });
+      return result;
+    },
+  };
+
   const communications = {
     getByUser: async (userId: number) => {
       return await apiCall(
@@ -1224,6 +1387,7 @@ export const useBookingApi = () => {
     users,
     resources,
     services,
+    tasks,
     pricing,
     quotas,
     memberships,

@@ -179,6 +179,112 @@
         </div>
       </div>
 
+      <!-- Aufgaben / Checklist -->
+      <div
+        v-if="bookingTasks.length > 0"
+        class="border-t border-neutral-200 px-5 py-5"
+      >
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-2">
+            <UiIcon name="i-lucide-list-checks" class="size-4 shrink-0 text-neutral-500" />
+            <h4 class="text-sm font-semibold text-neutral-900">Aufgaben</h4>
+          </div>
+          <span class="text-xs text-neutral-500">
+            {{ completedTaskCount }}/{{ bookingTasks.length }} erledigt
+          </span>
+        </div>
+
+        <ul class="space-y-3">
+          <li
+            v-for="task in bookingTasks"
+            :key="task.id"
+            class="border border-neutral-100 px-3 py-3"
+          >
+            <label class="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                class="mt-0.5 border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                :checked="!!task.is_completed"
+                :disabled="togglingTaskId === task.id"
+                @change="toggleTask(task, ($event.target as HTMLInputElement).checked)"
+              />
+              <div class="min-w-0 flex-1">
+                <div
+                  class="text-sm font-medium text-neutral-900"
+                  :class="{ 'line-through text-neutral-400': task.is_completed }"
+                >
+                  {{ task.title }}
+                </div>
+                <p
+                  v-if="task.description"
+                  class="mt-1 whitespace-pre-wrap text-xs text-neutral-500"
+                >
+                  {{ task.description }}
+                </p>
+
+                <div
+                  v-if="instructionFiles(task).length"
+                  class="mt-2 space-y-1"
+                >
+                  <p class="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                    Anleitungen
+                  </p>
+                  <a
+                    v-for="file in instructionFiles(task)"
+                    :key="file.id"
+                    :href="getFileUrl(file.file_path)"
+                    target="_blank"
+                    rel="noopener"
+                    class="block truncate text-xs text-brand-accent underline-offset-2 hover:underline"
+                  >
+                    {{ file.original_name }}
+                  </a>
+                </div>
+
+                <div class="mt-3 space-y-2">
+                  <p class="text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                    Nachweise
+                  </p>
+                  <ul
+                    v-if="proofFiles(task).length"
+                    class="space-y-1"
+                  >
+                    <li
+                      v-for="file in proofFiles(task)"
+                      :key="file.id"
+                      class="flex items-center justify-between gap-2 text-xs"
+                    >
+                      <a
+                        :href="getFileUrl(file.file_path)"
+                        target="_blank"
+                        rel="noopener"
+                        class="truncate text-neutral-700 underline-offset-2 hover:underline"
+                      >
+                        {{ file.original_name }}
+                      </a>
+                      <button
+                        type="button"
+                        class="shrink-0 text-neutral-400 hover:text-red-600"
+                        title="Nachweis löschen"
+                        @click.stop="removeProof(task, file)"
+                      >
+                        <UiIcon name="i-lucide-trash-2" class="size-3.5" />
+                      </button>
+                    </li>
+                  </ul>
+                  <input
+                    type="file"
+                    class="block w-full text-xs text-neutral-600 file:mr-2 file:border-0 file:bg-neutral-100 file:px-2 file:py-1 file:text-xs file:font-medium file:text-neutral-800"
+                    :disabled="uploadingTaskId === task.id"
+                    @change="onProofSelected(task, $event)"
+                  />
+                </div>
+              </div>
+            </label>
+          </li>
+        </ul>
+      </div>
+
       <!-- Kommunikation -->
       <div class="border-t border-neutral-200 px-5 py-5">
         <div class="mb-3 flex items-center justify-between gap-3">
@@ -195,13 +301,22 @@
               :class="{ 'rotate-180': !commSectionOpen }"
             />
           </button>
-          <button
-            type="button"
-            class="btn-dialog-primary shrink-0"
-            @click="$emit('welcome-email')"
-          >
-            Email senden
-          </button>
+          <div class="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              class="px-2 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:text-neutral-900"
+              @click="$emit('welcome-email')"
+            >
+              WiFi / Welcome
+            </button>
+            <button
+              type="button"
+              class="btn-dialog-primary !px-3 !py-1.5 !text-xs"
+              @click="$emit('compose-email')"
+            >
+              Email senden
+            </button>
+          </div>
         </div>
 
         <div v-show="commSectionOpen">
@@ -322,14 +437,113 @@ const emit = defineEmits([
   "update-status",
   "delete",
   "welcome-email",
+  "compose-email",
 ]);
 
 const isDownloading = ref(false);
 const commSectionOpen = ref(true);
+const togglingTaskId = ref<number | null>(null);
+const uploadingTaskId = ref<number | null>(null);
 const communicationHistoryRef =
   ref<InstanceType<typeof CommunicationHistory> | null>(null);
 
 const userDetails = computed(() => props.booking.User?.details);
+
+const bookingTasks = computed(() => {
+  const list = props.booking?.BookingTasks || props.booking?.bookingTasks || [];
+  return [...list].sort(
+    (a: any, b: any) =>
+      (a.sort_order ?? 0) - (b.sort_order ?? 0) || (a.id ?? 0) - (b.id ?? 0),
+  );
+});
+
+const completedTaskCount = computed(
+  () => bookingTasks.value.filter((t: any) => !!t.is_completed).length,
+);
+
+const getFileUrl = (filePath: string) => {
+  if (!filePath) return "#";
+  const path = filePath.startsWith("/") ? filePath : `/${filePath}`;
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL || ""}${path}`;
+};
+
+const instructionFiles = (task: any) =>
+  (task.files || []).filter((f: any) => f.kind === "instruction");
+
+const proofFiles = (task: any) =>
+  (task.files || []).filter((f: any) => f.kind === "proof");
+
+const replaceLocalTask = (updated: any) => {
+  if (!props.booking.BookingTasks) {
+    props.booking.BookingTasks = [];
+  }
+  const idx = props.booking.BookingTasks.findIndex(
+    (t: any) => t.id === updated.id,
+  );
+  if (idx >= 0) {
+    props.booking.BookingTasks[idx] = {
+      ...props.booking.BookingTasks[idx],
+      ...updated,
+    };
+  }
+};
+
+const toggleTask = async (task: any, checked: boolean) => {
+  togglingTaskId.value = task.id;
+  try {
+    const updated = await api.bookings.updateTask(props.booking.id, task.id, {
+      is_completed: checked,
+    });
+    if (updated) {
+      replaceLocalTask(updated);
+      emit("update-status", props.booking);
+    }
+  } finally {
+    togglingTaskId.value = null;
+  }
+};
+
+const onProofSelected = async (task: any, event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  uploadingTaskId.value = task.id;
+  try {
+    const uploaded = await api.bookings.uploadTaskFile(
+      props.booking.id,
+      task.id,
+      file,
+    );
+    if (uploaded) {
+      const current = props.booking.BookingTasks?.find(
+        (t: any) => t.id === task.id,
+      );
+      if (current) {
+        current.files = [...(current.files || []), uploaded];
+      }
+      emit("update-status", props.booking);
+    }
+  } finally {
+    uploadingTaskId.value = null;
+    input.value = "";
+  }
+};
+
+const removeProof = async (task: any, file: any) => {
+  const ok = await confirm({
+    title: "Nachweis löschen",
+    message: `„${file.original_name}“ löschen?`,
+    variant: "danger",
+  });
+  if (!ok) return;
+
+  await api.bookings.deleteTaskFile(props.booking.id, task.id, file.id);
+  const current = props.booking.BookingTasks?.find((t: any) => t.id === task.id);
+  if (current) {
+    current.files = (current.files || []).filter((f: any) => f.id !== file.id);
+  }
+  emit("update-status", props.booking);
+};
 
 const customerFullName = computed(() => {
   const first = userDetails.value?.first_name?.trim() || "";

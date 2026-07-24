@@ -6,8 +6,29 @@ export type BookingTodoSummary = {
   allDone: boolean;
 };
 
-/** Derive a simple checklist from available booking fields (no dedicated todo API). */
+function getBookingTasks(booking: any): any[] {
+  return booking?.BookingTasks || booking?.bookingTasks || [];
+}
+
+/** Derive checklist progress from booking tasks when present, else from legacy fields. */
 export function getBookingTodoSummary(booking: any): BookingTodoSummary {
+  const tasks = getBookingTasks(booking);
+
+  if (tasks.length > 0) {
+    const total = tasks.length;
+    const done = tasks.filter((t: any) => !!t.is_completed).length;
+    const open = total - done;
+    const allDone = open === 0;
+
+    return {
+      done,
+      total,
+      open,
+      allDone,
+      label: allDone ? "Alles erledigt!" : `${open}/${total} offen`,
+    };
+  }
+
   const checks = [
     booking.status === "CONFIRMED" || booking.status === "CANCELLED",
     !!(booking.Invoice || booking.invoice_id || booking.invoice),
