@@ -1,400 +1,248 @@
 <template>
-  <div class="min-h-screen bg-slate-50/50 pb-12 font-sans">
-    <div class="bg-white border-b border-slate-200 px-6 py-4 mb-8">
-      <div class="max-w-7xl mx-auto flex items-center gap-4">
-        <button
-          @click="$router.push('/booking-system/users')"
-          class="inline-flex items-center justify-center rounded-none text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:opacity-50 ring-offset-white hover:bg-slate-100 hover:text-slate-900 h-9 px-3 py-2 border border-slate-200 bg-transparent text-slate-500"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="mr-2 h-4 w-4"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-          Zurück
-        </button>
-        <h1 class="text-xl font-semibold text-slate-900 tracking-tight">
-          Nutzerprofil
-        </h1>
-      </div>
-    </div>
-
-    <div v-if="loading" class="flex justify-center py-20">
-      <svg
-        class="animate-spin w-10 h-10 text-slate-400"
-        fill="none"
-        viewBox="0 0 24 24"
+  <div class="space-y-6 pb-20">
+    <div>
+      <button
+        type="button"
+        class="mb-4 inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900"
+        @click="$router.push('/booking-system/users')"
       >
-        <circle
-          class="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          stroke-width="4"
-        ></circle>
-        <path
-          class="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
-      </svg>
-    </div>
+        <UiIcon name="i-lucide-chevron-left" class="size-4" />
+        Zurück zur Übersicht
+      </button>
 
-    <div v-else-if="user" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-1 space-y-6">
-          <UserProfileCard :user="user" @update="handleUpdateUser" />
+      <div v-if="loading" class="py-12 text-center text-neutral-500">Lädt…</div>
 
-          <div class="grid grid-cols-2 gap-4">
+      <template v-else-if="user">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div class="flex items-center gap-4 min-w-0">
             <div
-              class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
+              class="flex size-12 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white"
             >
-              <p class="text-sm text-slate-500 font-medium">Gesamtumsatz</p>
-              <p class="text-2xl font-bold text-slate-900 mt-2">
-                {{ totalRevenue }} €
-              </p>
+              {{ avatarInitials }}
             </div>
-            <div
-              class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm"
-            >
-              <p class="text-sm text-slate-500 font-medium">Buchungen</p>
-              <p class="text-2xl font-bold text-slate-900 mt-2">
-                {{ user.Bookings?.length || 0 }}
+            <div class="min-w-0">
+              <h1 class="truncate text-2xl md:text-3xl font-bold tracking-tight text-neutral-900">
+                {{ displayName }}
+              </h1>
+              <p class="mt-0.5 truncate text-neutral-500">
+                {{ user.email }}
+                <span class="text-neutral-300">·</span>
+                <span class="uppercase tracking-wide text-xs">{{ user.role || "user" }}</span>
+                <template v-if="user.details?.user_type === 'COMPANY'">
+                  <span class="text-neutral-300">·</span> Firma
+                </template>
               </p>
             </div>
           </div>
-          <button
-            class="border border-slate-200 bg-white shadow-sm px-4 py-2 rounded-none text-xs text-red-800 hover:bg-red-50 hover:cursor-pointer"
-            @click="handleDeleteUser()"
-          >
-            Benutzer Löschen
-          </button>
+
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <div>
+              <span class="text-neutral-500">Umsatz</span>
+              <span class="ml-2 font-semibold text-neutral-900">{{ totalRevenue }} €</span>
+            </div>
+            <div>
+              <span class="text-neutral-500">Buchungen</span>
+              <span class="ml-2 font-semibold text-neutral-900">{{ user.Bookings?.length || 0 }}</span>
+            </div>
+            <button
+              type="button"
+              class="text-sm text-red-600 transition-colors hover:underline"
+              @click="handleDeleteUser()"
+            >
+              Löschen
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <template v-if="user && !loading">
+      <div class="flex gap-1 overflow-x-auto border-b border-neutral-200">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          type="button"
+          :class="[
+            'shrink-0 px-3 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+            activeTab === tab.id
+              ? 'border-brand-accent text-neutral-900'
+              : 'border-transparent text-neutral-500 hover:text-neutral-900',
+          ]"
+          @click="activeTab = tab.id"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <div>
+        <div v-if="activeTab === 'stammdaten'">
+          <UserProfileCard
+            :user="user"
+            :show-identity="false"
+            @update="handleUpdateUser"
+          />
         </div>
 
-        <div class="lg:col-span-2 space-y-6">
-          <div
-            class="inline-flex h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500 w-full"
-          >
+        <div v-else-if="activeTab === 'bookings'">
+          <UserBookingsHistory :bookings="user.Bookings" />
+        </div>
+
+        <div v-else-if="activeTab === 'invoices'">
+          <UserInvoicesList
+            :invoices="user.Invoices"
+            @download="downloadInvoice"
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'communications'">
+          <CommunicationHistory
+            :user-id="user.id"
+            show-booking-link
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'memberships'" class="space-y-4">
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-neutral-500">
+              {{ user.UserMemberships?.length || 0 }} Mitgliedschaft(en)
+            </p>
             <button
-              v-for="tab in [
-                'bookings',
-                'invoices',
-                'communications',
-                'memberships',
-                'kontingente',
-              ]"
-              :key="tab"
-              @click="activeTab = tab"
-              :class="[
-                'inline-flex items-center justify-center whitespace-nowrap rounded-none px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 flex-1',
-                activeTab === tab
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'hover:text-slate-900',
-              ]"
+              type="button"
+              class="btn-dialog-primary gap-2"
+              @click="showMembershipModal = true"
             >
-              {{
-                tab === "memberships"
-                  ? "Mitgliedschaften"
-                  : tab === "bookings"
-                    ? "Buchungen"
-                    : tab === "communications"
-                      ? "Kommunikation"
-                    : tab === "kontingente"
-                      ? "Kontingente"
-                      : "Rechnungen"
-              }}
+              <UiIcon name="i-lucide-plus" class="size-4" />
+              Zuweisen
             </button>
           </div>
 
           <div
-            class="bg-white rounded-xl border border-slate-200 shadow-sm min-h-[400px] overflow-hidden"
+            v-if="!user.UserMemberships || user.UserMemberships.length === 0"
+            class="py-12 text-center text-neutral-500"
           >
-            <div v-if="activeTab === 'bookings'" class="p-0">
-              <UserBookingsHistory :bookings="user.Bookings" />
-            </div>
+            Keine Mitgliedschaften vorhanden.
+          </div>
 
-            <div v-if="activeTab === 'invoices'" class="p-0">
-              <UserInvoicesList
-                :invoices="user.Invoices"
-                @download="downloadInvoice"
-              />
-            </div>
-
-            <div v-if="activeTab === 'communications'" class="p-6">
-              <CommunicationHistory
-                :user-id="user.id"
-                show-booking-link
-              />
-            </div>
-
-            <div v-if="activeTab === 'memberships'" class="p-6">
-              <div class="flex justify-between items-center mb-6">
-                <div>
-                  <h3
-                    class="text-lg font-semibold text-slate-900 tracking-tight"
-                  >
-                    Aktive Mitgliedschaften
-                  </h3>
-                  <p class="text-sm text-slate-500">
-                    Übersicht der laufenden Verträge.
-                  </p>
-                </div>
-                <button
-                  @click="showMembershipModal = true"
-                  class="inline-flex items-center justify-center rounded-none bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mr-2 h-4 w-4"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="M12 5v14" />
-                  </svg>
-                  Zuweisen
-                </button>
-              </div>
-
-              <div
-                v-if="
-                  !user.UserMemberships || user.UserMemberships.length === 0
-                "
-                class="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50"
-              >
-                <svg
-                  class="h-10 w-10 text-slate-400 mb-3"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
-                <p class="text-sm text-slate-500 font-medium">
-                  Keine Mitgliedschaften vorhanden.
-                </p>
-                <p class="text-xs text-slate-400">
-                  Weisen Sie oben eine neue zu.
-                </p>
-              </div>
-
-              <ul
-                v-else
-                class="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden"
-              >
-                <li
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-neutral-200 text-neutral-500">
+                  <th class="pb-3 pr-4 font-medium">Typ</th>
+                  <th class="pb-3 pr-4 font-medium">Gültigkeit</th>
+                  <th class="pb-3 pr-4 font-medium">Status</th>
+                  <th class="pb-3 font-medium text-right">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
                   v-for="ms in user.UserMemberships"
                   :key="ms.id"
-                  class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition-colors group"
+                  class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
                 >
-                  <div>
-                    <p class="font-semibold text-slate-900">
-                      {{ ms.MembershipType?.name }}
-                    </p>
-                    <div
-                      class="flex items-center text-xs text-slate-500 mt-1 space-x-2"
-                    >
-                      <span
-                        >Ab:
-                        {{
-                          new Date(ms.valid_from).toLocaleDateString("de-DE")
-                        }}</span
-                      >
-                      <span>•</span>
-                      <span v-if="ms.valid_until"
-                        >Bis:
-                        {{
-                          new Date(ms.valid_until).toLocaleDateString("de-DE")
-                        }}</span
-                      >
-                      <span v-else>Unbegrenzt gültig</span>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-4">
-                    <span
-                      class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20"
-                    >
-                      Aktiv
-                    </span>
-
+                  <td class="py-4 pr-4 font-medium text-neutral-900">
+                    {{ ms.MembershipType?.name }}
+                  </td>
+                  <td class="py-4 pr-4 text-neutral-500">
+                    Ab
+                    {{ new Date(ms.valid_from).toLocaleDateString("de-DE") }}
+                    ·
+                    <template v-if="ms.valid_until">
+                      Bis
+                      {{ new Date(ms.valid_until).toLocaleDateString("de-DE") }}
+                    </template>
+                    <template v-else>Unbegrenzt</template>
+                  </td>
+                  <td class="py-4 pr-4 text-neutral-700">Aktiv</td>
+                  <td class="py-4 text-right">
                     <button
-                      @click="removeMembership(ms.id)"
-                      class="text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
+                      type="button"
+                      class="inline-flex items-center justify-center p-1.5 text-neutral-400 transition-colors hover:text-red-600"
                       title="Mitgliedschaft entfernen"
+                      @click="removeMembership(ms.id)"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        <line x1="10" x2="10" y1="11" y2="17" />
-                        <line x1="14" x2="14" y1="11" y2="17" />
-                      </svg>
+                      <IconTrash class="size-4" />
                     </button>
-                  </div>
-                </li>
-              </ul>
-            </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-            <div v-if="activeTab === 'kontingente'" class="p-6">
-              <div class="flex justify-between items-center mb-6">
-                <div>
-                  <h3
-                    class="text-lg font-semibold text-slate-900 tracking-tight"
-                  >
-                    Gebuchte Kontingente
-                  </h3>
-                  <p class="text-sm text-slate-500">
-                    Übersicht aller Kontingente.
-                  </p>
-                </div>
-                <button
-                  @click="showQuotaModal = true"
-                  class="inline-flex items-center justify-center rounded-none bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    class="mr-2 h-4 w-4"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="M12 5v14" />
-                  </svg>
-                  Zuweisen
-                </button>
-              </div>
+        <div v-else-if="activeTab === 'kontingente'" class="space-y-4">
+          <div class="flex items-center justify-between gap-4">
+            <p class="text-sm text-neutral-500">
+              {{ user.UserQuota?.length || 0 }} Kontingent(e)
+            </p>
+            <button
+              type="button"
+              class="btn-dialog-primary gap-2"
+              @click="showQuotaModal = true"
+            >
+              <UiIcon name="i-lucide-plus" class="size-4" />
+              Zuweisen
+            </button>
+          </div>
 
-              <div
-                v-if="!user.UserQuota || user.UserQuota.length === 0"
-                class="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/50"
-              >
-                <svg
-                  class="h-10 w-10 text-slate-400 mb-3"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
-                <p class="text-sm text-slate-500 font-medium">
-                  Keine Kontingente vorhanden.
-                </p>
-                <p class="text-xs text-slate-400">
-                  Weisen Sie oben eine neue zu.
-                </p>
-              </div>
+          <div
+            v-if="!user.UserQuota || user.UserQuota.length === 0"
+            class="py-12 text-center text-neutral-500"
+          >
+            Keine Kontingente vorhanden.
+          </div>
 
-              <ul
-                v-else
-                class="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden"
-              >
-                <li
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead>
+                <tr class="border-b border-neutral-200 text-neutral-500">
+                  <th class="pb-3 pr-4 font-medium">Kontingent</th>
+                  <th class="pb-3 pr-4 font-medium">Details</th>
+                  <th class="pb-3 pr-4 font-medium">Gültigkeit</th>
+                  <th class="pb-3 font-medium text-right">Aktionen</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
                   v-for="quota in user.UserQuota"
                   :key="quota.id"
-                  class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition-colors group"
+                  class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
                 >
-                  <div>
-                    <p class="font-semibold text-slate-900">
-                      {{ formatQuotaAvailable(quota) }}
-                    </p>
-                    <div
-                      class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 mt-1"
-                    >
-                      <span v-if="quota.Resource?.name">{{
-                        quota.Resource.name
-                      }}</span>
-                      <span v-if="quota.PricingPlan?.name">• {{ quota.PricingPlan.name }}</span>
-                      <span v-if="quota.purchase_booking_id">• Mit Rechnung</span>
-                      <span v-else-if="quota.notes">• {{ quota.notes }}</span>
-                      <span v-else>• Kostenlos zugewiesen</span>
-                      <span>•</span>
-                      <span v-if="quota.valid_until"
-                        >Gültig bis:
-                        {{
-                          new Date(quota.valid_until).toLocaleDateString("de-DE")
-                        }}</span
-                      >
-                      <span v-else>Unbegrenzt gültig</span>
-                    </div>
-                  </div>
-
-                  <div class="flex items-center gap-4">
+                  <td class="py-4 pr-4 font-medium text-neutral-900">
+                    {{ formatQuotaAvailable(quota) }}
+                  </td>
+                  <td class="py-4 pr-4 text-neutral-500">
+                    <span v-if="quota.Resource?.name">{{ quota.Resource.name }}</span>
+                    <span v-if="quota.PricingPlan?.name">
+                      · {{ quota.PricingPlan.name }}
+                    </span>
+                    <span v-if="quota.purchase_booking_id"> · Mit Rechnung</span>
+                    <span v-else-if="quota.notes"> · {{ quota.notes }}</span>
+                    <span v-else> · Kostenlos zugewiesen</span>
+                  </td>
+                  <td class="py-4 pr-4 text-neutral-500">
+                    <template v-if="quota.valid_until">
+                      Bis
+                      {{ new Date(quota.valid_until).toLocaleDateString("de-DE") }}
+                    </template>
+                    <template v-else>Unbegrenzt</template>
+                  </td>
+                  <td class="py-4 text-right">
                     <button
-                      @click="deleteQuota(quota.id)"
-                      class="text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50"
+                      type="button"
+                      class="inline-flex items-center justify-center p-1.5 text-neutral-400 transition-colors hover:text-red-600"
                       title="Kontingent entfernen"
+                      @click="deleteQuota(quota.id)"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        <line x1="10" x2="10" y1="11" y2="17" />
-                        <line x1="14" x2="14" y1="11" y2="17" />
-                      </svg>
+                      <IconTrash class="size-4" />
                     </button>
-                  </div>
-                </li>
-              </ul>
-            </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
+    </template>
 
     <div
       v-if="showMembershipModal"
@@ -525,7 +373,7 @@
                   :class="[
                     'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                     newQuota.mode === 'free'
-                      ? 'bg-neutral-900 text-white'
+                      ? 'bg-brand-accent text-neutral-900'
                       : 'bg-white text-neutral-700 hover:bg-neutral-50',
                   ]"
                 >
@@ -537,7 +385,7 @@
                   :class="[
                     'flex-1 px-4 py-2 text-sm font-medium transition-colors',
                     newQuota.mode === 'paid'
-                      ? 'bg-neutral-900 text-white'
+                      ? 'bg-brand-accent text-neutral-900'
                       : 'bg-white text-neutral-700 hover:bg-neutral-50',
                   ]"
                 >
@@ -662,7 +510,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import UserProfileCard from "@/components/users/UserProfileCard.vue";
 import UserBookingsHistory from "@/components/users/UserBookingsHistory.vue";
 import UserInvoicesList from "@/components/users/UserInvoicesList.vue";
@@ -670,16 +518,24 @@ import CommunicationHistory from "@/components/communication/CommunicationHistor
 
 const api = useBookingApi();
 const route = useRoute();
-const router = useRouter();
 
 const loading = ref(true);
 const user = ref<any>(null);
-const activeTab = ref("bookings");
+const activeTab = ref("stammdaten");
 const showMembershipModal = ref(false);
 const showQuotaModal = ref(false);
 const membershipTypes = ref<any[]>([]);
 const resources = ref<any[]>([]);
 const pricingPlans = ref<any[]>([]);
+
+const tabs = [
+  { id: "stammdaten", label: "Stammdaten" },
+  { id: "bookings", label: "Buchungen" },
+  { id: "invoices", label: "Rechnungen" },
+  { id: "communications", label: "Kommunikation" },
+  { id: "memberships", label: "Mitgliedschaften" },
+  { id: "kontingente", label: "Kontingente" },
+];
 
 const newMembership = ref({
   type_id: null,
@@ -696,6 +552,26 @@ const newQuota = ref({
   valid_until: "",
   notes: "",
   pricing_plan_id: null as number | null,
+});
+
+const displayName = computed(() => {
+  if (!user.value) return "Nutzerprofil";
+  const details = user.value.details;
+  if (details?.user_type === "COMPANY" && details.company) {
+    return details.company;
+  }
+  const name = `${details?.first_name || ""} ${details?.last_name || ""}`.trim();
+  return name || user.value.username || "Nutzerprofil";
+});
+
+const avatarInitials = computed(() => {
+  if (!user.value) return "?";
+  const details = user.value.details;
+  if (details?.first_name || details?.last_name) {
+    return `${details.first_name?.charAt(0) || ""}${details.last_name?.charAt(0) || ""}`.toUpperCase();
+  }
+  const source = user.value.username || user.value.email || "?";
+  return source.substring(0, 2).toUpperCase();
 });
 
 const quotaPlans = computed(() =>
@@ -839,7 +715,7 @@ const removeMembership = async (membershipId: number) => {
   try {
     const success = await api.memberships.removeAssignment(membershipId);
     if (success) {
-      await loadUser(); // Liste aktualisieren
+      await loadUser();
     }
   } catch (e) {
     console.error(e);

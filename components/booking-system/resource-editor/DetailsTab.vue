@@ -7,7 +7,7 @@
           v-model="form.name" 
           type="text" 
           placeholder="z.B. Konferenzraum A"
-          class="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
+          class="flex h-9 w-full  border border-slate-200 bg-white px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
         />
       </div>
       
@@ -15,7 +15,7 @@
         <label class="text-sm font-medium leading-none text-slate-900">Kategorie</label>
         <select 
           v-model="form.category_id" 
-          class="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+          class="flex h-9 w-full  border border-slate-200 bg-white px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
         >
           <option :value="null">Bitte wählen...</option>
           <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
@@ -28,7 +28,7 @@
           v-model.number="form.capacity" 
           type="number" 
           min="0"
-          class="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
+          class="flex h-9 w-full  border border-slate-200 bg-white px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
         />
       </div>
 
@@ -38,7 +38,7 @@
           v-model="form.location_data" 
           type="text" 
           placeholder="z.B. 1. OG, Raum 102"
-          class="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
+          class="flex h-9 w-full  border border-slate-200 bg-white px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950" 
         />
       </div>
 
@@ -48,7 +48,7 @@
           v-model="form.description" 
           rows="4" 
           placeholder="Beschreiben Sie die Ausstattung..."
-          class="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+          class="flex min-h-[80px] w-full  border border-slate-200 bg-white px-3 py-2 text-sm  focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
         ></textarea>
       </div>
     </div>
@@ -68,7 +68,7 @@
         :disabled="saving"
         class="btn-dialog-primary h-9"
       >
-        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Änderungen speichern' }}
       </button>
     </div>

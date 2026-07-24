@@ -10,6 +10,7 @@ import IconMeter from "~/components/icon/Meter.vue";
 import IconMeterOverview from "~/components/icon/MeterOverview.vue";
 import IconResource from "~/components/icon/Resource.vue";
 import IconSettings from "~/components/icon/Settings.vue";
+import IconImage from "~/components/icon/Image.vue";
 
 type NavItem = {
   label: string;
@@ -58,22 +59,14 @@ const mainGroups = ref<NavItem[][]>([
     {
       label: "Kommunikation",
       icon: IconMail,
-      defaultOpen: false,
-      children: [
-        { label: "Email-Vorlagen", to: "/booking-system/email-templates" },
-      ],
+      to: "/booking-system/email-templates"
     },
   ],
   [
     { label: "Campusplan", icon: IconMap, to: "/" },
     {
       label: "Gebäude",
-      icon: IconMeter,
-      defaultOpen: false,
-      children: [
-        { label: "Haus 5", to: "/haus-5" },
-        { label: "Haustechnik", to: "/haus-5/haustechnik" },
-      ],
+      icon: IconMeter
     },
   ],
   [
@@ -83,6 +76,7 @@ const mainGroups = ref<NavItem[][]>([
       to: "/meters/readings",
     },
     { label: "Zählerverwaltung", icon: IconMeter, to: "/meters" },
+    { label: "Zählerbilder", icon: IconImage, to: "/haus-5/haustechnik" },
   ],
 ]);
 

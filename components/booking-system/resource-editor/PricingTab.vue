@@ -14,7 +14,7 @@
       </button>
     </div>
 
-    <div v-if="plans.length === 0" class="text-center py-10 border border-dashed border-slate-200 rounded-lg bg-slate-50/50">
+    <div v-if="plans.length === 0" class="text-center py-10 border border-dashed border-slate-200  bg-slate-50/50">
       <p class="text-sm text-slate-500">Noch keine Preise hinterlegt.</p>
     </div>
 
@@ -22,11 +22,11 @@
       <div 
         v-for="(plan, index) in plans" 
         :key="index" 
-        class="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-lg border border-slate-200 bg-white shadow-sm group hover:border-slate-300 transition-colors"
+        class="relative grid grid-cols-1 md:grid-cols-12 gap-4 p-4  border border-slate-200 bg-white group hover:border-slate-300 transition-colors"
       >
         <button 
           @click="removePlan(index, plan.id)"
-          class="absolute -top-2 -right-2 bg-white rounded-none p-1 text-slate-400 hover:text-red-600 shadow-sm border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity"
+          class="absolute -top-2 -right-2 bg-white rounded-none p-1 text-slate-400 hover:text-red-600 border border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity"
           title="Plan entfernen"
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -37,7 +37,7 @@
           <input 
             v-model="plan.name" 
             placeholder="z.B. Standardtarif"
-            class="flex h-8 w-full rounded-md border border-slate-200 bg-slate-50 px-2.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white" 
+            class="flex h-8 w-full  border border-slate-200 bg-slate-50 px-2.5 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white" 
           />
         </div>
 
@@ -48,7 +48,7 @@
             type="number"
             min="0"
             step="0.01"
-            class="flex h-8 w-full rounded-md border border-slate-200 bg-slate-50 px-2.5 text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white" 
+            class="flex h-8 w-full  border border-slate-200 bg-slate-50 px-2.5 text-xs text-right focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white" 
           />
         </div>
 
@@ -56,7 +56,7 @@
           <label class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Abrechnung</label>
           <select 
             v-model="plan.billing_interval" 
-            class="flex h-8 w-full rounded-md border border-slate-200 bg-slate-50 px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white"
+            class="flex h-8 w-full  border border-slate-200 bg-slate-50 px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 transition-colors focus:bg-white"
           >
             <option value="HOUR">Pro Stunde</option>
             <option value="DAY">Pro Tag</option>
@@ -73,7 +73,7 @@
         :disabled="saving"
         class="btn-dialog-primary h-9"
       >
-        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Preise aktualisieren' }}
       </button>
     </div>

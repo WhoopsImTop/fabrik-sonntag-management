@@ -69,7 +69,7 @@
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input type="text" v-model="userSearchQuery" @focus="showUserDropdown = true" @blur="closeUserDropdown"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm shadow-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm  transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Name oder E-Mail..." />
               <button v-if="userSearchQuery" @click="clearUserSelection"
                 class="absolute right-2.5 top-2.5 h-4 w-4 text-neutral-500 hover:text-neutral-900">
@@ -83,7 +83,7 @@
               class="absolute z-50 mt-1 w-[calc(100%-3rem)] md:w-[330px] rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
               <div class="max-h-60 overflow-y-auto p-1">
                 <div v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)"
-                  class="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
+                  class="relative flex cursor-pointer select-none items-center  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                   <div class="flex items-center gap-2">
                     <div
                       class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900">
@@ -124,13 +124,13 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Vorname</label>
                 <input v-model="customerForm.first_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="Max" />
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Nachname</label>
                 <input v-model="customerForm.last_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="Mustermann" />
               </div>
             </div>
@@ -139,21 +139,21 @@
               <label class="text-sm font-medium leading-none text-neutral-700">{{ customerForm.user_type === 'COMPANY' ?
                 'Firmenname (Pflicht)' : 'Firma (optional)' }}</label>
               <input v-model="customerForm.company" :required="customerForm.user_type === 'COMPANY'"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                 placeholder="Muster GmbH" />
             </div>
 
             <div class="space-y-2">
               <label class="text-sm font-medium leading-none text-neutral-700">E-Mail</label>
               <input v-model="customerForm.email" type="email"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                 placeholder="max@beispiel.de" />
             </div>
 
             <div class="space-y-2">
               <label class="text-sm font-medium leading-none text-neutral-700">Telefon (Mobil)</label>
               <input v-model="customerForm.phone" type="tel"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                 placeholder="+49 152 33 59 20 58" />
             </div>
 
@@ -161,13 +161,13 @@
               <div class="col-span-3 space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Straße</label>
                 <input v-model="customerForm.street"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="Hauptstr." />
               </div>
               <div class="col-span-1 space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Nr.</label>
                 <input v-model="customerForm.houseNumber"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="1" />
               </div>
             </div>
@@ -176,19 +176,19 @@
               <div class="col-span-1 space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">PLZ</label>
                 <input v-model="customerForm.zip_code"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="12345" />
               </div>
               <div class="col-span-2 space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Stadt</label>
                 <input v-model="customerForm.city"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="Berlin" />
               </div>
               <div class="col-span-3 space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Land</label>
                 <input v-model="customerForm.country"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                   placeholder="Deutschland" />
               </div>
             </div>
@@ -209,7 +209,7 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Status</label>
                 <select v-model="form.status"
-                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
+                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
                   <option value="DRAFT">Entwurf</option>
                   <option value="SENT">Versendet</option>
                   <option value="PAID">Bezahlt</option>
@@ -220,30 +220,30 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Rechnungsdatum</label>
                 <input type="date" v-model="form.invoice_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
 
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Leistungsbeginn</label>
                 <input type="date" v-model="form.service_start"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
 
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Leistungsende</label>
                 <input type="date" v-model="form.service_end"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
 
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel</label>
                 <input type="date" v-model="form.due_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel (Tage)</label>
                 <input type="number" v-model="form.days_to_pay"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
             </div>
           </div>
@@ -254,7 +254,7 @@
           <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
             <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
             <button @click="addItem"
-              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium shadow-sm transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
+              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium  transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -265,7 +265,7 @@
           <div class="w-full">
             <table class="w-full caption-bottom text-sm">
               <thead class="[&_tr]:border-b border-neutral-200">
-                <tr class="border-b transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
+                <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
                   <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[200px]">Beschreibung</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[50px]">Menge</th>
                   <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[100px]">Einheit</th>
@@ -282,7 +282,7 @@
                       <div class="relative">
                         <input v-model="item.description" @input="handleInput(index)" @focus="focusRow(index)"
                           @blur="blurRow(index)"
-                          class="border border-neutral-200 flex h-9 w-full rounded-md px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                          class="border border-neutral-200 flex h-9 w-full  px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                           placeholder="Leistung eingeben..." />
 
                         <div v-if="focusedRowIndex === index && suggestions.length > 0"
@@ -290,7 +290,7 @@
                           @mousedown.prevent>
                           <div class="p-1 max-h-60 overflow-y-auto">
                             <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
-                              class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
+                              class="relative flex cursor-pointer select-none items-center justify-between  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                               <div class="flex flex-col">
                                 <span class="font-medium">{{ sugg.label }}</span>
                                 <span class="text-[10px] text-neutral-500 uppercase">{{ sugg.type }}</span>
@@ -305,12 +305,12 @@
 
                     <td class="p-1 align-middle text-right">
                       <input type="number" v-model="item.quantity" min="1"
-                        class="border border-neutral-200 flex h-9 w-full text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white" />
+                        class="border border-neutral-200 flex h-9 w-full text-right  px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white" />
                     </td>
 
                     <td class="p-1 align-middle text-left">
                       <input type="text" v-model="item.unit"
-                        class="border border-neutral-200 flex h-9 w-full rounded-md px-3 py-1 text-sm text-neutral-500 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                        class="border border-neutral-200 flex h-9 w-full  px-3 py-1 text-sm text-neutral-500 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                         placeholder="Einheit" name="suggestions" list="suggestions" />
                       <datalist id="suggestions">
                         <option value="Stunde"></option>
@@ -322,13 +322,13 @@
 
                     <td class="p-1 align-middle text-right">
                       <input type="number" v-model="item.amount" step="0.01"
-                        class="border border-neutral-200 flex h-9 w-full text-right rounded-md px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                        class="border border-neutral-200 flex h-9 w-full text-right  px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
                         placeholder="0.00" />
                     </td>
 
                     <td class="p-1 align-middle text-right">
                       <select v-model="item.vat_rate"
-                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
+                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950">
                         <option :value="0">0%</option>
                         <option :value="0.07">7%</option>
                         <option :value="0.19">19%</option>

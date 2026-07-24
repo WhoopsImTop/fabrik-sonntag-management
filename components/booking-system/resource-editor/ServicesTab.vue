@@ -5,7 +5,7 @@
       <p class="text-xs text-slate-500">Wählen Sie Services, die für diese Ressource gebucht werden können.</p>
     </div>
 
-    <div v-if="allServices.length === 0" class="text-sm text-slate-500 p-4 border border-slate-200 rounded-lg bg-slate-50">
+    <div v-if="allServices.length === 0" class="text-sm text-slate-500 p-4 border border-slate-200  bg-slate-50">
       Keine Services im System definiert. <NuxtLink to="/booking-system/services" class="text-blue-600 underline font-medium">Jetzt anlegen</NuxtLink>
     </div>
 
@@ -13,7 +13,7 @@
       <label 
         v-for="svc in allServices" 
         :key="svc.id"
-        class="relative flex cursor-pointer rounded-lg border p-3 shadow-sm focus:outline-none transition-all duration-200 select-none group"
+        class="relative flex cursor-pointer  border p-3 focus:outline-none transition-all duration-200 select-none group"
         :class="selectedIds.includes(svc.id) 
           ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50' 
           : 'border-slate-200 bg-white hover:border-slate-300'"
@@ -36,7 +36,7 @@
             <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
           </div>
           <div v-else class="text-slate-200 group-hover:text-slate-300">
-             <div class="w-5 h-5 border-2 border-current rounded-full"></div>
+             <div class="w-5 h-5 border-2 border-current"></div>
           </div>
         </div>
       </label>
@@ -48,7 +48,7 @@
         :disabled="saving"
         class="btn-dialog-primary h-9"
       >
-        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+        <span v-if="saving" class="mr-2 h-3 w-3 animate-spin border-2 border-current border-t-transparent"></span>
         {{ saving ? 'Speichert...' : 'Services verknüpfen' }}
       </button>
     </div>

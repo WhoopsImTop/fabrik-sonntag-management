@@ -7,7 +7,7 @@
       </div>
       <button
         type="button"
-        class="inline-flex items-center gap-2 rounded-none bg-brand-accent px-4 py-2 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95"
+        class="btn btn-dialog-primary"
         @click="openTypeModal()"
       >
         <UiIcon name="i-lucide-plus" class="size-4" />
@@ -98,7 +98,7 @@
                   title="Löschen"
                   @click="deleteType(type)"
                 >
-                  <UiIcon name="i-lucide-trash-2" class="size-3.5" />
+                  <IconTrash class="size-4 text-neutral-600" />
                 </button>
               </div>
             </td>

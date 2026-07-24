@@ -271,5 +271,87 @@ export const useMeterApi = () => {
       }
       return res;
     },
+
+    getCameraDevices: async () => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/meters/camera-devices`, {
+            headers: getAuthHeaders(),
+          }),
+        "getCameraDevices",
+      );
+      return res?.data || [];
+    },
+
+    createCameraDevice: async (data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/meters/camera-devices`, {
+            method: "POST",
+            headers: {
+              ...getAuthHeaders(),
+              "Content-Type": "application/json",
+            },
+            body: data,
+          }),
+        "createCameraDevice",
+      );
+      if (res && (res as any).success) {
+        toast.add({ title: "Kamera-Gerät angelegt", color: "primary" });
+      }
+      return res;
+    },
+
+    updateCameraDevice: async (device_id: string, data: any) => {
+      const res = await apiCall(
+        () =>
+          $fetch(
+            `${baseURL}/meters/camera-devices/${encodeURIComponent(device_id)}`,
+            {
+              method: "PUT",
+              headers: {
+                ...getAuthHeaders(),
+                "Content-Type": "application/json",
+              },
+              body: data,
+            },
+          ),
+        "updateCameraDevice",
+      );
+      if (res && (res as any).success) {
+        toast.add({ title: "Kamera-Gerät aktualisiert", color: "primary" });
+      }
+      return res;
+    },
+
+    deleteCameraDevice: async (device_id: string) => {
+      const res = await apiCall(
+        () =>
+          $fetch(
+            `${baseURL}/meters/camera-devices/${encodeURIComponent(device_id)}`,
+            {
+              method: "DELETE",
+              headers: getAuthHeaders(),
+            },
+          ),
+        "deleteCameraDevice",
+      );
+      if (res && (res as any).success) {
+        toast.add({ title: "Kamera-Gerät gelöscht", color: "primary" });
+      }
+      return res;
+    },
+
+    getDeviceStatuses: async () => {
+      try {
+        const res = await $fetch(`${baseURL}/devices`, {
+          headers: getAuthHeaders(),
+        });
+        return (res as Record<string, any>) || {};
+      } catch (error) {
+        console.error("Error in getDeviceStatuses:", error);
+        return {};
+      }
+    },
   };
 };

@@ -13,7 +13,7 @@
       </div>
       <button
         @click="router.push('/booking-system/subscriptions/new')"
-        class="inline-flex items-center justify-center px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-none hover:bg-neutral-800 transition-colors shadow-sm"
+        class="btn btn-dialog-primary"
       >
         <svg
           class="w-4 h-4 mr-2"
@@ -33,13 +33,13 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+      <div class="bg-white p-6  border border-neutral-200 ">
         <p class="text-sm font-medium text-neutral-500">Aktive Abos</p>
         <h3 class="text-2xl font-bold text-neutral-900 mt-1">
           {{ activeCount }}
         </h3>
       </div>
-      <div class="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+      <div class="bg-white p-6  border border-neutral-200 ">
         <p class="text-sm font-medium text-neutral-500">Monatliches Volumen</p>
         <h3 class="text-2xl font-bold text-neutral-900 mt-1">
           €{{ formatMoney(monthlyVolume) }}
@@ -70,12 +70,12 @@
           v-model="searchQuery"
           type="text"
           placeholder="Abos suchen..."
-          class="w-full pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
+          class="w-full pl-9 pr-4 py-2 bg-white border border-neutral-200  text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900"
         />
       </div>
       <select
         v-model="statusFilter"
-        class="px-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900"
+        class="px-4 py-2 bg-white border border-neutral-200  focus:outline-none focus:ring-2 focus:ring-neutral-900"
       >
         <option value="all">Alle Status</option>
         <option value="ACTIVE">Aktiv</option>
@@ -139,26 +139,26 @@
               </span>
             </td>
             <td class="py-4 text-right">
-              <div class="flex items-center justify-end gap-2">
+              <div class="flex items-center justify-end">
                 <button
                   @click="router.push(`/booking-system/subscriptions/${sub.id}`)"
-                  class="text-brand-accent hover:underline"
+                  class="text-brand-accent hover:underline p-1.5 hover:bg-neutral-100"
                 >
-                  Bearbeiten
+                  <IconEdit class="size-3 text-neutral-600" />
                 </button>
 
                 <button
                   v-if="sub.status === 'ACTIVE'"
                   @click="cancelSubscription(sub)"
-                  class="text-amber-600 hover:underline"
+                  class="text-neutral-600 hover:text-neutral-700 p-1.5 hover:bg-neutral-100"
                   title="Abo beenden"
                 >
-                  Beenden
+                  <IconStop class="size-4 text-neutral-600" />
                 </button>
 
                 <button
                   @click="deleteSubscription(sub.id)"
-                  class="text-red-600 hover:text-red-700"
+                  class="text-red-600 hover:text-red-700 p-1.5 hover:bg-neutral-100"
                 >
                   <svg
                     class="w-4 h-4"

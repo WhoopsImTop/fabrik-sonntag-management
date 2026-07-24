@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="booking"
-    class="flex h-full flex-col border-l border-neutral-200 bg-white font-sans"
+    class="flex h-full min-h-0 flex-col overflow-hidden border-l border-neutral-200 bg-white font-sans"
   >
     <!-- Header -->
     <div
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Scrollable body -->
-    <div class="flex-1 overflow-y-auto">
+    <div class="min-h-0 flex-1 overflow-y-auto">
       <!-- Customer + Booking info -->
       <div class="grid grid-cols-1 gap-6 px-5 py-5 sm:grid-cols-2">
         <div class="min-w-0 space-y-2">
@@ -64,7 +64,7 @@
               class="p-0.5 text-neutral-400 transition-colors hover:text-neutral-700"
               title="Kundenprofil öffnen"
             >
-              <UiIcon name="i-lucide-pencil" class="size-3.5" />
+              <IconEdit class="size-3" />
             </NuxtLink>
           </div>
 
@@ -110,7 +110,7 @@
               title="Buchung bearbeiten"
               @click="$emit('edit', booking)"
             >
-              <UiIcon name="i-lucide-pencil" class="size-3.5" />
+              <IconEdit class="size-3" />
             </button>
           </div>
 
@@ -303,6 +303,7 @@
 import { ref, computed } from "vue";
 import ConfirmationModal from "@/components/app/ConfirmationModal.vue";
 import CommunicationHistory from "@/components/communication/CommunicationHistory.vue";
+import IconEdit from "@/components/icon/Edit.vue";
 
 const router = useRouter();
 const api = useBookingApi();

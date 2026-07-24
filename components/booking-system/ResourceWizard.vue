@@ -46,7 +46,7 @@
             <input
               v-model="form.resource.name"
               placeholder="z.B. Podcast Studio A"
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              class="flex h-10 w-full  border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -56,7 +56,7 @@
             >
             <select
               v-model="form.resource.category_id"
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+              class="flex h-10 w-full  border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
             >
               <option :value="null">Bitte wählen...</option>
               <option v-for="cat in categories" :key="cat.id" :value="cat.id">
@@ -72,7 +72,7 @@
             <input
               v-model.number="form.resource.capacity"
               type="number"
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+              class="flex h-10 w-full  border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
             />
           </div>
 
@@ -83,7 +83,7 @@
             <input
               v-model="form.resource.location_data"
               placeholder="Raum-Nummer oder Etage"
-              class="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
+              class="flex h-10 w-full  border border-slate-200 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2"
             />
           </div>
 
@@ -94,7 +94,7 @@
             <textarea
               v-model="form.resource.description"
               rows="4"
-              class="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              class="flex min-h-[80px] w-full  border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             ></textarea>
           </div>
         </div>
@@ -119,7 +119,7 @@
         <div
           v-for="(plan, index) in form.pricingPlans"
           :key="index"
-          class="group relative rounded-lg border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200"
+          class="group relative  border border-slate-200 bg-white p-6 hover:transition-all duration-200"
         >
           <button
             v-if="form.pricingPlans.length > 1"
@@ -151,7 +151,7 @@
               <input
                 v-model="plan.name"
                 placeholder="Standard Tarif"
-                class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex h-9 w-full  border border-slate-200 bg-transparent px-3 py-1 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
             <div class="space-y-2">
@@ -162,7 +162,7 @@
               <input
                 v-model.number="plan.price"
                 type="number"
-                class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                class="flex h-9 w-full  border border-slate-200 bg-transparent px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
               />
             </div>
             <div class="space-y-2">
@@ -172,7 +172,7 @@
               >
               <select
                 v-model="plan.billing_interval"
-                class="flex h-9 w-full rounded-md border border-slate-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
+                class="flex h-9 w-full  border border-slate-200 bg-transparent px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950"
               >
                 <option value="HOUR">Stündlich</option>
                 <option value="DAY">Täglich</option>
@@ -185,22 +185,6 @@
           <div
             class="mt-6 pt-4 border-t border-slate-100 flex items-start gap-4"
           >
-            <div class="p-2 bg-indigo-50 rounded-md text-indigo-600">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 15 15"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M7.49995 1.04999C7.74848 1.04999 7.94995 1.25146 7.94995 1.49999V8H9.49995C9.74848 8 9.94995 8.20147 9.94995 8.45C9.94995 8.69853 9.74848 8.9 9.49995 8.9H7.94995V13.5C7.94995 13.7485 7.74848 13.95 7.49995 13.95C7.25142 13.95 7.04995 13.7485 7.04995 13.5V8.9H5.5C5.25147 8.9 5.05 8.69853 5.05 8.45C5.05 8.20147 5.25147 8 5.5 8H7.04995V1.49999C7.04995 1.25146 7.25142 1.04999 7.49995 1.04999Z"
-                  fill="currentColor"
-                  fill-rule="evenodd"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-            </div>
             <div class="flex-1">
               <label class="text-sm font-medium text-slate-900"
                 >Mitgliedschaft gewähren</label
@@ -210,7 +194,7 @@
               </p>
               <select
                 v-model="plan.grants_membership_type_id"
-                class="flex h-9 w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
+                class="flex h-9 w-full  border border-slate-200  px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500"
               >
                 <option :value="null">Keine Mitgliedschaft</option>
                 <option
@@ -239,10 +223,10 @@
             v-for="svc in allServices"
             :key="svc.id"
             :class="[
-              'relative flex cursor-pointer rounded-lg border p-4 shadow-sm focus:outline-none transition-all duration-200',
+              'relative flex cursor-pointer  border p-4 focus:outline-none transition-all duration-200',
               form.selectedServiceIds.includes(svc.id)
                 ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50'
-                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md',
+                : 'border-slate-200 bg-white hover:border-slate-300',
             ]"
           >
             <input

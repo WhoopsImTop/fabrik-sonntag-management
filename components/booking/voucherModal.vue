@@ -12,8 +12,8 @@
               Gast-Onboarding & WiFi
             </h3>
             <div class="flex items-center gap-2 mt-1.5">
-               <div :class="['h-1.5 w-8 rounded-full transition-all', step === 1 ? 'bg-neutral-900' : 'bg-neutral-200']"></div>
-               <div :class="['h-1.5 w-8 rounded-full transition-all', step === 2 ? 'bg-neutral-900' : 'bg-neutral-200']"></div>
+               <div :class="['h-1.5 w-8  transition-all', step === 1 ? 'bg-neutral-900' : 'bg-neutral-200']"></div>
+               <div :class="['h-1.5 w-8  transition-all', step === 2 ? 'bg-neutral-900' : 'bg-neutral-200']"></div>
                <p class="text-[11px] font-bold text-neutral-400 uppercase tracking-widest ml-2">
                  Schritt {{ step }} von 2
                </p>
@@ -32,16 +32,16 @@
         <div class="p-0 h-[680px] overflow-hidden flex flex-col bg-white">
           
           <div v-if="step === 1" class="flex-1 flex flex-col p-6 overflow-hidden">
-            <div class="flex p-1 bg-neutral-100 rounded-md self-center mb-8 w-full max-w-[400px] border border-neutral-200">
+            <div class="flex p-1 bg-neutral-100  self-center mb-8 w-full max-w-[400px] border border-neutral-200">
               <button 
                 @click="activeTab = 'list'"
-                :class="['flex-1 px-4 py-2 text-sm font-semibold rounded-none transition-all', activeTab === 'list' ? 'bg-white shadow-sm text-neutral-900 border border-neutral-900' : 'text-neutral-500 hover:text-neutral-700']"
+                :class="['flex-1 px-4 py-2 text-sm font-semibold rounded-none transition-all', activeTab === 'list' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500 hover:text-neutral-700']"
               >
                 Vorhandene Codes
               </button>
               <button 
                 @click="activeTab = 'create'"
-                :class="['flex-1 px-4 py-2 text-sm font-semibold rounded-none transition-all', activeTab === 'create' ? 'bg-white shadow-sm text-neutral-900 border border-neutral-900' : 'text-neutral-500 hover:text-neutral-700']"
+                :class="['flex-1 px-4 py-2 text-sm font-semibold rounded-none transition-all', activeTab === 'create' ? 'bg-white text-neutral-900 border border-neutral-200' : 'text-neutral-500 hover:text-neutral-700']"
               >
                 Neu generieren
               </button>
@@ -53,7 +53,7 @@
                   v-for="v in sortedVouchers" :key="v.code"
                   @click="selectedVoucher = v"
                   :class="[
-                    'group p-5 border rounded-2xl cursor-pointer transition-all duration-200 relative',
+                    'group p-5 border  cursor-pointer transition-all duration-200 relative',
                     selectedVoucher?.code === v.code 
                       ? 'border-neutral-900 bg-neutral-50 ring-1 ring-neutral-900' 
                       : 'border-neutral-200 hover:border-neutral-400 bg-white shadow-sm'
@@ -63,7 +63,7 @@
                     <span class="font-mono text-base font-bold tracking-tighter text-slate-900">
                       {{ formatVoucherCode(v.code) }}
                     </span>
-                    <div v-if="selectedVoucher?.code === v.code" class="h-5 w-5 bg-neutral-900 rounded-full flex items-center justify-center">
+                    <div v-if="selectedVoucher?.code === v.code" class="h-5 w-5 bg-neutral-900  flex items-center justify-center">
                         <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -71,7 +71,7 @@
                   </div>
                   <p class="text-xs text-slate-500 font-medium truncate mb-4">{{ v.name || 'Allgemeiner Voucher' }}</p>
                   <div class="flex items-center justify-between mt-auto pt-3 border-t border-slate-100">
-                     <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-bold uppercase">
+                     <span class="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600  font-bold uppercase">
                         {{ v.timeLimitMinutes / 60 }} Std.
                      </span>
                      <span class="text-[10px] text-slate-400 font-medium">
@@ -85,7 +85,7 @@
               </div>
 
               <div v-if="activeTab === 'create'" class="max-w-2xl mx-auto">
-                <div class="bg-neutral-50 border border-neutral-200 rounded-md p-8">
+                <div class="bg-neutral-50 border border-neutral-200  p-8">
                   <h4 class="text-sm font-bold text-neutral-900 mb-6 uppercase tracking-widest">Voucher Konfiguration</h4>
                   <div class="grid grid-cols-2 gap-6">
                     <div class="col-span-2">
@@ -106,7 +106,7 @@
                         :disabled="loading" 
                         class="btn-dialog-primary w-full py-3"
                       >
-                         <span v-if="loading" class="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                         <span v-if="loading" class="mr-3 h-5 w-5 animate-spin  border-2 border-current border-t-transparent"></span>
                          Voucher in Unifi erstellen
                       </button>
                     </div>
@@ -119,14 +119,14 @@
           <div v-if="step === 2" class="flex-1 flex flex-col overflow-hidden bg-neutral-50/50 p-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full overflow-hidden">
               
-              <div class="flex flex-col gap-4 h-full min-h-0">
+              <div class="flex flex-col gap-4 h-full min-h-0 overflow-y-auto">
                 <div class="bg-white p-5 rounded-none border border-neutral-200 flex flex-col gap-4 flex-1">
                   <div class="flex items-center justify-between">
                     <label class="text-xs font-bold text-neutral-400 uppercase tracking-widest">E-Mail Daten</label>
                     <select 
                       v-model="selectedTemplateId" 
                       @change="applyTemplate" 
-                      class="text-xs font-bold text-neutral-700 bg-neutral-100 px-2 py-1 rounded-md cursor-pointer outline-none hover:bg-neutral-200 transition-colors"
+                      class="text-xs font-bold text-neutral-700 bg-neutral-100 px-2 py-1  cursor-pointer outline-none hover:bg-neutral-200 transition-colors"
                     >
                       <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.name }}</option>
                     </select>
@@ -152,16 +152,17 @@
                     >
                   </div>
                   
-                  <div class="flex-1 flex flex-col">
-                    <label class="dialog-label">Inhalt (HTML)</label>
-                    <textarea 
-                      v-model="emailData.rawBody" 
-                      class="dialog-input flex-1 min-h-[120px] font-mono text-[13px] leading-relaxed resize-none"
-                      placeholder="HTML Inhalt hier bearbeiten..."
-                    ></textarea>
+                  <div class="flex-1 flex flex-col min-h-0">
+                    <label class="dialog-label">Inhalt</label>
+                    <ClientOnly>
+                      <UiRichTextEditor
+                        v-model="emailData.rawBody"
+                        class="flex-1 min-h-[120px]"
+                      />
+                    </ClientOnly>
                   </div>
                   
-                  <div class="p-3 bg-amber-50 rounded-md border border-amber-100 flex gap-3 items-start">
+                  <div class="p-3 bg-amber-50  border border-amber-100 flex gap-3 items-start">
                     <div class="text-amber-600 mt-0.5">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
@@ -177,9 +178,9 @@
                   <div class="px-5 py-3 border-b border-neutral-200 flex justify-between items-center">
                     <label class="text-xs font-bold text-neutral-400 uppercase tracking-widest">Live Vorschau</label>
                     <div class="flex gap-1">
-                      <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                      <div class="w-2 h-2 rounded-full bg-slate-200"></div>
-                      <div class="w-2 h-2 rounded-full bg-slate-200"></div>
+                      <div class="w-2 h-2  bg-slate-200"></div>
+                      <div class="w-2 h-2  bg-slate-200"></div>
+                      <div class="w-2 h-2  bg-slate-200"></div>
                     </div>
                   </div>
                   <div 

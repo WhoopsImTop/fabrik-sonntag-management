@@ -63,16 +63,10 @@
           >
             <td class="py-4 pr-4">
               <div class="flex items-center gap-3">
-                <div
-                  class="flex size-9 shrink-0 items-center justify-center border border-neutral-200 bg-neutral-50 text-neutral-600"
-                >
-                  <component :is="getServiceIcon(service.name)" />
-                </div>
                 <div class="min-w-0">
                   <div class="font-medium text-neutral-900">
                     {{ service.name }}
                   </div>
-                  <div class="text-xs text-neutral-500">ID: {{ service.id }}</div>
                 </div>
               </div>
             </td>
@@ -90,7 +84,7 @@
                   title="Bearbeiten"
                   @click="editService(service)"
                 >
-                  <UiIcon name="i-lucide-pencil" class="size-4" />
+                  <IconEdit class="size-3 text-neutral-600" />
                 </button>
                 <button
                   type="button"
@@ -98,7 +92,7 @@
                   title="Löschen"
                   @click="deleteService(service)"
                 >
-                  <UiIcon name="i-lucide-trash-2" class="size-4" />
+                  <IconTrash class="size-4 text-neutral-600" />
                 </button>
               </div>
             </td>

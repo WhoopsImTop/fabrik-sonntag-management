@@ -150,7 +150,7 @@
             </div>
 
             <div
-              class="bg-neutral-50 p-4 rounded-none border border-neutral-200 space-y-4"
+              class="space-y-4"
             >
               <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -220,12 +220,12 @@
                   >
                     <span v-if="checkingAvailability">Pruefung...</span>
                     <span v-else-if="availabilityStatus === 'available'"
-                      >Verfuegbar</span
+                      >Verfügbar</span
                     >
                     <span v-else-if="availabilityStatus === 'unavailable'"
                       >Belegt</span
                     >
-                    <span v-else>Verfuegbarkeit</span>
+                    <span v-else>Verfügbarkeit</span>
                   </span>
                   <span class="text-neutral-500" v-if="availabilityMessage">{{
                     availabilityMessage

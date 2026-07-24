@@ -1,283 +1,223 @@
 <template>
-  <div
-    class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
-  >
-    <div class="p-6">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-slate-900">Stammdaten</h3>
-        <button
-          @click="isEditing = !isEditing"
-          class="text-sm font-medium text-blue-600 hover:text-blue-800"
+  <div class="space-y-4">
+    <div class="flex items-center justify-between">
+      <h3
+        v-if="showIdentity"
+        class="text-lg font-semibold text-neutral-900 tracking-tight"
+      >
+        Stammdaten
+      </h3>
+      <p v-else class="text-sm text-neutral-500">Kontaktdaten und Adresse</p>
+      <button
+        type="button"
+        class="text-sm font-medium text-brand-accent hover:underline"
+        @click="isEditing = !isEditing"
+      >
+        {{ isEditing ? "Abbrechen" : "Bearbeiten" }}
+      </button>
+    </div>
+
+    <div v-if="!isEditing" class="space-y-6">
+      <div v-if="showIdentity" class="flex items-center gap-4">
+        <div
+          class="flex size-12 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white"
         >
-          {{ isEditing ? "Abbrechen" : "Bearbeiten" }}
-        </button>
-      </div>
-
-      <div v-if="!isEditing" class="space-y-6">
-        <div class="flex items-center gap-4">
-          <div
-            class="h-16 w-16 rounded-full bg-slate-900 text-white flex items-center justify-center text-2xl font-bold"
-          >
-            {{ getInitials(user.username) }}
-          </div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-900">
-              {{
-                user.details?.user_type === "COMPANY" && user.details.company
-                  ? user.details.company
-                  : (user.details?.first_name || "") +
-                    " " +
-                    (user.details?.last_name || "")
-              }}
-            </h2>
-            <div class="flex items-center gap-2">
-              <span
-                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 uppercase tracking-wide"
-              >
-                {{ user.role || "user" }}
-              </span>
-              <span
-                v-if="user.details?.user_type === 'COMPANY'"
-                class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20"
-              >
-                Firma
-              </span>
-            </div>
-          </div>
+          {{ getInitials(user.username) }}
         </div>
-
-        <div class="grid gap-4 border-t border-slate-100 pt-4">
-          <div v-if="user.details?.user_type === 'PERSON'">
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Vorname</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details?.first_name || "—" }}
-            </p>
-          </div>
-          <div v-if="user.details?.user_type === 'PERSON'">
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Nachname</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details?.last_name || "—" }}
-            </p>
-          </div>
-          <div
-            v-if="
-              user.details?.user_type === 'COMPANY' &&
-              (user.details?.first_name || user.details?.last_name)
-            "
-          >
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Ansprechpartner</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details?.first_name || "" }}
-              {{ user.details?.last_name || "" }}
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Ansprechpartner auf Rechnung</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details?.display_contact_person ? "Ja" : "Nein" }}
-            </p>
-          </div>
-          <div
-            v-if="
-              user.details?.company && user.details?.user_type !== 'COMPANY'
-            "
-          >
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Firma</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details.company }}
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >E-Mail</label
-            >
-            <p class="text-slate-900 font-medium flex items-center gap-2">
-              <svg
-                class="w-4 h-4 text-slate-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-              <a
-                v-if="user.email"
-                :href="'mailto:' + user.email"
-                class="hover:text-blue-600"
-                >{{ user.email }}</a
-              >
-              <span v-else>—</span>
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Mobilnummer</label
-            >
-            <p class="text-slate-900 font-medium flex items-center gap-2">
-              <a
-                v-if="user.details?.mobile_number"
-                :href="'tel:' + user.details.mobile_number"
-                class="hover:text-blue-600"
-                >{{ user.details.mobile_number }}</a
-              >
-              <span v-else>—</span>
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Straße</label
-            >
-            <p class="text-slate-900 font-medium">
-              <template
-                v-if="user.details?.street || user.details?.house_number"
-              >
-                {{ user.details?.street || "" }}
-                {{ user.details?.house_number || "" }}
-              </template>
-              <span v-else>—</span>
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >PLZ / Stadt</label
-            >
-            <p class="text-slate-900 font-medium">
-              <template v-if="user.details?.zip_code || user.details?.city">
-                {{ user.details?.zip_code || "" }}
-                {{ user.details?.city || "" }}
-              </template>
-              <span v-else>—</span>
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Land</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details?.country || "—" }}
-            </p>
-          </div>
-          <div v-if="user.details?.vat_number">
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >USt-IdNr.</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details.vat_number }}
-            </p>
-          </div>
-          <div v-if="user.details?.debitor_number">
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Debitorennummer</label
-            >
-            <p class="text-slate-900 font-medium">
-              {{ user.details.debitor_number }}
-            </p>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-slate-500 uppercase"
-              >Mitglied seit</label
-            >
-            <p class="text-slate-900">{{ formatDate(user.createdAt) }}</p>
+        <div>
+          <h2 class="text-lg font-bold text-neutral-900">
+            {{
+              user.details?.user_type === "COMPANY" && user.details.company
+                ? user.details.company
+                : (user.details?.first_name || "") +
+                  " " +
+                  (user.details?.last_name || "")
+            }}
+          </h2>
+          <div class="mt-0.5 flex items-center gap-2 text-xs text-neutral-500">
+            <span class="uppercase tracking-wide">{{ user.role || "user" }}</span>
+            <span v-if="user.details?.user_type === 'COMPANY'">· Firma</span>
           </div>
         </div>
       </div>
 
-      <form v-else @submit.prevent="saveUser" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2"
-            >Kontotyp</label
-          >
-          <div class="flex rounded-lg border border-slate-200 overflow-hidden">
-            <button
-              type="button"
-              @click="form.user_type = 'PERSON'"
-              :class="[
-                'flex-1 px-4 py-2 text-sm font-medium transition-colors',
-                form.user_type === 'PERSON'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white text-slate-700 hover:bg-slate-50',
-              ]"
-            >
-              Person
-            </button>
-            <button
-              type="button"
-              @click="form.user_type = 'COMPANY'"
-              :class="[
-                'flex-1 px-4 py-2 text-sm font-medium transition-colors',
-                form.user_type === 'COMPANY'
-                  ? 'bg-slate-900 text-white'
-                  : 'bg-white text-slate-700 hover:bg-slate-50',
-              ]"
-            >
-              Firma
-            </button>
-          </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+        <div v-if="user.details?.user_type === 'PERSON'">
+          <p class="text-xs font-medium text-neutral-500">Vorname</p>
+          <p class="mt-0.5 text-neutral-900">
+            {{ user.details?.first_name || "—" }}
+          </p>
         </div>
-        <!-- Ansprechpartner auf Rechnung display_contact_person true/false mit eigenem toggle button -->
-        <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Ansprechpartner auf Rechnung einblenden</label
-          >
-          <ToggleButton
-            v-model="form.display_contact_person"
-            :labels="{ checked: 'Ja', unchecked: 'Nein' }"
-          />
+        <div v-if="user.details?.user_type === 'PERSON'">
+          <p class="text-xs font-medium text-neutral-500">Nachname</p>
+          <p class="mt-0.5 text-neutral-900">
+            {{ user.details?.last_name || "—" }}
+          </p>
+        </div>
+        <div
+          v-if="
+            user.details?.user_type === 'COMPANY' &&
+            (user.details?.first_name || user.details?.last_name)
+          "
+          class="sm:col-span-2"
+        >
+          <p class="text-xs font-medium text-neutral-500">Ansprechpartner</p>
+          <p class="mt-0.5 text-neutral-900">
+            {{ user.details?.first_name || "" }}
+            {{ user.details?.last_name || "" }}
+          </p>
+        </div>
+        <div
+          v-if="
+            user.details?.company && user.details?.user_type !== 'COMPANY'
+          "
+        >
+          <p class="text-xs font-medium text-neutral-500">Firma</p>
+          <p class="mt-0.5 text-neutral-900">{{ user.details.company }}</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">{{
+          <p class="text-xs font-medium text-neutral-500">E-Mail</p>
+          <p class="mt-0.5 text-neutral-900">
+            <a
+              v-if="user.email"
+              :href="'mailto:' + user.email"
+              class="hover:text-brand-accent"
+              >{{ user.email }}</a
+            >
+            <span v-else>—</span>
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-neutral-500">Mobilnummer</p>
+          <p class="mt-0.5 text-neutral-900">
+            <a
+              v-if="user.details?.mobile_number"
+              :href="'tel:' + user.details.mobile_number"
+              class="hover:text-brand-accent"
+              >{{ user.details.mobile_number }}</a
+            >
+            <span v-else>—</span>
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-neutral-500">Adresse</p>
+          <p class="mt-0.5 text-neutral-900">
+            <template
+              v-if="
+                user.details?.street ||
+                user.details?.house_number ||
+                user.details?.zip_code ||
+                user.details?.city
+              "
+            >
+              {{ user.details?.street || "" }}
+              {{ user.details?.house_number || "" }}<br />
+              {{ user.details?.zip_code || "" }}
+              {{ user.details?.city || "" }}
+              <template v-if="user.details?.country">
+                <br />{{ user.details.country }}
+              </template>
+            </template>
+            <span v-else>—</span>
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-neutral-500">
+            Ansprechpartner auf Rechnung
+          </p>
+          <p class="mt-0.5 text-neutral-900">
+            {{ user.details?.display_contact_person ? "Ja" : "Nein" }}
+          </p>
+        </div>
+        <div v-if="user.details?.vat_number">
+          <p class="text-xs font-medium text-neutral-500">USt-IdNr.</p>
+          <p class="mt-0.5 text-neutral-900">{{ user.details.vat_number }}</p>
+        </div>
+        <div v-if="user.details?.debitor_number">
+          <p class="text-xs font-medium text-neutral-500">Debitorennummer</p>
+          <p class="mt-0.5 text-neutral-900">
+            {{ user.details.debitor_number }}
+          </p>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-neutral-500">Mitglied seit</p>
+          <p class="mt-0.5 text-neutral-900">{{ formatDate(user.createdAt) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <form v-else @submit.prevent="saveUser" class="space-y-4">
+      <div>
+        <label class="dialog-label">Kontotyp</label>
+        <div class="flex rounded-none border border-neutral-200 overflow-hidden max-w-xs">
+          <button
+            type="button"
+            @click="form.user_type = 'PERSON'"
+            :class="[
+              'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+              form.user_type === 'PERSON'
+                ? 'bg-brand-accent text-neutral-900'
+                : 'bg-white text-neutral-700 hover:bg-neutral-50',
+            ]"
+          >
+            Person
+          </button>
+          <button
+            type="button"
+            @click="form.user_type = 'COMPANY'"
+            :class="[
+              'flex-1 px-4 py-2 text-sm font-medium transition-colors',
+              form.user_type === 'COMPANY'
+                ? 'bg-brand-accent text-neutral-900'
+                : 'bg-white text-neutral-700 hover:bg-neutral-50',
+            ]"
+          >
+            Firma
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="dialog-label"
+          >Ansprechpartner auf Rechnung einblenden</label
+        >
+        <ToggleButton
+          v-model="form.display_contact_person"
+          :labels="{ checked: 'Ja', unchecked: 'Nein' }"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="dialog-label">{{
             form.user_type === "COMPANY" ? "Ansprechpartner Vorname" : "Vorname"
           }}</label>
-          <input
-            v-model="form.first_name"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <input v-model="form.first_name" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">{{
+          <label class="dialog-label">{{
             form.user_type === "COMPANY"
               ? "Ansprechpartner Nachname"
               : "Nachname"
           }}</label>
-          <input
-            v-model="form.last_name"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <input v-model="form.last_name" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">{{
+          <label class="dialog-label">{{
             form.user_type === "COMPANY"
               ? "Ansprechpartner Telefon"
               : "Telefonnummer"
           }}</label>
-          <input
-            v-model="form.mobile_number"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <input v-model="form.mobile_number" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
+          <label class="dialog-label"
             >Firma {{ form.user_type === "COMPANY" ? "" : "(optional)" }}</label
           >
           <input
             v-model="form.company"
             :required="form.user_type === 'COMPANY'"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+            class="dialog-input"
             :placeholder="
               form.user_type === 'COMPANY'
                 ? 'Firmenname (Pflicht)'
@@ -285,102 +225,79 @@
             "
           />
         </div>
-
         <div v-if="form.user_type === 'COMPANY'">
-          <label class="block text-sm font-medium text-slate-700"
-            >USt-IdNr.</label
-          >
+          <label class="dialog-label">USt-IdNr.</label>
           <input
             v-model="form.vat_number"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+            class="dialog-input"
             placeholder="DE123456789"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Straße</label>
-          <input
-            v-model="form.street"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">Straße</label>
+          <input v-model="form.street" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Hausnummer</label
-          >
-          <input
-            v-model="form.house_number"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">Hausnummer</label>
+          <input v-model="form.house_number" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Postleitzahl</label
-          >
-          <input
-            v-model="form.zip_code"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">Postleitzahl</label>
+          <input v-model="form.zip_code" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Stadt</label>
-          <input
-            v-model="form.city"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">Stadt</label>
+          <input v-model="form.city" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Land</label>
-          <input
-            v-model="form.country"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">Land</label>
+          <input v-model="form.country" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">E-Mail</label>
-          <input
-            v-model="form.email"
-            type="email"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          />
+          <label class="dialog-label">E-Mail</label>
+          <input v-model="form.email" type="email" class="dialog-input" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700">Rolle</label>
-          <select
-            v-model="form.role"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
-          >
+          <label class="dialog-label">Rolle</label>
+          <select v-model="form.role" class="dialog-input">
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700"
-            >Debitoren Nummer</label
-          >
+          <label class="dialog-label">Debitoren Nummer</label>
           <input
             v-model="form.debitor_number"
             type="text"
-            class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2"
+            class="dialog-input"
           />
         </div>
-        <div class="pt-4 flex justify-end">
-          <button
-            type="submit"
-            :disabled="loading"
-            class="bg-slate-900 text-white px-4 py-2 rounded-none text-sm font-medium hover:bg-slate-800 transition-colors"
-          >
-            {{ loading ? "Speichert..." : "Speichern" }}
-          </button>
-        </div>
-      </form>
-    </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          type="button"
+          class="btn-dialog-cancel"
+          @click="isEditing = false"
+        >
+          Abbrechen
+        </button>
+        <button type="submit" :disabled="loading" class="btn-dialog-primary">
+          {{ loading ? "Speichert..." : "Speichern" }}
+        </button>
+      </div>
+    </form>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import ToggleButton from "@/components/users/ToggleButton.vue";
-const props = defineProps<{ user: any }>();
+
+const props = withDefaults(
+  defineProps<{ user: any; showIdentity?: boolean }>(),
+  { showIdentity: true },
+);
 const emit = defineEmits(["update"]);
 
 const isEditing = ref(false);
@@ -403,7 +320,6 @@ const form = ref({
   display_contact_person: false,
 });
 
-// Init Form
 watch(
   () => props.user,
   (u) => {

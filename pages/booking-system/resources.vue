@@ -87,7 +87,7 @@
             <td class="py-4 pr-4 text-neutral-600">
               {{ resource.ResourceCategory?.name || "Allgemein" }}
             </td>
-            <td class="py-4 pr-4 text-neutral-700">
+            <td class="py-4 pr-4 text-neutral-600">
               {{ resource.capacity || 0 }} Pers.
             </td>
             <td class="py-4 pr-4 text-neutral-600">
@@ -98,7 +98,7 @@
                 {{ resource.PricingPlans.length }}
                 {{ resource.PricingPlans.length === 1 ? "Tarif" : "Tarife" }}
               </template>
-              <span v-else class="text-neutral-400">—</span>
+              <span v-else class="text-neutral-600">—</span>
             </td>
             <td class="py-4 text-right">
               <button
@@ -106,7 +106,7 @@
                 class="font-medium text-brand-accent hover:underline"
                 @click.stop="openEditModal(resource.id)"
               >
-                Bearbeiten
+                <IconEdit class="size-3 text-neutral-600" />
               </button>
             </td>
           </tr>

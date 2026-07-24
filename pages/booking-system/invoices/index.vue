@@ -128,7 +128,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+      <div class="bg-white p-6 border border-neutral-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-neutral-500">Gesamtumsatz</p>
@@ -136,15 +136,9 @@
               €{{ formatMoney(stats.totalRevenue) }}
             </h3>
           </div>
-          <div class="p-3 bg-green-50 rounded-lg">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+      <div class="bg-white p-6 border border-neutral-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-neutral-500">Offen</p>
@@ -152,27 +146,15 @@
               €{{ formatMoney(stats.pendingAmount) }}
             </h3>
           </div>
-          <div class="p-3 bg-yellow-50 rounded-lg">
-            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
         </div>
       </div>
-      <div class="bg-white p-6 rounded-xl border border-neutral-200 shadow-sm">
+      <div class="bg-white p-6 border border-neutral-200">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-neutral-500">Überfällig</p>
             <h3 class="text-2xl font-bold text-neutral-900 mt-1">
               €{{ formatMoney(stats.overdueAmount) }}
             </h3>
-          </div>
-          <div class="p-3 bg-red-50 rounded-lg">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
           </div>
         </div>
       </div>
@@ -187,10 +169,10 @@
           </svg>
         </span>
         <input v-model="searchQuery" type="text" placeholder="Suchen nach Nummer, Kunde..."
-          class="w-full pl-10 pr-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow" />
+          class="w-full pl-10 pr-4 py-2 bg-white border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent transition-shadow" />
       </div>
       <select v-model="statusFilter"
-        class="px-4 py-2 bg-white border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-900">
+        class="px-4 py-2 bg-white border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900">
         <option value="all">Alle Status</option>
         <option value="DRAFT">Entwurf</option>
         <option value="PENDING">Ausstehend</option>
@@ -206,7 +188,7 @@
           <tr class="border-b border-neutral-200 text-neutral-500">
             <th class="pb-3 pr-4 font-medium w-10">
               <input type="checkbox" :checked="allSelected" @change="toggleSelectAll"
-                class="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900" />
+                class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none" />
             </th>
             <th class="pb-3 pr-4 font-medium">Nr. / Datum</th>
             <th class="pb-3 pr-4 font-medium">Kunde</th>
@@ -232,7 +214,7 @@
           >
             <td class="py-4 pr-4" @click.stop>
               <input type="checkbox" :value="invoice.id" v-model="selectedInvoices"
-                class="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900" />
+                class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none" />
             </td>
             <td class="py-4 pr-4">
               <div class="font-medium text-neutral-900">
@@ -270,7 +252,7 @@
                   v-if="invoice.status === 'SENT'"
                   @click.stop="togglePaidStatus(invoice)"
                   :class="[
-                    'p-2 rounded-none transition-colors',
+                    'p-2 transition-colors',
                     invoice.status === 'PAID' ? 'text-emerald-600 hover:bg-emerald-50' : 'text-neutral-400 hover:text-emerald-600 hover:bg-emerald-50'
                   ]"
                   :title="invoice.status === 'PAID' ? 'Als offen markieren' : 'Als bezahlt markieren'"
@@ -278,7 +260,7 @@
                   <img src="../../../public/check.svg" class="w-5 h-5" />
                 </button>
                 <button
-                  class="text-neutral-400 hover:text-neutral-900 p-2 rounded-none hover:bg-neutral-100 transition-colors"
+                  class="text-neutral-400 hover:text-neutral-900 p-2 hover:bg-neutral-100 transition-colors"
                   @click.stop="goToDetail(invoice.id)"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

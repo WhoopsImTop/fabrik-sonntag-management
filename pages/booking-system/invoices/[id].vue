@@ -146,14 +146,14 @@
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input type="text" v-model="userSearchQuery" @input="handleUserSearch"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm shadow-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm  transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
                   placeholder="Name oder E-Mail..." />
 
                 <div v-if="userSearchResults.length > 0"
                   class="absolute z-50 mt-1 w-[calc(100%-0rem)] rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
                   <div class="max-h-60 overflow-y-auto p-1">
                     <div v-for="user in userSearchResults" :key="user.id" @click="selectUser(user)"
-                      class="relative flex cursor-pointer select-none flex-col rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
+                      class="relative flex cursor-pointer select-none flex-col  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                       <span class="font-medium">{{ user.username }}</span>
                       <span class="text-xs text-neutral-500">{{ user.email }}</span>
                     </div>
@@ -198,14 +198,14 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Status</label>
                 <select v-if="isEditing && isDraft" v-model="form.status"
-                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
+                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
                   <option value="DRAFT">Entwurf</option>
                   <option value="SENT">Versendet</option>
                   <option value="PAID">Bezahlt</option>
                   <option value="OVERDUE">Überfällig</option>
                 </select>
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500 ">
                   {{ getStatusLabel(invoice.status) }}
                 </div>
               </div>
@@ -213,9 +213,9 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Rechnungsdatum</label>
                 <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
                   {{ formatDate(invoice.invoice_date || invoice.createdAt) }}
                 </div>
               </div>
@@ -223,9 +223,9 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Fälligkeitsdatum</label>
                 <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
                   {{ formatDate(invoice.due_date) }}
                 </div>
               </div>
@@ -233,9 +233,9 @@
               <div class="space-y-2">
                 <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel (Tage)</label>
                 <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
                 <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 shadow-sm">
+                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
                   {{ invoice.days_to_pay ?? form.days_to_pay }}
                 </div>
               </div>
@@ -248,7 +248,7 @@
           <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
             <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
             <button v-if="isEditing && isDraft" @click="addItem"
-              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium shadow-sm transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
+              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium  transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -259,7 +259,7 @@
           <div class="w-full">
             <table class="w-full caption-bottom text-sm">
               <thead class="[&_tr]:border-b border-neutral-200">
-                <tr class="border-b transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
+                <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
                   <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[35%]">Beschreibung</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[10%]">Menge</th>
                   <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[15%]">Einheit</th>
@@ -271,7 +271,7 @@
               </thead>
               <tbody class="[&_tr:last-child]:border-0">
                 <template v-for="(item, index) in form.items" :key="index">
-                  <tr class="transition-colors hover:bg-neutral-50/50 group">
+                  <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-50/50 group">
                     <td class="pl-4 pr-1 py-2 align-middle relative">
                       <div v-if="isEditing && isDraft" class="relative">
                         <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
@@ -283,7 +283,7 @@
                           @mousedown.prevent>
                           <div class="p-1 max-h-60 overflow-y-auto">
                             <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
-                              class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
+                              class="relative flex cursor-pointer select-none items-center justify-between  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
                               <div class="flex flex-col">
                                 <span class="font-medium">{{ sugg.label }}</span>
                                 <span class="text-[10px] text-neutral-500 uppercase">{{ sugg.type }}</span>
@@ -319,7 +319,7 @@
 
                     <td class="p-1 align-middle text-right">
                       <select v-if="isEditing && isDraft" v-model="item.vat_rate"
-                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
+                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950">
                         <option :value="0">0%</option>
                         <option :value="0.07">7%</option>
                         <option :value="0.19">19%</option>
@@ -372,7 +372,7 @@
           </div>
 
           <div class="border-t border-neutral-200 bg-neutral-50 p-4 pb-6">
-            <div class="flex justify-end pr-10">
+            <div class="flex justify-end">
               <div class="w-full max-w-md space-y-2">
                 <div class="flex justify-between text-sm text-neutral-500">
                   <span>Netto</span>

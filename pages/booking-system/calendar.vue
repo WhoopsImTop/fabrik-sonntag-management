@@ -1,5 +1,7 @@
 <template>
-  <div class="flex min-h-[calc(100dvh-4rem)] flex-col bg-white font-sans">
+  <div
+    class="flex h-[calc(100dvh-4rem)] flex-col overflow-hidden bg-white font-sans"
+  >
     <BookingVoucherModal
       v-if="showVoucherModal"
       :initial-email="selectedBooking?.User?.email || ''"
@@ -9,39 +11,49 @@
       @success="handleWelcomeEmailSuccess"
     />
 
-    <header class="z-20 flex-shrink-0 border-b border-neutral-200 pb-6">
+    <header class="z-20 shrink-0 border-b border-neutral-200 pb-6">
       <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
           Buchungskalender
         </h1>
 
         <div class="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            class="inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
-            :class="
-              currentView === 'list'
-                ? 'text-brand-accent'
-                : 'text-neutral-500 hover:text-neutral-800'
-            "
-            @click="currentView = 'list'"
+          <div
+            class="inline-flex overflow-hidden rounded-none border border-neutral-200"
+            role="group"
+            aria-label="Ansicht wählen"
           >
-            <UiIcon name="i-lucide-list" class="size-4" />
-            Listenansicht
-          </button>
-          <button
-            type="button"
-            class="inline-flex size-9 items-center justify-center rounded-none border border-neutral-200 transition-colors"
-            :class="
-              currentView === 'calendar'
-                ? 'border-brand-accent text-brand-accent'
-                : 'text-neutral-500 hover:text-neutral-800'
-            "
-            title="Kalenderansicht"
-            @click="currentView = 'calendar'"
-          >
-            <UiIcon name="i-lucide-calendar" class="size-4" />
-          </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 py-2 text-sm font-medium transition-colors"
+              :class="
+                currentView === 'list'
+                  ? 'bg-neutral-900 px-3 text-white'
+                  : 'bg-white px-2.5 text-neutral-500 hover:text-neutral-800'
+              "
+              :aria-pressed="currentView === 'list'"
+              aria-label="Listenansicht"
+              @click="currentView = 'list'"
+            >
+              <UiIcon name="i-lucide-list" class="size-4" />
+              <span v-if="currentView === 'list'">Listenansicht</span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 border-l border-neutral-200 py-2 text-sm font-medium transition-colors"
+              :class="
+                currentView === 'calendar'
+                  ? 'bg-neutral-900 px-3 text-white'
+                  : 'bg-white px-2.5 text-neutral-500 hover:text-neutral-800'
+              "
+              :aria-pressed="currentView === 'calendar'"
+              aria-label="Kalenderansicht"
+              @click="currentView = 'calendar'"
+            >
+              <UiIcon name="i-lucide-calendar" class="size-4" />
+              <span v-if="currentView === 'calendar'">Kalenderansicht</span>
+            </button>
+          </div>
           <button
             type="button"
             class="inline-flex items-center gap-2 rounded-none bg-brand-accent px-4 py-2 text-sm font-semibold text-neutral-900 transition-colors hover:brightness-95"
@@ -90,7 +102,7 @@
       </div>
     </header>
 
-    <main class="relative flex flex-1 overflow-hidden">
+    <main class="relative flex min-h-0 flex-1 overflow-hidden">
       <div
         v-if="loading"
         class="absolute inset-0 z-10 flex items-center justify-center bg-white/80"
@@ -131,7 +143,7 @@
       >
         <div
           v-if="selectedBooking"
-          class="absolute inset-y-0 right-0 z-20 w-[480px] max-w-[90vw] shadow-xl sm:w-[480px]"
+          class="absolute inset-y-0 right-0 z-20 flex h-full w-[480px] max-w-[90vw] flex-col overflow-hidden shadow-xl sm:w-[480px]"
         >
           <BookingDetails
             ref="bookingDetailsRef"
