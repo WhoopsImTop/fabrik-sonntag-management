@@ -23,6 +23,11 @@ type NavItem = {
 const searchQuery = ref("");
 const openSections = ref<Record<string, boolean>>({});
 
+const { hydrateFromStorage, role } = useAuth();
+if (import.meta.client) {
+  hydrateFromStorage();
+}
+
 const mainGroups = ref<NavItem[][]>([
   [
     { label: "Dashboard", icon: IconDashboard, to: "/booking-system" },
@@ -81,6 +86,13 @@ const mainGroups = ref<NavItem[][]>([
   ],
 ]);
 
+const visibleMainGroups = computed(() => {
+  // Sachbearbeiter: nur Buchungssystem (erste Gruppe)
+  if (role.value === "sachbearbeiter") {
+    return [mainGroups.value[0]];
+  }
+  return mainGroups.value;
+});
 const settingsItem = ref<NavItem>({
   label: "Einstellungen",
   icon: IconSettings,
@@ -164,6 +176,15 @@ watch(
   { immediate: true },
 );
 
+watch(
+  visibleMainGroups,
+  () => {
+    initOpen();
+    openActiveSections();
+  },
+  { deep: true },
+);
+
 const matchesSearch = (item: NavItem): boolean => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return true;
@@ -172,7 +193,7 @@ const matchesSearch = (item: NavItem): boolean => {
 };
 
 const filteredGroups = computed(() =>
-  mainGroups.value
+  visibleMainGroups.value
     .map((group) => group.filter(matchesSearch))
     .filter((group) => group.length > 0),
 );

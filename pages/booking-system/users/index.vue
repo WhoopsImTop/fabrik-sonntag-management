@@ -146,7 +146,7 @@
           <div class="min-w-0 flex-1">
             <h2 class="dialog-title">Neuen Benutzer anlegen</h2>
             <p class="dialog-desc">
-              Erstellen Sie einen neuen Kunden- oder Admin-Account.
+              Erstellen Sie einen Kunden oder einen Benutzer mit Anmeldezugang.
             </p>
           </div>
           <button type="button" class="dialog-close" aria-label="Schließen" @click="showAddModal = false">
@@ -195,12 +195,64 @@
               <input v-model="newUser.email" type="email" required
                 class="dialog-input" />
             </div>
-            <div>
+
+            <div class="border border-neutral-200 bg-neutral-50 p-4 space-y-3">
+              <label class="flex cursor-pointer items-start gap-3">
+                <input
+                  v-model="newUser.enable_login"
+                  type="checkbox"
+                  class="mt-0.5 border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+                />
+                <span>
+                  <span class="block text-sm font-medium text-neutral-900">
+                    Anmeldezugang aktivieren
+                  </span>
+                  <span class="mt-0.5 block text-xs text-neutral-500">
+                    Der Benutzer kann sich in der Verwaltung anmelden.
+                  </span>
+                </span>
+              </label>
+
+              <div v-if="newUser.enable_login" class="space-y-3 pt-1">
+                <div>
+                  <label class="dialog-label">Rolle</label>
+                  <select v-model="newUser.role" class="dialog-input" required>
+                    <option value="user">User (Kunde)</option>
+                    <option value="sachbearbeiter">Sachbearbeiter</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="mb-1.5 flex items-center justify-between gap-2">
+                    <label class="dialog-label !mb-0">Passwort</label>
+                    <button
+                      type="button"
+                      class="text-xs font-medium text-brand-accent hover:underline"
+                      @click="newUser.password = generatePassword(12)"
+                    >
+                      Generieren
+                    </button>
+                  </div>
+                  <input
+                    v-model="newUser.password"
+                    type="text"
+                    required
+                    minlength="6"
+                    class="dialog-input font-mono"
+                    placeholder="Mind. 6 Zeichen"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div v-if="!newUser.enable_login">
               <label class="dialog-label">Rolle</label>
-              <select v-model="newUser.role" class="dialog-input">
+              <select v-model="newUser.role" class="dialog-input" disabled>
                 <option value="user">User (Kunde)</option>
-                <option value="admin">Admin</option>
               </select>
+              <p class="mt-1 text-xs text-neutral-500">
+                Ohne Anmeldezugang wird der Benutzer als Kunde angelegt.
+              </p>
             </div>
           </div>
 
@@ -222,11 +274,74 @@
         </form>
       </div>
     </div>
+
+    <div
+      v-if="createdCredentials"
+      class="dialog-overlay"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="absolute inset-0" @click="createdCredentials = null"></div>
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h2 class="dialog-title">Zugangsdaten</h2>
+            <p class="dialog-desc">
+              Bitte einmalig notieren oder kopieren – das Passwort wird danach nicht mehr angezeigt.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="createdCredentials = null"
+          >
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
+        <div class="dialog-body space-y-3">
+          <div>
+            <p class="dialog-label">Benutzername / E-Mail</p>
+            <p class="rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900">
+              {{ createdCredentials.login }}
+            </p>
+          </div>
+          <div>
+            <p class="dialog-label">Passwort</p>
+            <p class="rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 font-mono text-sm text-neutral-900">
+              {{ createdCredentials.password }}
+            </p>
+          </div>
+          <div>
+            <p class="dialog-label">Rolle</p>
+            <p class="text-sm text-neutral-900">
+              {{ getRoleLabel(createdCredentials.role) }}
+            </p>
+          </div>
+        </div>
+        <div class="dialog-footer !justify-between">
+          <button
+            type="button"
+            class="btn-dialog-cancel"
+            @click="copyCredentials"
+          >
+            {{ copied ? "Kopiert" : "Kopieren" }}
+          </button>
+          <button
+            type="button"
+            class="btn-dialog-primary"
+            @click="createdCredentials = null"
+          >
+            Fertig
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const api = useBookingApi();
@@ -240,10 +355,30 @@ const statusFilter = ref("all");
 // Modal State
 const showAddModal = ref(false);
 const createLoading = ref(false);
+const createdCredentials = ref<{
+  login: string;
+  password: string;
+  role: string;
+} | null>(null);
+const copied = ref(false);
+const lettersAndNumbers = "1234567890abcdefghijklmnopqrstuvwxyz!&%$?)(][";
+
+function generatePassword(length = 10) {
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    const index = Math.floor(Math.random() * lettersAndNumbers.length);
+    password += lettersAndNumbers[index];
+  }
+
+  return password;
+}
+
 const newUser = ref({
   username: "",
   email: "",
   password: "",
+  enable_login: false,
   role: "user",
   details: {
     first_name: "",
@@ -252,6 +387,18 @@ const newUser = ref({
     company: "",
   },
 });
+
+watch(
+  () => newUser.value.enable_login,
+  (enabled) => {
+    if (!enabled) {
+      newUser.value.role = "user";
+      newUser.value.password = "";
+    } else if (!newUser.value.password) {
+      newUser.value.password = generatePassword(12);
+    }
+  },
+);
 
 const statusOptions = [
   { label: "Alle Status", value: "all" },
@@ -305,6 +452,7 @@ const getInitials = (firstName: string, lastName?: string) => {
 const getRoleLabel = (role: string) => {
   const map: Record<string, string> = {
     admin: "Admin",
+    sachbearbeiter: "Sachbearbeiter",
     user: "User",
   };
   return map[role] || role;
@@ -322,42 +470,42 @@ const loadUsers = async () => {
   }
 };
 
-const lettersAndNumbers = "1234567890abcdefghijklmnopqrstuvwxyz!&%$?)(][";
-
-function generatePassword(length = 10) {
-  let password = "";
-
-  for (let i = 0; i < length; i++) {
-    const index = Math.floor(Math.random() * lettersAndNumbers.length);
-    password += lettersAndNumbers[index];
-  }
-
-  return password;
-}
-
 const createUser = async () => {
   createLoading.value = true;
+  copied.value = false;
   try {
-    // Nutzung des neuen Composable-Aufrufs
-    newUser.value.password = await generatePassword(10);
+    const enableLogin = !!newUser.value.enable_login;
+    if (enableLogin && (!newUser.value.password || newUser.value.password.length < 6)) {
+      newUser.value.password = generatePassword(12);
+    }
+
     const payload = {
       username: newUser.value.username,
       email: newUser.value.email,
-      password: newUser.value.password,
-      role: newUser.value.role,
+      password: enableLogin ? newUser.value.password : null,
+      enable_login: enableLogin,
+      role: enableLogin ? newUser.value.role : "user",
       first_name: newUser.value.details.first_name,
       last_name: newUser.value.details.last_name,
-      details: newUser.value.details
+      details: newUser.value.details,
     };
 
     const success = await api.users.create(payload);
 
     if (success) {
+      if (enableLogin) {
+        createdCredentials.value = {
+          login: newUser.value.email || newUser.value.username,
+          password: newUser.value.password,
+          role: newUser.value.role,
+        };
+      }
       showAddModal.value = false;
       newUser.value = {
         username: "",
         email: "",
         password: "",
+        enable_login: false,
         role: "user",
         details: {
           first_name: "",
@@ -373,6 +521,17 @@ const createUser = async () => {
     console.error(e);
   } finally {
     createLoading.value = false;
+  }
+};
+
+const copyCredentials = async () => {
+  if (!createdCredentials.value) return;
+  const text = `Login: ${createdCredentials.value.login}\nPasswort: ${createdCredentials.value.password}\nRolle: ${getRoleLabel(createdCredentials.value.role)}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    copied.value = true;
+  } catch {
+    copied.value = false;
   }
 };
 

@@ -518,7 +518,8 @@ import CommunicationHistory from "@/components/communication/CommunicationHistor
 
 const api = useBookingApi();
 const route = useRoute();
-
+const router = useRouter();
+const { confirm } = useConfirm();
 const loading = ref(true);
 const user = ref<any>(null);
 const activeTab = ref("stammdaten");
@@ -732,10 +733,27 @@ const handleUpdateUser = async (updatedData: any) => {
 };
 
 const handleDeleteUser = async () => {
+  const displayName =
+    user.value?.details?.company ||
+    [user.value?.details?.first_name, user.value?.details?.last_name]
+      .filter(Boolean)
+      .join(" ") ||
+    user.value?.username ||
+    "diesen Benutzer";
+
+  const confirmed = await confirm({
+    title: "Benutzer löschen",
+    message: `Möchten Sie „${displayName}“ wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+    variant: "danger",
+    confirmLabel: "Ja, löschen",
+    icon: "i-heroicons-trash-20-solid",
+  });
+  if (!confirmed) return;
+
   try {
     const userId = route.params.id;
     await api.users.delete(userId);
-    await loadUser();
+    router.push("/booking-system/users");
   } catch (e) {
     window.alert(
       "Benutzer konnte nicht gelöscht werden. Es kann daran liegen, das es versendete Rechnungen gibt.",

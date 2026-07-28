@@ -22,6 +22,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       // Wenn 401 (Unauthorized) zurückkommt, Token entfernen und zur Login-Seite
       if (response.status === 401) {
         localStorage.removeItem('jwt');
+        localStorage.removeItem('auth_user');
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }

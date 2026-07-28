@@ -16,6 +16,7 @@
       :initial-email="selectedBooking?.User?.email || ''"
       :user-id="selectedBooking?.user_id"
       :booking-id="selectedBooking?.id"
+      :booking="selectedBooking"
       @close="showComposeEmailModal = false"
       @success="handleComposeEmailSuccess"
     />

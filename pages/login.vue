@@ -60,6 +60,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { getDefaultHomePath } from "~/utils/authGuard";
 
 // Verwende das auth Layout (ohne Sidebar)
 definePageMeta({
@@ -70,6 +71,7 @@ const username = ref("");
 const password = ref("");
 const error = ref("");
 const router = useRouter();
+const { setSession } = useAuth();
 
 async function login() {
   error.value = "";
@@ -92,8 +94,8 @@ async function login() {
       throw new Error(
         "Es ist ein Fehler aufgetreten, bitte versuchen Sie es später erneut"
       );
-    localStorage.setItem("jwt", data.token);
-    router.push("/");
+    setSession(data.token, data.user || null);
+    router.push(getDefaultHomePath(data.user?.role));
   } catch (e) {
     error.value = e.message || "Unbekannter Fehler";
   }

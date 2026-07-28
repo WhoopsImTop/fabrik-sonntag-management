@@ -261,6 +261,7 @@
           <label class="dialog-label">Rolle</label>
           <select v-model="form.role" class="dialog-input">
             <option value="user">User</option>
+            <option value="sachbearbeiter">Sachbearbeiter</option>
             <option value="admin">Admin</option>
           </select>
         </div>

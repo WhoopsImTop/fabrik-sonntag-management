@@ -51,6 +51,7 @@ export function handleApiError(
 
   if (error.status === 401 || error.statusCode === 401) {
     storage.removeItem("jwt");
+    storage.removeItem("auth_user");
     toast.add({
       title: "Sitzung abgelaufen",
       description: "Bitte melden Sie sich erneut an.",
