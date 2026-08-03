@@ -1,5 +1,5 @@
 <template>
-  <div class="relative h-full w-full">
+  <div class="relative h-full w-full min-h-0 overflow-hidden">
     <AppDialogPoi
       v-if="isModalVisible"
       class="absolute top-2 left-2 bottom-2 z-20"
@@ -12,7 +12,7 @@
       @edit-position="handleEditPositionStart"
       @create-new="handleCreateNew"
     />
-    <div class="map-container w-full h-full" id="mapContainer"></div>
+    <div class="map-container absolute inset-0 h-full w-full" id="mapContainer"></div>
     <div
       v-if="isSaving"
       class="saving-indicator absolute bottom-4 right-4 bg-blue-500 text-white p-2 rounded shadow-md z-20"
@@ -984,8 +984,8 @@ export default {
 <style>
 .map-container {
   width: 100%;
-  /* Höhe anpassen, z.B. volle Höhe abzüglich Header/Footer */
-  height: 100vh; /* oder calc(100vh - XXpx) */
+  height: 100%;
+  min-height: 0;
 }
 
 /* Stellt sicher, dass Maplibre Controls sichtbar sind */

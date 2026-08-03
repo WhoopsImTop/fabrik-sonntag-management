@@ -24,9 +24,9 @@
   @apply relative z-10 flex max-h-[90vh] w-full flex-col overflow-hidden border border-neutral-200 bg-white shadow-xl;
 }
 
-/* Side drawer for map / campusplan editors (fixed width, not full-bleed) */
+/* Side drawer for map / campusplan editors (fixed width, full height of host) */
 .dialog-drawer {
-  @apply z-20 flex w-96 max-w-[calc(100%-1rem)] flex-col overflow-y-auto border border-neutral-200 bg-white shadow-xl;
+  @apply z-20 flex h-full w-96 max-w-[calc(100%-1rem)] flex-col overflow-hidden border border-neutral-200 bg-white shadow-xl;
 }
 
 .dialog-header {

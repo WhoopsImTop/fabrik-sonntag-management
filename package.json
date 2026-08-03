@@ -18,6 +18,8 @@
     "@iconify/vue": "^5.0.0",
     "@mapbox/mapbox-gl-draw": "^1.5.0",
     "@nuxt/eslint": "^1.2.0",
+    "@photo-sphere-viewer/core": "^5.15.1",
+    "@photo-sphere-viewer/markers-plugin": "^5.15.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@tiptap/extension-link": "^3.28.0",
     "@tiptap/extension-underline": "^3.28.0",

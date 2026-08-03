@@ -7,7 +7,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="dialog-panel max-w-2xl">
+    <div class="dialog-panel !max-h-[calc(100dvh-2rem)] h-[calc(100dvh-2rem)] max-w-2xl">
       <div class="dialog-header">
         <div class="min-w-0 flex-1">
           <h3 class="dialog-title">
@@ -24,7 +24,7 @@
         </button>
       </div>
 
-      <div class="dialog-body space-y-5">
+      <div class="dialog-body min-h-0 flex-1 space-y-5">
         <div class="space-y-4">
           <div class="rounded-none border border-neutral-200 p-4 space-y-4 bg-neutral-50/40">
             <div>

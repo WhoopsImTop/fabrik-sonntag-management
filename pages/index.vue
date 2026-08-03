@@ -1,9 +1,9 @@
 <template>
-  <app-map-component class="w-full h-full"></app-map-component>
+  <app-map-component class="h-full w-full min-h-0" />
 </template>
 
-<script>
-export default {};
+<script setup>
+definePageMeta({
+  layout: "map",
+});
 </script>
-
-<style></style>

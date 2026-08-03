@@ -256,6 +256,16 @@
               </div>
             </div>
 
+            <div>
+              <label class="dialog-label">Beschreibung / Infos</label>
+              <textarea
+                v-model="form.description"
+                rows="3"
+                class="dialog-input"
+                placeholder="Interne Infos zur Buchung (nur in den Buchungsdetails sichtbar)"
+              />
+            </div>
+
             <div
               v-if="isEdit"
               class="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-200"
@@ -596,6 +606,7 @@ const form = ref({
   status: "CONFIRMED",
   user_preview: null,
   manual_price: null as number | null,
+  description: "",
 });
 
 // Interne State für Dauer (in Millisekunden)
@@ -890,6 +901,7 @@ const hydrateEditForm = (booking: any) => {
           ? parseFloat(booking.Invoice.total_amount || 0) -
             parseFloat(booking.Invoice.tax_amount || 0)
           : null,
+    description: booking.description || "",
   };
 
   originalRange.value = {
@@ -950,6 +962,7 @@ watch(
       form.value.user_id = "";
       form.value.pricingPlanId = "";
       form.value.user_preview = null;
+      form.value.description = "";
       if (props.initialDate) applyInitialDate(props.initialDate);
     }
   },
@@ -1043,6 +1056,7 @@ const buildUpdatePayload = () => {
     start_at: form.value.start_at,
     end_at: form.value.end_at,
     status: form.value.status,
+    description: form.value.description?.trim() || null,
   };
 
   if (

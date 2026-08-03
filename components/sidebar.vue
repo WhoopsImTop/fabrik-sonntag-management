@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, type Component } from "vue";
+import { ref, computed, watch, onBeforeUnmount, type Component } from "vue";
 import IconCalendar from "~/components/icon/Calendar.vue";
 import IconContact from "~/components/icon/Contact.vue";
 import IconDashboard from "~/components/icon/Dashboard.vue";
@@ -11,6 +11,7 @@ import IconMeterOverview from "~/components/icon/MeterOverview.vue";
 import IconResource from "~/components/icon/Resource.vue";
 import IconSettings from "~/components/icon/Settings.vue";
 import IconImage from "~/components/icon/Image.vue";
+import type { SearchResult, SearchResultGroup } from "~/composables/useGlobalSearch";
 
 type NavItem = {
   label: string;
@@ -21,7 +22,14 @@ type NavItem = {
 };
 
 const searchQuery = ref("");
+const searchFocused = ref(false);
+const searchLoading = ref(false);
+const entityGroups = ref<SearchResultGroup[]>([]);
 const openSections = ref<Record<string, boolean>>({});
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const { search: runGlobalSearch } = useGlobalSearch();
+const router = useRouter();
 
 const { hydrateFromStorage, role } = useAuth();
 if (import.meta.client) {
@@ -65,14 +73,14 @@ const mainGroups = ref<NavItem[][]>([
     {
       label: "Kommunikation",
       icon: IconMail,
-      to: "/booking-system/email-templates"
+      to: "/booking-system/email-templates",
     },
   ],
   [
     { label: "Campusplan", icon: IconMap, to: "/" },
     {
       label: "Gebäude",
-      icon: IconMeter
+      icon: IconMeter,
     },
   ],
   [
@@ -200,6 +208,67 @@ const filteredGroups = computed(() =>
 
 const settingsVisible = computed(() => matchesSearch(settingsItem.value));
 
+const showEntityResults = computed(
+  () => searchFocused.value && searchQuery.value.trim().length >= 2,
+);
+
+const hasEntityResults = computed(() =>
+  entityGroups.value.some((g) => g.items.length > 0),
+);
+
+const typeIcon: Record<string, string> = {
+  user: "i-lucide-user",
+  booking: "i-lucide-calendar",
+  resource: "i-lucide-box",
+  invoice: "i-lucide-file-text",
+  nav: "i-lucide-compass",
+};
+
+const runSearch = async () => {
+  const q = searchQuery.value.trim();
+  if (q.length < 2) {
+    entityGroups.value = [];
+    searchLoading.value = false;
+    return;
+  }
+
+  searchLoading.value = true;
+  try {
+    entityGroups.value = await runGlobalSearch(q);
+  } finally {
+    searchLoading.value = false;
+  }
+};
+
+watch(searchQuery, () => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  if (searchQuery.value.trim().length < 2) {
+    entityGroups.value = [];
+    searchLoading.value = false;
+    return;
+  }
+  searchLoading.value = true;
+  searchTimeout = setTimeout(runSearch, 280);
+});
+
+const clearSearch = () => {
+  searchQuery.value = "";
+  entityGroups.value = [];
+  searchFocused.value = false;
+};
+
+const selectResult = async (item: SearchResult) => {
+  clearSearch();
+  await router.push(item.to);
+};
+
+const onSearchBlur = () => {
+  // Delay so click on result can register
+  setTimeout(() => {
+    searchFocused.value = false;
+  }, 150);
+};
+
 const linkClass = (to?: string, nested = false) => [
   "relative flex w-full items-center gap-2.5 px-3 py-2 text-sm transition-colors",
   nested ? "pl-9 font-normal" : "",
@@ -211,13 +280,17 @@ const linkClass = (to?: string, nested = false) => [
 const toggleSection = (key: string) => {
   openSections.value[key] = !openSections.value[key];
 };
+
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+});
 </script>
 
 <template>
   <nav
     class="flex h-dvh w-60 flex-col border-r border-neutral-200 bg-neutral-50"
   >
-    <div class="flex flex-col gap-4 p-4 pb-2">
+    <div class="relative flex flex-col gap-4 p-4 pb-2">
       <IconFabrikSonntagLogo class="h-10 w-auto" />
       <div class="relative">
         <UiIcon
@@ -227,9 +300,67 @@ const toggleSection = (key: string) => {
         <input
           v-model="searchQuery"
           type="search"
-          placeholder="Suchen"
+          placeholder="Buchung, Nutzer, …"
           class="w-full rounded-md border-0 bg-neutral-200/70 py-2 pl-8 pr-3 text-sm text-neutral-800 placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-400"
+          @focus="searchFocused = true"
+          @blur="onSearchBlur"
         />
+
+        <div
+          v-if="showEntityResults"
+          class="absolute left-0 right-0 top-full z-50 mt-1 max-h-[min(28rem,70vh)] overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg"
+        >
+          <div
+            v-if="searchLoading && !hasEntityResults"
+            class="px-3 py-3 text-xs text-neutral-500"
+          >
+            Suche…
+          </div>
+          <div
+            v-else-if="!searchLoading && !hasEntityResults"
+            class="px-3 py-3 text-xs text-neutral-500"
+          >
+            Keine Treffer
+          </div>
+          <template v-else>
+            <div
+              v-for="group in entityGroups"
+              :key="group.type"
+              class="border-b border-neutral-100 last:border-b-0"
+            >
+              <div
+                class="px-3 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-neutral-400"
+              >
+                {{ group.label }}
+              </div>
+              <button
+                v-for="item in group.items"
+                :key="`${item.type}-${item.id}`"
+                type="button"
+                class="flex w-full items-start gap-2 px-3 py-2 text-left hover:bg-neutral-50"
+                @mousedown.prevent="selectResult(item)"
+              >
+                <UiIcon
+                  :name="typeIcon[item.type] || 'i-lucide-search'"
+                  class="mt-0.5 size-3.5 shrink-0 text-neutral-400"
+                />
+                <span class="min-w-0 flex-1">
+                  <span
+                    class="block truncate text-sm font-medium text-neutral-900"
+                  >
+                    {{ item.title }}
+                  </span>
+                  <span
+                    v-if="item.subtitle"
+                    class="mt-0.5 block truncate text-xs text-neutral-500"
+                  >
+                    {{ item.subtitle }}
+                  </span>
+                </span>
+              </button>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
 

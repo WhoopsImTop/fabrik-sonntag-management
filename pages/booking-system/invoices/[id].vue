@@ -103,151 +103,242 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      <div class="lg:col-span-1 border border-neutral-200 bg-white text-neutral-950 ">
-        <div class="flex flex-col space-y-1.5 p-6 pb-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold leading-none tracking-tight">Kunde</h3>
-            <span v-if="form.user_id || invoice.User"
-              class="inline-flex items-center rounded-none border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 transition-colors">Ausgewählt</span>
-            <span v-else
-              class="inline-flex items-center rounded-none border border-neutral-200 px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500 transition-colors">Gast
-              / Manuell</span>
+    <div class="space-y-4">
+      <div class="border border-neutral-200 bg-white text-neutral-950">
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100">
+          <div class="min-w-0">
+            <h3 class="font-semibold leading-none tracking-tight">Empfänger</h3>
+            <p class="text-xs text-neutral-500 mt-1 truncate">
+              {{ isEditing && isDraft
+                ? 'Suche füllt vor — Änderungen gelten nur für diese Rechnung.'
+                : 'Empfänger dieser Rechnung (Snapshot).' }}
+            </p>
           </div>
-          <p class="text-sm text-neutral-500">
-            {{ isEditing && isDraft ? 'Kundenkonto auswählen oder entfernen.' : 'Zugewiesener Kunde dieser Rechnung.' }}
-          </p>
+          <span v-if="form.user_id || invoice.User"
+            class="shrink-0 inline-flex items-center rounded-none border border-emerald-200 px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800">Verknüpft</span>
+          <span v-else
+            class="shrink-0 inline-flex items-center rounded-none border border-neutral-200 px-2 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500">Ohne Konto</span>
         </div>
 
-        <div class="p-6 pt-0 space-y-4">
+        <div class="p-4 space-y-3">
           <template v-if="isEditing && isDraft">
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none">
-                Kunden suchen
-              </label>
-              <div v-if="form.user_id"
-                class="flex items-center justify-between p-2 rounded-none border border-neutral-200 bg-neutral-50">
-                <div class="flex flex-col overflow-hidden">
-                  <span class="text-sm font-medium truncate">{{ form.user_preview?.username || "User ID: " +
-                    form.user_id }}</span>
-                  <span class="text-xs text-neutral-500 truncate">{{ form.user_preview?.email || "..." }}</span>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Kunden suchen</label>
+                <div v-if="form.user_id"
+                  class="flex h-9 items-center justify-between px-2 rounded-none border border-neutral-200 bg-neutral-50">
+                  <div class="flex flex-col overflow-hidden min-w-0">
+                    <span class="text-sm font-medium truncate">{{ form.user_preview?.username || "User ID: " + form.user_id }}</span>
+                  </div>
+                  <button type="button" @click="removeUser"
+                    class="shrink-0 text-neutral-400 hover:text-red-500 p-1"
+                    title="Verknüpfung entfernen">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <button @click="removeUser"
-                  class="text-neutral-400 hover:text-red-500 p-1 rounded-none hover:bg-red-50 transition-colors">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <div v-else class="relative group">
+                  <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                </button>
-              </div>
-              <div v-else class="relative group">
-                <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input type="text" v-model="userSearchQuery" @input="handleUserSearch"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm  transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Name oder E-Mail..." />
-
-                <div v-if="userSearchResults.length > 0"
-                  class="absolute z-50 mt-1 w-[calc(100%-0rem)] rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
-                  <div class="max-h-60 overflow-y-auto p-1">
-                    <div v-for="user in userSearchResults" :key="user.id" @click="selectUser(user)"
-                      class="relative flex cursor-pointer select-none flex-col  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
-                      <span class="font-medium">{{ user.username }}</span>
-                      <span class="text-xs text-neutral-500">{{ user.email }}</span>
+                  <input type="text" v-model="userSearchQuery" @input="handleUserSearch"
+                    class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                    placeholder="Name, Firma oder E-Mail..." />
+                  <div v-if="userSearchResults.length > 0"
+                    class="absolute z-50 mt-1 w-full rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
+                    <div class="max-h-60 overflow-y-auto p-1">
+                      <div v-for="user in userSearchResults" :key="user.id" @click="selectUser(user)"
+                        class="relative flex cursor-pointer select-none flex-col px-2 py-1.5 text-sm outline-none hover:bg-neutral-100">
+                        <span class="font-medium">{{ user.details?.company || user.username }}</span>
+                        <span class="text-xs text-neutral-500">{{ user.email }}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div v-if="isSearchingUsers" class="absolute right-3 top-2.5">
-                  <svg class="animate-spin w-4 h-4 text-neutral-400" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                    </path>
-                  </svg>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Kundentyp</label>
+                <div class="flex border border-neutral-200 overflow-hidden h-9">
+                  <button type="button" @click="customerForm.user_type = 'PERSON'"
+                    :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'PERSON' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Person</button>
+                  <button type="button" @click="customerForm.user_type = 'COMPANY'"
+                    :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'COMPANY' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Firma</button>
                 </div>
+              </div>
+
+              <div v-if="customerForm.user_type === 'COMPANY'" class="flex items-end pb-2">
+                <div class="flex items-center gap-2">
+                  <input id="edit_display_contact_person" type="checkbox" v-model="customerForm.display_contact_person"
+                    class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none" />
+                  <label for="edit_display_contact_person" class="text-xs text-neutral-700">Ansprechpartner anzeigen</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Vorname</label>
+                <input v-model="customerForm.first_name"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Nachname</label>
+                <input v-model="customerForm.last_name"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Firma</label>
+                <input v-model="customerForm.company"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">E-Mail</label>
+                <input v-model="customerForm.email" type="email"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Telefon</label>
+                <input v-model="customerForm.phone" type="tel"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Land</label>
+                <input v-model="customerForm.country"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+              <div class="col-span-2 sm:col-span-3 space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Straße</label>
+                <input v-model="customerForm.street"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Nr.</label>
+                <input v-model="customerForm.house_number"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-600">PLZ</label>
+                <input v-model="customerForm.zip_code"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              </div>
+              <div class="col-span-2 sm:col-span-1 space-y-1">
+                <label class="text-xs font-medium text-neutral-600">Stadt</label>
+                <input v-model="customerForm.city"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
               </div>
             </div>
           </template>
           <template v-else>
-            <div v-if="invoice.User" class="flex items-center gap-3">
-              <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-900">
-                {{ invoice.User.username?.substring(0, 2).toUpperCase() }}
+            <div class="space-y-3 text-sm">
+              <div v-if="form.user_id || invoice.User" class="flex items-center gap-3 pb-2 border-b border-neutral-100">
+                <div
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900">
+                  {{ (invoice.User?.username || '?').substring(0, 2).toUpperCase() }}
+                </div>
+                <div class="overflow-hidden">
+                  <p class="font-medium text-neutral-900 truncate">{{ invoice.User?.username || 'Konto #' + form.user_id }}</p>
+                  <p class="text-xs text-neutral-500 truncate">Verknüpftes Kundenkonto</p>
+                </div>
               </div>
-              <div class="overflow-hidden">
-                <p class="text-sm font-medium text-neutral-900 truncate">{{ invoice.User.username }}</p>
-                <p class="text-xs text-neutral-500 truncate">{{ invoice.User.email }}</p>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div>
+                  <div class="text-xs text-neutral-500">Typ</div>
+                  <div>{{ customerForm.user_type === 'COMPANY' ? 'Firma' : 'Person' }}</div>
+                </div>
+                <div v-if="customerForm.company">
+                  <div class="text-xs text-neutral-500">Firma</div>
+                  <div>{{ customerForm.company }}</div>
+                </div>
+                <div v-if="customerForm.first_name || customerForm.last_name">
+                  <div class="text-xs text-neutral-500">{{ customerForm.user_type === 'COMPANY' ? 'Ansprechpartner' : 'Name' }}</div>
+                  <div>{{ [customerForm.first_name, customerForm.last_name].filter(Boolean).join(' ') }}</div>
+                </div>
+                <div v-if="customerForm.email">
+                  <div class="text-xs text-neutral-500">E-Mail</div>
+                  <div class="truncate">{{ customerForm.email }}</div>
+                </div>
+                <div v-if="customerForm.phone">
+                  <div class="text-xs text-neutral-500">Telefon</div>
+                  <div>{{ customerForm.phone }}</div>
+                </div>
+                <div v-if="customerForm.street || customerForm.city">
+                  <div class="text-xs text-neutral-500">Adresse</div>
+                  <div>
+                    {{ [customerForm.street, customerForm.house_number].filter(Boolean).join(' ') }}
+                    <template v-if="customerForm.zip_code || customerForm.city">
+                      · {{ [customerForm.zip_code, customerForm.city].filter(Boolean).join(' ') }}
+                    </template>
+                    <template v-if="customerForm.country"> · {{ customerForm.country }}</template>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div v-else class="text-sm text-neutral-500 italic">
-              Gast / Manuell
             </div>
           </template>
         </div>
       </div>
 
-      <div class="lg:col-span-2 space-y-6">
-        <div class="border border-neutral-200 bg-white text-neutral-950 ">
-          <div class="flex flex-col space-y-1.5 p-6 pb-4 border-b border-neutral-100">
-            <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
-          </div>
-          <div class="p-6 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Status</label>
-                <select v-if="isEditing && isDraft" v-model="form.status"
-                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="DRAFT">Entwurf</option>
-                  <option value="SENT">Versendet</option>
-                  <option value="PAID">Bezahlt</option>
-                  <option value="OVERDUE">Überfällig</option>
-                </select>
-                <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500 ">
-                  {{ getStatusLabel(invoice.status) }}
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Rechnungsdatum</label>
-                <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-                <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
-                  {{ formatDate(invoice.invoice_date || invoice.createdAt) }}
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Fälligkeitsdatum</label>
-                <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-                <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
-                  {{ formatDate(invoice.due_date) }}
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel (Tage)</label>
-                <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-                <div v-else
-                  class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500 ">
-                  {{ invoice.days_to_pay ?? form.days_to_pay }}
-                </div>
+      <div class="border border-neutral-200 bg-white text-neutral-950">
+        <div class="px-4 py-3 border-b border-neutral-100">
+          <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
+        </div>
+        <div class="p-4">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Status</label>
+              <select v-if="isEditing && isDraft" v-model="form.status"
+                class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
+                <option value="DRAFT">Entwurf</option>
+                <option value="SENT">Versendet</option>
+                <option value="PAID">Bezahlt</option>
+                <option value="OVERDUE">Überfällig</option>
+              </select>
+              <div v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+                {{ getStatusLabel(invoice.status) }}
               </div>
             </div>
-
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Rechnungsdatum</label>
+              <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              <div v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+                {{ formatDate(invoice.invoice_date || invoice.createdAt) }}
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Fälligkeitsdatum</label>
+              <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              <div v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+                {{ formatDate(invoice.due_date) }}
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Tage</label>
+              <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+              <div v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+                {{ invoice.days_to_pay ?? form.days_to_pay }}
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="border border-neutral-200 bg-white text-neutral-950 ">
-          <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
-            <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
-            <button v-if="isEditing && isDraft" @click="addItem"
+      <div class="border border-neutral-200 bg-white text-neutral-950 ">
+        <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
+          <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
+          <button v-if="isEditing && isDraft" @click="addItem"
               class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium  transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -392,7 +483,6 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
   </div>
 
@@ -528,6 +618,101 @@ const form = ref({
     vat_rate?: number;
     long_description: string,
   }>
+});
+
+const customerForm = ref({
+  first_name: "",
+  last_name: "",
+  company: "",
+  email: "",
+  street: "",
+  house_number: "",
+  phone: "",
+  zip_code: "",
+  city: "",
+  country: "",
+  user_type: "PERSON" as "PERSON" | "COMPANY",
+  display_contact_person: false,
+});
+
+const fillCustomerFormFromInvoice = (data: any) => {
+  if (
+    data.recipient_first_name ||
+    data.recipient_last_name ||
+    data.recipient_company ||
+    data.recipient_street
+  ) {
+    customerForm.value = {
+      first_name: data.recipient_first_name || "",
+      last_name: data.recipient_last_name || "",
+      company: data.recipient_company || "",
+      email: data.recipient_email || data.User?.email || "",
+      street: data.recipient_street || "",
+      house_number: data.recipient_house_number || "",
+      phone: data.recipient_phone || "",
+      zip_code: data.recipient_zip_code || "",
+      city: data.recipient_city || "",
+      country: data.recipient_country || "",
+      user_type: (data.recipient_user_type === "COMPANY" ? "COMPANY" : "PERSON") as
+        | "PERSON"
+        | "COMPANY",
+      display_contact_person: Boolean(data.recipient_display_contact_person),
+    };
+    return;
+  }
+
+  const d = data.User?.details || {};
+  customerForm.value = {
+    first_name: d.first_name || "",
+    last_name: d.last_name || "",
+    company: d.company || "",
+    email: data.User?.email || "",
+    street: d.street || "",
+    house_number: d.house_number || "",
+    phone: d.mobile_number || "",
+    zip_code: d.zip_code || "",
+    city: d.city || "",
+    country: d.country || "",
+    user_type: (d.user_type === "COMPANY" ? "COMPANY" : "PERSON") as
+      | "PERSON"
+      | "COMPANY",
+    display_contact_person: Boolean(d.display_contact_person),
+  };
+};
+
+const fillCustomerFormFromUser = (user: any) => {
+  const d = user?.details || {};
+  customerForm.value = {
+    first_name: d.first_name || "",
+    last_name: d.last_name || "",
+    company: d.company || "",
+    email: user?.email || "",
+    street: d.street || "",
+    house_number: d.house_number || "",
+    phone: d.mobile_number || "",
+    zip_code: d.zip_code || "",
+    city: d.city || "",
+    country: d.country || "",
+    user_type: (d.user_type === "COMPANY" ? "COMPANY" : "PERSON") as
+      | "PERSON"
+      | "COMPANY",
+    display_contact_person: Boolean(d.display_contact_person),
+  };
+};
+
+const buildRecipientPayload = () => ({
+  user_type: customerForm.value.user_type,
+  first_name: customerForm.value.first_name,
+  last_name: customerForm.value.last_name,
+  company: customerForm.value.company,
+  email: customerForm.value.email,
+  phone: customerForm.value.phone,
+  street: customerForm.value.street,
+  house_number: customerForm.value.house_number,
+  zip_code: customerForm.value.zip_code,
+  city: customerForm.value.city,
+  country: customerForm.value.country,
+  display_contact_person: customerForm.value.display_contact_person,
 });
 
 const invoiceId = route.params.id as string;
@@ -745,6 +930,7 @@ const loadInvoice = async () => {
 
       form.value.user_id = data.user_id;
       form.value.user_preview = data.User;
+      fillCustomerFormFromInvoice(data);
 
       // Map Items for Editing
       if (data.InvoiceLineItems && Array.isArray(data.InvoiceLineItems)) {
@@ -795,7 +981,10 @@ const handleUserSearch = () => {
         .filter(
           (u: any) =>
             u.username?.toLowerCase().includes(q) ||
-            u.email?.toLowerCase().includes(q),
+            u.email?.toLowerCase().includes(q) ||
+            u.details?.company?.toLowerCase().includes(q) ||
+            u.details?.first_name?.toLowerCase().includes(q) ||
+            u.details?.last_name?.toLowerCase().includes(q),
         )
         .slice(0, 5);
     } catch (e) {
@@ -809,6 +998,7 @@ const handleUserSearch = () => {
 const selectUser = (user: any) => {
   form.value.user_id = user.id;
   form.value.user_preview = user;
+  fillCustomerFormFromUser(user);
   userSearchQuery.value = "";
   userSearchResults.value = [];
 };
@@ -904,10 +1094,12 @@ const saveInvoice = async () => {
       days_to_pay: Number(form.value.days_to_pay),
       user_id: form.value.user_id,
       items: form.value.items,
+      recipient: buildRecipientPayload(),
     });
 
     if (res) {
       invoice.value = res; // Update view with server response
+      fillCustomerFormFromInvoice(res);
       // Wichtig: Auch Form Items updaten, falls Server Daten formatiert hat
       if (res.InvoiceLineItems) {
         form.value.items = res.InvoiceLineItems.map((i: any) => ({
@@ -919,6 +1111,8 @@ const saveInvoice = async () => {
           long_description: i.long_description || null,
         }));
       }
+      form.value.user_id = res.user_id;
+      form.value.user_preview = res.User;
       isEditing.value = false;
     }
   } catch (e: any) {
@@ -976,7 +1170,10 @@ const emailPreviewError = ref("");
 const emailSending = ref(false);
 
 const emailRecipientLabel = computed(
-  () => invoice.value?.User?.email || "den Kunden",
+  () =>
+    invoice.value?.recipient_email ||
+    invoice.value?.User?.email ||
+    "den Kunden",
 );
 
 const revokeEmailPreviewUrl = () => {

@@ -227,13 +227,15 @@
             <td class="py-4 pr-4">
               <div class="text-neutral-900">
                 {{
+                  invoice.recipient_company ||
+                  `${invoice.recipient_first_name ?? ""} ${invoice.recipient_last_name ?? ""}`.trim() ||
                   invoice.User?.details?.company ||
                   `${invoice.User?.details?.first_name ?? ""} ${invoice.User?.details?.last_name ?? ""}`.trim() ||
                   "Unbekannt"
                 }}
               </div>
               <div class="text-xs text-neutral-500">
-                {{ invoice.User?.email || invoice.customer_email }}
+                {{ invoice.recipient_email || invoice.User?.email || invoice.customer_email }}
               </div>
             </td>
             <td class="py-4 pr-4 whitespace-nowrap">
@@ -311,7 +313,11 @@ const filteredInvoices = computed(() => {
       (inv) =>
         inv.invoice_number?.toLowerCase().includes(q) ||
         inv.User?.username?.toLowerCase().includes(q) ||
-        inv.User?.email?.toLowerCase().includes(q),
+        inv.User?.email?.toLowerCase().includes(q) ||
+        inv.recipient_company?.toLowerCase().includes(q) ||
+        inv.recipient_email?.toLowerCase().includes(q) ||
+        inv.recipient_first_name?.toLowerCase().includes(q) ||
+        inv.recipient_last_name?.toLowerCase().includes(q),
     );
   }
 

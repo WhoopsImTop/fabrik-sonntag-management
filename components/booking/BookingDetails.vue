@@ -131,70 +131,128 @@
         </div>
       </div>
 
+      <!-- Beschreibung / Infos -->
+      <div
+        v-if="booking.description"
+        class="border-t border-neutral-200 px-5"
+        :class="descSectionOpen ? 'py-4' : 'py-2.5'"
+      >
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 text-left"
+          :class="{ 'mb-3': descSectionOpen }"
+          @click="descSectionOpen = !descSectionOpen"
+        >
+          <UiIcon name="i-lucide-sticky-note" class="size-4 text-neutral-500" />
+          <h4 class="text-sm font-semibold text-neutral-900">
+            Beschreibung / Infos
+          </h4>
+          <UiIcon
+            name="i-lucide-chevron-up"
+            class="size-4 shrink-0 text-neutral-400 transition-transform"
+            :class="{ 'rotate-180': !descSectionOpen }"
+          />
+        </button>
+        <p
+          v-show="descSectionOpen"
+          class="whitespace-pre-wrap text-sm text-neutral-700"
+        >
+          {{ booking.description }}
+        </p>
+      </div>
+
       <!-- Abrechnung -->
-      <div class="border-t border-neutral-200 px-5 py-5">
-        <div class="mb-3 flex items-center gap-2">
+      <div
+        class="border-t border-neutral-200 px-5"
+        :class="billingSectionOpen ? 'py-4' : 'py-2.5'"
+      >
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 text-left"
+          :class="{ 'mb-3': billingSectionOpen }"
+          @click="billingSectionOpen = !billingSectionOpen"
+        >
           <UiIcon name="i-lucide-file-text" class="size-4 text-neutral-500" />
           <h4 class="text-sm font-semibold text-neutral-900">Abrechnung</h4>
-        </div>
+          <UiIcon
+            name="i-lucide-chevron-up"
+            class="size-4 shrink-0 text-neutral-400 transition-transform"
+            :class="{ 'rotate-180': !billingSectionOpen }"
+          />
+        </button>
 
-        <div
-          v-if="booking.Invoice"
-          class="flex items-center justify-between gap-3"
-        >
-          <div class="flex min-w-0 items-center gap-2">
-            <span class="truncate text-sm text-neutral-800">
-              Rechnung ({{ booking.Invoice.invoice_number }})
-            </span>
+        <div v-show="billingSectionOpen">
+          <div
+            v-if="booking.Invoice"
+            class="flex items-center justify-between gap-3"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="truncate text-sm text-neutral-800">
+                Rechnung ({{ booking.Invoice.invoice_number }})
+              </span>
+              <button
+                type="button"
+                class="shrink-0 p-1 text-neutral-500 transition-colors hover:text-neutral-900 disabled:opacity-50"
+                :disabled="isDownloading"
+                title="PDF herunterladen"
+                @click="downloadInvoice(booking.Invoice.id)"
+              >
+                <UiIcon name="i-lucide-download" class="size-4" />
+              </button>
+            </div>
+            <p class="shrink-0 text-sm font-bold text-neutral-900">
+              {{ formatCurrency(booking.Invoice.total_amount) }}
+            </p>
+          </div>
+
+          <p v-else-if="booking.paid_with_quota" class="text-sm text-neutral-600">
+            Gebucht über das hinterlegte Kontingent
+          </p>
+
+          <div v-else class="flex items-center justify-between gap-2">
+            <p class="text-sm text-neutral-500">Keine Rechnung</p>
             <button
               type="button"
-              class="shrink-0 p-1 text-neutral-500 transition-colors hover:text-neutral-900 disabled:opacity-50"
-              :disabled="isDownloading"
-              title="PDF herunterladen"
-              @click="downloadInvoice(booking.Invoice.id)"
+              class="text-sm font-medium text-brand-accent underline underline-offset-2 hover:brightness-90"
+              @click="
+                router.push(`/booking-system/invoices/new?bookingId=${booking.id}`)
+              "
             >
-              <UiIcon name="i-lucide-download" class="size-4" />
+              Rechnung erstellen
             </button>
           </div>
-          <p class="shrink-0 text-sm font-bold text-neutral-900">
-            {{ formatCurrency(booking.Invoice.total_amount) }}
-          </p>
-        </div>
-
-        <p v-else-if="booking.paid_with_quota" class="text-sm text-neutral-600">
-          Gebucht über das hinterlegte Kontingent
-        </p>
-
-        <div v-else class="flex items-center justify-between gap-2">
-          <p class="text-sm text-neutral-500">Keine Rechnung</p>
-          <button
-            type="button"
-            class="text-sm font-medium text-brand-accent underline underline-offset-2 hover:brightness-90"
-            @click="
-              router.push(`/booking-system/invoices/new?bookingId=${booking.id}`)
-            "
-          >
-            Rechnung erstellen
-          </button>
         </div>
       </div>
 
       <!-- Aufgaben / Checklist -->
       <div
         v-if="bookingTasks.length > 0"
-        class="border-t border-neutral-200 px-5 py-5"
+        class="border-t border-neutral-200 px-5"
+        :class="tasksSectionOpen ? 'py-4' : 'py-2.5'"
       >
-        <div class="mb-3 flex items-center justify-between gap-3">
-          <div class="flex min-w-0 items-center gap-2">
+        <div
+          class="flex items-center justify-between gap-3"
+          :class="{ 'mb-3': tasksSectionOpen }"
+        >
+          <button
+            type="button"
+            class="flex min-w-0 items-center gap-2 text-left"
+            @click="tasksSectionOpen = !tasksSectionOpen"
+          >
             <UiIcon name="i-lucide-list-checks" class="size-4 shrink-0 text-neutral-500" />
             <h4 class="text-sm font-semibold text-neutral-900">Aufgaben</h4>
-          </div>
+            <UiIcon
+              name="i-lucide-chevron-up"
+              class="size-4 shrink-0 text-neutral-400 transition-transform"
+              :class="{ 'rotate-180': !tasksSectionOpen }"
+            />
+          </button>
           <span class="text-xs text-neutral-500">
             {{ completedTaskCount }}/{{ bookingTasks.length }} erledigt
           </span>
         </div>
 
-        <ul class="space-y-3">
+        <ul v-show="tasksSectionOpen" class="space-y-3">
           <li
             v-for="task in bookingTasks"
             :key="task.id"
@@ -286,8 +344,14 @@
       </div>
 
       <!-- Kommunikation -->
-      <div class="border-t border-neutral-200 px-5 py-5">
-        <div class="mb-3 flex items-center justify-between gap-3">
+      <div
+        class="border-t border-neutral-200 px-5"
+        :class="commSectionOpen ? 'py-4' : 'py-2.5'"
+      >
+        <div
+          class="flex items-center justify-between gap-3"
+          :class="{ 'mb-3': commSectionOpen }"
+        >
           <button
             type="button"
             class="flex min-w-0 items-center gap-2 text-left"
@@ -441,7 +505,10 @@ const emit = defineEmits([
 ]);
 
 const isDownloading = ref(false);
-const commSectionOpen = ref(true);
+const descSectionOpen = ref(false);
+const billingSectionOpen = ref(false);
+const tasksSectionOpen = ref(false);
+const commSectionOpen = ref(false);
 const togglingTaskId = ref<number | null>(null);
 const uploadingTaskId = ref<number | null>(null);
 const communicationHistoryRef =

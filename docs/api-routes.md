@@ -70,6 +70,11 @@ Dialoge (von der Karte geöffnet):
 | DELETE | `/renters/:id` | Mieter löschen |
 | PATCH | `/sort/floor/:floorId/renters` | Mieter-Reihenfolge |
 | GET | `/media` | Medienliste |
+| GET/POST | `/pois/:id/panorama-scenes` | 360°-Szenen laden/anlegen |
+| PUT | `/pois/:id/panorama-scenes/reorder` | Szenen-Reihenfolge |
+| PATCH/DELETE | `/panorama-scenes/:id` | Szene aktualisieren/löschen |
+| POST | `/panorama-scenes/:id/hotspots` | Hotspot anlegen |
+| PATCH/DELETE | `/panorama-hotspots/:id` | Hotspot aktualisieren/löschen |
 
 #### `components/app/dialog/RenterForm.vue`
 

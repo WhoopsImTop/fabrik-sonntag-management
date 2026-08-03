@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 const api = useBookingApi()
+const route = useRoute()
 
 const loading = ref(true)
 const resources = ref<any[]>([])
@@ -218,7 +219,21 @@ const saveCategory = async () => {
     loadData()
 }
 
-onMounted(() => {
-  loadData()
+const openFromQuery = () => {
+  const rawId = route.query.id
+  if (!rawId) return
+  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId)
+  if (!Number.isFinite(id)) return
+  openEditModal(id)
+}
+
+onMounted(async () => {
+  await loadData()
+  openFromQuery()
 })
+
+watch(
+  () => route.query.id,
+  () => openFromQuery(),
+)
 </script>

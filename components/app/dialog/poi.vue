@@ -53,254 +53,340 @@
       </div>
     </div>
 
-    <form @submit.prevent="submitForm" class="dialog-body flex flex-col gap-6">
-      <div>
-        <h3 class="text-sm font-semibold mb-3 text-neutral-500">
-          Basis Informationen
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex flex-col mt-2">
-            <label for="poiType" class="dialog-label">Typ:</label>
-            <select
-              id="poiType"
-              v-model="formData.poiType"
-              class="dialog-input"
-            >
-              <option value="BUILDING">Gebäude</option>
-              <option value="AREA">Fläche</option>
-              <option value="POINT">Punkt / Symbol</option>
-            </select>
-          </div>
-
-          <div class="flex flex-col mt-2">
-            <label for="name" class="dialog-label">Name:</label>
-            <input
-              id="name"
-              type="text"
-              v-model.trim="formData.name"
-              required
-              placeholder="Name des Ortes"
-              class="dialog-input"
+    <form @submit.prevent="submitForm" class="flex min-h-0 flex-1 flex-col">
+      <div class="dialog-body flex min-h-0 flex-1 flex-col gap-0 !py-0">
+        <!-- Basis Informationen -->
+        <section class="border-b border-neutral-200">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between gap-3 px-0 py-4 text-left"
+            :aria-expanded="isSectionOpen('basis')"
+            @click="toggleSection('basis')"
+          >
+            <h3 class="text-sm font-semibold text-neutral-700">
+              Basis Informationen
+            </h3>
+            <UiIcon
+              name="i-lucide-chevron-down"
+              class="size-5 shrink-0 text-neutral-400 transition-transform"
+              :class="{ 'rotate-180': isSectionOpen('basis') }"
             />
-          </div>
+          </button>
+          <div v-show="isSectionOpen('basis')" class="pb-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="flex flex-col mt-2">
+                <label for="poiType" class="dialog-label">Typ:</label>
+                <select
+                  id="poiType"
+                  v-model="formData.poiType"
+                  class="dialog-input"
+                >
+                  <option value="BUILDING">Gebäude</option>
+                  <option value="AREA">Fläche</option>
+                  <option value="POINT">Punkt / Symbol</option>
+                </select>
+              </div>
 
-          <div class="flex flex-col mt-2">
-            <label for="address" class="dialog-label">Adresse:</label>
-            <input
-              id="address"
-              type="text"
-              v-model.trim="formData.address"
-              placeholder="Vollständige Adresse"
-              class="dialog-input"
-            />
-          </div>
-
-          <div class="flex flex-col mt-2">
-            <label for="shortName" class="dialog-label">Abgekürzter Name:</label>
-            <input
-              id="shortName"
-              type="text"
-              v-model.trim="formData.shortName"
-              placeholder="z.B. Hausnummer, Symbol"
-              class="dialog-input"
-            />
-          </div>
-
-          <div class="flex flex-col mt-2 md:col-span-2">
-            <label for="description" class="dialog-label"
-              >Kurze Beschreibung (optional):</label
-            >
-            <textarea
-              id="description"
-              rows="4"
-              v-model="formData.directionDescription"
-              placeholder="Zusätzliche Informationen oder Hinweise zum Ort"
-              class="dialog-input"
-            ></textarea>
-          </div>
-
-          <div class="flex flex-col mt-2" v-if="formData.poiType === 'POINT'">
-            <label for="iconId" class="dialog-label">Icon (optional):</label>
-            <select
-              id="iconId"
-              v-model="formData.iconId"
-              class="dialog-input"
-            >
-              <option :value="null">Kein Icon</option>
-              <option value="icon-pin">Pin</option>
-              <option value="icon-info">Info</option>
-            </select>
-          </div>
-          <!-- Custom Icon Selection -->
-          <div class="flex flex-col mt-2">
-            <label class="dialog-label">Eigenes Icon</label>
-            <div class="flex items-center gap-4">
-              <div
-                v-if="formData.iconId && !isPredefinedIcon(formData.iconId)"
-                class="relative w-12 h-12 bg-neutral-200"
-              >
-                <img
-                  :src="getIconPreviewUrl(formData.iconId)"
-                  alt="Icon"
-                  class="w-full h-full object-contain border rounded-lg"
+              <div class="flex flex-col mt-2">
+                <label for="name" class="dialog-label">Name:</label>
+                <input
+                  id="name"
+                  type="text"
+                  v-model.trim="formData.name"
+                  required
+                  placeholder="Name des Ortes"
+                  class="dialog-input"
                 />
+              </div>
+
+              <div class="flex flex-col mt-2">
+                <label for="address" class="dialog-label">Adresse:</label>
+                <input
+                  id="address"
+                  type="text"
+                  v-model.trim="formData.address"
+                  placeholder="Vollständige Adresse"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div class="flex flex-col mt-2">
+                <label for="shortName" class="dialog-label"
+                  >Abgekürzter Name:</label
+                >
+                <input
+                  id="shortName"
+                  type="text"
+                  v-model.trim="formData.shortName"
+                  placeholder="z.B. Hausnummer, Symbol"
+                  class="dialog-input"
+                />
+              </div>
+
+              <div class="flex flex-col mt-2 md:col-span-2">
+                <label for="description" class="dialog-label"
+                  >Kurze Beschreibung (optional):</label
+                >
+                <textarea
+                  id="description"
+                  rows="4"
+                  v-model="formData.directionDescription"
+                  placeholder="Zusätzliche Informationen oder Hinweise zum Ort"
+                  class="dialog-input"
+                ></textarea>
+              </div>
+
+              <div
+                class="flex flex-col mt-2"
+                v-if="formData.poiType === 'POINT'"
+              >
+                <label for="iconId" class="dialog-label"
+                  >Icon (optional):</label
+                >
+                <select
+                  id="iconId"
+                  v-model="formData.iconId"
+                  class="dialog-input"
+                >
+                  <option :value="null">Kein Icon</option>
+                  <option value="icon-pin">Pin</option>
+                  <option value="icon-info">Info</option>
+                </select>
+              </div>
+              <!-- Custom Icon Selection -->
+              <div class="flex flex-col mt-2">
+                <label class="dialog-label">Eigenes Icon</label>
+                <div class="flex items-center gap-4">
+                  <div
+                    v-if="formData.iconId && !isPredefinedIcon(formData.iconId)"
+                    class="relative w-12 h-12 bg-neutral-200"
+                  >
+                    <img
+                      :src="getIconPreviewUrl(formData.iconId)"
+                      alt="Icon"
+                      class="w-full h-full object-contain border rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      @click="formData.iconId = null"
+                      class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 w-6 h-6 flex items-center justify-center"
+                    >
+                      <UiIcon name="i-lucide-x" size="12" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    @click="showIconMediaLibrary = true"
+                    class="btn-dialog-primary"
+                  >
+                    {{
+                      formData.iconId && !isPredefinedIcon(formData.iconId)
+                        ? "Icon ändern"
+                        : "Icon auswählen"
+                    }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Marketing Bilder -->
+        <section class="border-b border-neutral-200">
+          <button
+            type="button"
+            class="flex w-full items-center justify-between gap-3 px-0 py-4 text-left"
+            :aria-expanded="isSectionOpen('marketing')"
+            @click="toggleSection('marketing')"
+          >
+            <h3 class="text-sm font-semibold text-neutral-700">
+              Marketing Bilder
+            </h3>
+            <UiIcon
+              name="i-lucide-chevron-down"
+              class="size-5 shrink-0 text-neutral-400 transition-transform"
+              :class="{ 'rotate-180': isSectionOpen('marketing') }"
+            />
+          </button>
+          <div v-show="isSectionOpen('marketing')" class="pb-5">
+            <div v-if="images.length > 0">
+              <div class="space-y-4">
+                <div
+                  class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
+                >
+                  <div
+                    v-for="(imageId, index) in formData.marketingImages"
+                    :key="imageId"
+                    class="relative aspect-square bg-neutral-200"
+                  >
+                    <img
+                      :src="getMarketingImageUrl(imageId)"
+                      alt="Marketing Image"
+                      class="w-full h-full object-cover border rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      @click="removeMarketingImage(index)"
+                      class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 flex items-center justify-center h-6 w-6"
+                    >
+                      <UiIcon name="i-lucide-x" size="16" />
+                    </button>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  @click="formData.iconId = null"
-                  class="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 w-6 h-6 flex items-center justify-center"
+                  @click="showMarketingMediaLibrary = true"
+                  class="btn-dialog-primary"
                 >
-                  <UiIcon name="i-lucide-x" size="12" />
+                  Marketing Bilder hinzufügen
                 </button>
               </div>
+            </div>
+            <div v-else class="space-y-3">
+              <p class="text-sm text-neutral-500 italic">
+                Noch keine Marketing-Bilder ausgewählt
+              </p>
               <button
                 type="button"
-                @click="showIconMediaLibrary = true"
+                @click="showMarketingMediaLibrary = true"
                 class="btn-dialog-primary"
               >
-                {{
-                  formData.iconId && !isPredefinedIcon(formData.iconId)
-                    ? "Icon ändern"
-                    : "Icon auswählen"
-                }}
+                Marketing Bilder hinzufügen
               </button>
             </div>
           </div>
-        </div>
-      </div>
-      <div>
-        <h3 class="text-sm font-semibold mb-3 text-neutral-500">
-          Marketing Bilder
-        </h3>
-        <div v-if="images.length > 0">
-          <label class="dialog-label">Marketing Bilder</label>
-          <div class="space-y-4">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              <div
-                v-for="(imageId, index) in formData.marketingImages"
-                :key="imageId"
-                class="relative aspect-square bg-neutral-200"
-              >
-                <img
-                  :src="getMarketingImageUrl(imageId)"
-                  alt="Marketing Image"
-                  class="w-full h-full object-cover border rounded-lg"
-                />
-                <button
-                  type="button"
-                  @click="removeMarketingImage(index)"
-                  class="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-none hover:bg-red-600 flex items-center justify-center h-6 w-6"
-                >
-                  <UiIcon name="i-lucide-x" size="16" />
-                </button>
-              </div>
-            </div>
+        </section>
+
+        <!-- Mieter -->
+        <section
+          v-if="
+            poiToEdit?.poiType === 'BUILDING' || formData.poiType === 'BUILDING'
+          "
+          class="border-b border-neutral-200"
+        >
+          <div class="flex items-center gap-3 py-4">
             <button
               type="button"
-              @click="showMarketingMediaLibrary = true"
-              class="btn-dialog-primary"
+              class="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+              :aria-expanded="isSectionOpen('renters')"
+              @click="toggleSection('renters')"
             >
-              Marketing Bilder hinzufügen
+              <h3 class="text-sm font-semibold text-neutral-700">Mieter</h3>
+              <UiIcon
+                name="i-lucide-chevron-down"
+                class="size-5 shrink-0 text-neutral-400 transition-transform"
+                :class="{ 'rotate-180': isSectionOpen('renters') }"
+              />
             </button>
           </div>
-        </div>
+
+          <div v-show="isSectionOpen('renters')" class="pb-5">
+            <div v-if="renters.length > 0">
+              <div
+                v-for="(renter, index) in renters"
+                :key="renter.id"
+                :draggable="renters.length > 1"
+                class="border-b border-neutral-200 py-2 transition-all"
+                :class="{
+                  'cursor-move': renters.length > 1,
+                  'bg-neutral-50': isDragging && draggedIndex === index,
+                }"
+                @dragstart="handleDragStart($event, index)"
+                @dragend="handleDragEnd"
+                @dragover="handleDragOver"
+                @drop="handleDrop($event, index)"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div v-if="renters.length > 1" class="text-neutral-400">
+                      <UiIcon name="i-lucide-grip-vertical" class="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 class="font-medium">{{ renter.name }}</h4>
+                      <p
+                        v-if="renter.syncToIdeenlabor"
+                        class="text-xs text-emerald-700"
+                      >
+                        Sync to Ideenlabor aktiv
+                      </p>
+                      <p v-if="renter.area" class="text-sm text-neutral-600">
+                        Fläche: {{ renter.area.squaremeters }}m² | Kosten:
+                        {{ renter.area.costs }}€
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      type="button"
+                      @click="editRenter(renter)"
+                      class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center"
+                    >
+                      <IconEdit class="h-3 w-3" />
+                    </button>
+                    <button
+                      type="button"
+                      @click="deleteRenter(renter)"
+                      class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 text-red-500 flex items-center justify-center"
+                    >
+                      <IconTrash class="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p v-else class="text-sm text-neutral-500 italic">
+              Noch keine Mieter vorhanden
+            </p>
+            <button
+              type="button"
+              class="btn-dialog-primary shrink-0 mt-4"
+              @click.stop="showRenterForm = true"
+            >
+              Mieter hinzufügen
+            </button>
+          </div>
+        </section>
+
+        <!-- 360°-Tour -->
+        <section
+          v-if="
+            formData.poiType === 'BUILDING' || poiToEdit?.poiType === 'BUILDING'
+          "
+          class="border-b border-neutral-200"
+        >
+          <button
+            type="button"
+            class="flex w-full items-center justify-between gap-3 py-4 text-left"
+            :aria-expanded="isSectionOpen('panorama')"
+            @click="toggleSection('panorama')"
+          >
+            <div class="min-w-0">
+              <h3 class="text-sm font-semibold text-neutral-700">360°-Tour</h3>
+              <p class="text-xs text-neutral-500 mt-0.5">
+                Mehrere Räume als Szenen verknüpfen
+              </p>
+            </div>
+            <UiIcon
+              name="i-lucide-chevron-down"
+              class="size-5 shrink-0 text-neutral-400 transition-transform"
+              :class="{ 'rotate-180': isSectionOpen('panorama') }"
+            />
+          </button>
+          <div v-show="isSectionOpen('panorama')" class="pb-5">
+            <SceneList :poi-id="poiToEdit?.id" :hide-header="true" />
+          </div>
+        </section>
       </div>
 
-      <div class="dialog-footer !px-0 !pb-0">
-        <button
-          type="button"
-          class="btn-dialog-cancel"
-          @click="handleCancel"
-        >
+      <div class="dialog-footer">
+        <button type="button" class="btn-dialog-cancel" @click="handleCancel">
           Abbrechen
         </button>
-        <button
-          type="submit"
-          class="btn-dialog-primary"
-          @click="saveEntry"
-        >
+        <button type="submit" class="btn-dialog-primary" @click="saveEntry">
           {{ isEditMode ? "Änderungen speichern" : "POI erstellen" }}
         </button>
       </div>
     </form>
-
-    <!-- Renter section - moved outside the form -->
-    <div
-      v-if="poiToEdit.poiType === 'BUILDING'"
-      class="border-t border-neutral-200 px-6 py-5"
-    >
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium">Mieter</h3>
-        <button
-          type="button"
-          @click="showRenterForm = true"
-          class="btn-dialog-primary"
-        >
-          Mieter hinzufügen
-        </button>
-      </div>
-
-      <div v-if="renters.length > 0" class="space-y-3">
-        <div
-          v-if="renters.length > 1"
-          class="text-sm text-blue-600 bg-blue-50 p-2 rounded-md mb-3"
-        >
-          💡 Ziehen Sie die Mieter-Karten, um die Reihenfolge zu ändern.
-          Änderungen werden automatisch gespeichert.
-        </div>
-
-        <div
-          v-for="(renter, index) in renters"
-          :key="renter.id"
-          :draggable="renters.length > 1"
-          class="border border-neutral-200 rounded-lg p-3 transition-all"
-          :class="{
-            'cursor-move border-blue-300 shadow-sm': renters.length > 1,
-            'bg-neutral-50': isDragging && draggedIndex === index,
-          }"
-          @dragstart="handleDragStart($event, index)"
-          @dragend="handleDragEnd"
-          @dragover="handleDragOver"
-          @drop="handleDrop($event, index)"
-        >
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div v-if="renters.length > 1" class="text-neutral-400">
-                <UiIcon name="i-lucide-grip-vertical" class="h-5 w-5" />
-              </div>
-              <div>
-                <h4 class="font-medium">{{ renter.name }}</h4>
-                <p v-if="renter.syncToIdeenlabor" class="text-xs text-emerald-700">
-                  Sync to Ideenlabor aktiv
-                </p>
-                <p v-if="renter.area" class="text-sm text-neutral-600">
-                  Fläche: {{ renter.area.squaremeters }}m² | Kosten:
-                  {{ renter.area.costs }}€
-                </p>
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                @click="editRenter(renter)"
-                class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center"
-              >
-                <UiIcon name="i-lucide-edit" class="h-6 m-0 p-0" />
-              </button>
-              <button
-                type="button"
-                @click="deleteRenter(renter)"
-                class="p-1 rounded-none border border-neutral-200 hover:bg-neutral-50 text-red-500 flex items-center justify-center"
-              >
-                <UiIcon name="i-lucide-trash" class="h-6" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <p v-else class="text-sm text-neutral-500 italic">
-        Noch keine Mieter vorhanden
-      </p>
-    </div>
 
     <RenterForm
       v-if="showRenterForm"
@@ -319,7 +405,10 @@
         role="dialog"
         aria-modal="true"
       >
-        <div class="absolute inset-0" @click="showMarketingMediaLibrary = false" />
+        <div
+          class="absolute inset-0"
+          @click="showMarketingMediaLibrary = false"
+        />
         <div class="dialog-panel max-w-4xl">
           <div class="dialog-header">
             <h3 class="dialog-title">Marketing Bilder auswählen</h3>
@@ -382,6 +471,7 @@
 import { ref, watch, computed, onMounted } from "vue";
 import RenterForm from "./RenterForm.vue";
 import MediaLibrary from "@/components/app/MediaLibrary.vue"; // Import MediaLibrary
+import SceneList from "@/components/app/panorama/SceneList.vue";
 
 // --- Props ---
 const props = defineProps({
@@ -399,6 +489,20 @@ const props = defineProps({
   },
 });
 
+const openSections = ref({
+  basis: true,
+  marketing: false,
+  renters: false,
+  panorama: false,
+});
+
+function isSectionOpen(key) {
+  return Boolean(openSections.value[key]);
+}
+
+function toggleSection(key) {
+  openSections.value[key] = !openSections.value[key];
+}
 const emit = defineEmits(["save", "cancel", "edit-position", "start-drawing"]);
 
 const getInitialFormData = () => ({
@@ -418,13 +522,19 @@ const formData = ref(getInitialFormData());
 const isEditMode = computed(() => !!props.poiToEdit);
 
 const formTitle = computed(() =>
-  isEditMode.value ? "POI bearbeiten" : "Neuen POI erstellen"
+  isEditMode.value ? "POI bearbeiten" : "Neuen POI erstellen",
 );
 
 watch(
   () => props.poiToEdit,
   (newPoi) => {
     console.log("Watcher: poiToEdit changed", newPoi);
+    openSections.value = {
+      basis: true,
+      marketing: false,
+      renters: false,
+      panorama: false,
+    };
     if (newPoi && typeof newPoi === "object") {
       const initialData = getInitialFormData();
       for (const key in initialData) {
@@ -433,7 +543,7 @@ watch(
       }
       if (newPoi.areaGeoJson) {
         formData.value.areaGeoJson = JSON.parse(
-          JSON.stringify(newPoi.areaGeoJson)
+          JSON.stringify(newPoi.areaGeoJson),
         );
       }
 
@@ -441,7 +551,7 @@ watch(
       if (newPoi.marketingImages && Array.isArray(newPoi.marketingImages)) {
         // Falls marketingImages ein Array von Objekten ist (mit id, url etc.)
         formData.value.marketingImages = newPoi.marketingImages.map((img) =>
-          typeof img === "object" ? img.id : img
+          typeof img === "object" ? img.id : img,
         );
       } else if (
         newPoi.marketingImageIds &&
@@ -460,7 +570,7 @@ watch(
   },
   {
     immediate: true,
-  }
+  },
 );
 
 const geometryButtonTooltip = computed(() => {
@@ -554,7 +664,7 @@ watch(
     if (newPoi?.id) {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_INTERNAL_API_URL}/pois/${newPoi.id}/renters`
+          `${import.meta.env.VITE_INTERNAL_API_URL}/pois/${newPoi.id}/renters`,
         );
         if (!response.ok) throw new Error("Failed to load renters");
         const data = await response.json();
@@ -566,7 +676,7 @@ watch(
       renters.value = [];
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 function editRenter(renter) {
@@ -592,7 +702,7 @@ async function deleteRenter(renter) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
-      }
+      },
     );
     if (!response.ok) throw new Error("Failed to delete renter");
     renters.value = renters.value.filter((r) => r.id !== renter.id);
@@ -663,7 +773,7 @@ async function saveSortOrder() {
 
     // Floor-ID aus dem ersten Renter mit Area extrahieren
     const firstRenterWithArea = renters.value.find(
-      (renter) => renter.area && renter.area.floorId
+      (renter) => renter.area && renter.area.floorId,
     );
     const floorId = firstRenterWithArea?.area?.floorId;
 
@@ -689,7 +799,7 @@ async function saveSortOrder() {
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
         body: JSON.stringify({ sortedAreaIds }), // Backend erwartet sortedAreaIds
-      }
+      },
     );
 
     if (!response.ok) {
@@ -755,7 +865,7 @@ function getMarketingImageUrl(imageId) {
   // Fallback: Direkte URL-Konstruktion wenn das Bild nicht im Array ist
   console.warn(
     "Bild nicht in geladenen Bildern gefunden, Fallback-URL wird verwendet für:",
-    imageId
+    imageId,
   );
   return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}/media/${imageId}`;
 }
@@ -771,7 +881,7 @@ const images = ref([]);
 async function loadImages() {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/media`
+      `${import.meta.env.VITE_INTERNAL_API_URL}/media`,
     );
     if (!response.ok) throw new Error("Failed to load images");
     images.value = await response.json();

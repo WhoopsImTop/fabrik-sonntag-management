@@ -43,211 +43,194 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-      <!-- Kunde Auswahl -->
-      <div class="lg:col-span-1 border border-neutral-200 bg-white text-neutral-950 ">
-        <div class="flex flex-col space-y-1.5 p-6 pb-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold leading-none tracking-tight">Kunde</h3>
-            <span v-if="form.user_id"
-              class="inline-flex items-center rounded-none border border-emerald-200 px-2.5 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 transition-colors">Ausgewählt</span>
-            <span v-else
-              class="inline-flex items-center rounded-none border border-neutral-200 px-2.5 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500 transition-colors">Optional</span>
+    <div class="space-y-4">
+      <!-- Empfänger -->
+      <div class="border border-neutral-200 bg-white text-neutral-950">
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100">
+          <div class="min-w-0">
+            <h3 class="font-semibold leading-none tracking-tight">Empfänger</h3>
+            <p class="text-xs text-neutral-500 mt-1 truncate">
+              Suche füllt vor — Änderungen gelten nur für diese Rechnung.
+            </p>
           </div>
-          <p class="text-sm text-neutral-500">Kundenkonto auswählen oder neu anlegen.</p>
+          <span v-if="form.user_id"
+            class="shrink-0 inline-flex items-center rounded-none border border-emerald-200 px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800">Verknüpft</span>
+          <span v-else
+            class="shrink-0 inline-flex items-center rounded-none border border-neutral-200 px-2 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500">Optional</span>
         </div>
 
-        <div class="p-6 pt-0 space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Kunden suchen
-            </label>
-            <div class="relative group">
-              <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input type="text" v-model="userSearchQuery" @focus="showUserDropdown = true" @blur="closeUserDropdown"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm  transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Name oder E-Mail..." />
-              <button v-if="userSearchQuery" @click="clearUserSelection"
-                class="absolute right-2.5 top-2.5 h-4 w-4 text-neutral-500 hover:text-neutral-900">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Kunden suchen</label>
+              <div class="relative group">
+                <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </button>
-            </div>
-
-            <div v-if="showUserDropdown && filteredUsers.length > 0"
-              class="absolute z-50 mt-1 w-[calc(100%-3rem)] md:w-[330px] rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
-              <div class="max-h-60 overflow-y-auto p-1">
-                <div v-for="user in filteredUsers" :key="user.id" @click="selectUser(user)"
-                  class="relative flex cursor-pointer select-none items-center  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
-                  <div class="flex items-center gap-2">
-                    <div
-                      class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900">
-                      {{ user.username.charAt(0).toUpperCase() }}
-                    </div>
-                    <div>
-                      <div class="font-medium">{{ user.details?.company || user.username }}</div>
-                      <div class="text-xs text-neutral-500">{{ user.email }}</div>
+                <input type="text" v-model="userSearchQuery" @focus="showUserDropdown = true" @blur="closeUserDropdown"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                  placeholder="Name, Firma oder E-Mail..." />
+                <button v-if="userSearchQuery || form.user_id" type="button" @click="clearUserSelection"
+                  class="absolute right-2.5 top-2.5 h-4 w-4 text-neutral-500 hover:text-neutral-900">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div v-if="showUserDropdown && filteredUsers.length > 0"
+                class="relative z-50 mt-1 w-full rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
+                <div class="max-h-60 overflow-y-auto p-1">
+                  <div v-for="user in filteredUsers" :key="user.id" @mousedown.prevent="selectUser(user)"
+                    class="relative flex cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900">
+                        {{ user.username.charAt(0).toUpperCase() }}
+                      </div>
+                      <div>
+                        <div class="font-medium">{{ user.details?.company || user.username }}</div>
+                        <div class="text-xs text-neutral-500">{{ user.email }}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="relative py-2">
-            <div class="absolute inset-0 flex items-center">
-              <span class="w-full border-t border-neutral-200"></span>
-            </div>
-            <div class="relative flex justify-center text-xs uppercase">
-              <span class="bg-white px-2 text-neutral-500">Oder manuell</span>
-            </div>
-          </div>
-
-          <div :class="{ 'opacity-50 pointer-events-none grayscale': form.user_id }"
-            class="space-y-4 transition-all duration-300">
-            <div>
-              <label class="text-sm font-medium leading-none text-neutral-700 mb-2 block">Kundentyp</label>
-              <div class="flex border border-neutral-200 overflow-hidden">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Kundentyp</label>
+              <div class="flex border border-neutral-200 overflow-hidden h-9">
                 <button type="button" @click="customerForm.user_type = 'PERSON'"
-                  :class="['flex-1 px-3 py-1.5 text-xs font-medium transition-colors', customerForm.user_type === 'PERSON' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Person</button>
+                  :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'PERSON' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Person</button>
                 <button type="button" @click="customerForm.user_type = 'COMPANY'"
-                  :class="['flex-1 px-3 py-1.5 text-xs font-medium transition-colors', customerForm.user_type === 'COMPANY' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Firma</button>
+                  :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'COMPANY' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Firma</button>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Vorname</label>
-                <input v-model="customerForm.first_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="Max" />
-              </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Nachname</label>
-                <input v-model="customerForm.last_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="Mustermann" />
+            <div v-if="customerForm.user_type === 'COMPANY'" class="flex items-end pb-2">
+              <div class="flex items-center gap-2">
+                <input id="display_contact_person" type="checkbox" v-model="customerForm.display_contact_person"
+                  class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none" />
+                <label for="display_contact_person" class="text-xs text-neutral-700">Ansprechpartner anzeigen</label>
               </div>
             </div>
+          </div>
 
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-neutral-700">{{ customerForm.user_type === 'COMPANY' ?
-                'Firmenname (Pflicht)' : 'Firma (optional)' }}</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Vorname</label>
+              <input v-model="customerForm.first_name"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="Max" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Nachname</label>
+              <input v-model="customerForm.last_name"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="Mustermann" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">{{ customerForm.user_type === 'COMPANY' ? 'Firmenname' : 'Firma (optional)' }}</label>
               <input v-model="customerForm.company" :required="customerForm.user_type === 'COMPANY'"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                 placeholder="Muster GmbH" />
             </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-neutral-700">E-Mail</label>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">E-Mail</label>
               <input v-model="customerForm.email" type="email"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
                 placeholder="max@beispiel.de" />
             </div>
-
-            <div class="space-y-2">
-              <label class="text-sm font-medium leading-none text-neutral-700">Telefon (Mobil)</label>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Telefon</label>
               <input v-model="customerForm.phone" type="tel"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                placeholder="+49 152 33 59 20 58" />
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="+49 …" />
             </div>
-
-            <div class="grid grid-cols-4 gap-4">
-              <div class="col-span-3 space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Straße</label>
-                <input v-model="customerForm.street"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="Hauptstr." />
-              </div>
-              <div class="col-span-1 space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Nr.</label>
-                <input v-model="customerForm.houseNumber"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="1" />
-              </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Land</label>
+              <input v-model="customerForm.country"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="Deutschland" />
             </div>
+          </div>
 
-            <div class="grid grid-cols-3 gap-4">
-              <div class="col-span-1 space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">PLZ</label>
-                <input v-model="customerForm.zip_code"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="12345" />
-              </div>
-              <div class="col-span-2 space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Stadt</label>
-                <input v-model="customerForm.city"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="Berlin" />
-              </div>
-              <div class="col-span-3 space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Land</label>
-                <input v-model="customerForm.country"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                  placeholder="Deutschland" />
-              </div>
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
+            <div class="col-span-2 sm:col-span-3 space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Straße</label>
+              <input v-model="customerForm.street"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="Hauptstr." />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Nr.</label>
+              <input v-model="customerForm.house_number"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="1" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">PLZ</label>
+              <input v-model="customerForm.zip_code"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="12345" />
+            </div>
+            <div class="col-span-2 sm:col-span-1 space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Stadt</label>
+              <input v-model="customerForm.city"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                placeholder="Berlin" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Einstellungen und Positionen -->
-      <div class="lg:col-span-2 space-y-6">
-
-        <!-- Einstellungen -->
-        <div class="border border-neutral-200 bg-white text-neutral-950 ">
-          <div class="flex flex-col space-y-1.5 p-6 pb-4">
-            <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
-          </div>
-          <div class="p-6 pt-0 space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Status</label>
-                <select v-model="form.status"
-                  class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950 disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="DRAFT">Entwurf</option>
-                  <option value="SENT">Versendet</option>
-                  <option value="PAID">Bezahlt</option>
-                  <option value="OVERDUE">Überfällig</option>
-                </select>
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Rechnungsdatum</label>
-                <input type="date" v-model="form.invoice_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Leistungsbeginn</label>
-                <input type="date" v-model="form.service_start"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Leistungsende</label>
-                <input type="date" v-model="form.service_end"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              </div>
-
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel</label>
-                <input type="date" v-model="form.due_date"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              </div>
-              <div class="space-y-2">
-                <label class="text-sm font-medium leading-none text-neutral-700">Zahlungsziel (Tage)</label>
-                <input type="number" v-model="form.days_to_pay"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm  transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              </div>
+      <!-- Einstellungen -->
+      <div class="border border-neutral-200 bg-white text-neutral-950">
+        <div class="px-4 py-3 border-b border-neutral-100">
+          <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
+        </div>
+        <div class="p-4">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Status</label>
+              <select v-model="form.status"
+                class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
+                <option value="DRAFT">Entwurf</option>
+                <option value="SENT">Versendet</option>
+                <option value="PAID">Bezahlt</option>
+                <option value="OVERDUE">Überfällig</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Rechnungsdatum</label>
+              <input type="date" v-model="form.invoice_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Leistungsbeginn</label>
+              <input type="date" v-model="form.service_start"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Leistungsende</label>
+              <input type="date" v-model="form.service_end"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Zahlungsziel</label>
+              <input type="date" v-model="form.due_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600">Tage</label>
+              <input type="number" v-model="form.days_to_pay"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
             </div>
           </div>
         </div>
+      </div>
 
         <!-- Positionen Tabelle -->
         <div class="border border-neutral-200 bg-white text-neutral-950 ">
@@ -385,7 +368,6 @@
             </div>
           </div>
         </div>
-      </div>
     </div>
   </div>
 </template>
@@ -463,19 +445,55 @@ const calculateDaysBetweenDates = (fromDate: string, toDate: string) => {
 
 const syncingPaymentTerms = ref(false);
 
-// Formular für neuen Kunden
+// Formular für Empfänger (Snapshot auf der Rechnung)
 const customerForm = ref({
   first_name: "",
   last_name: "",
   company: "",
   email: "",
   street: "",
-  houseNumber: "",
+  house_number: "",
   phone: "",
   zip_code: "",
-  city: "", 
+  city: "",
   country: "",
   user_type: "PERSON" as "PERSON" | "COMPANY",
+  display_contact_person: false,
+});
+
+const fillCustomerFormFromUser = (user: any) => {
+  const d = user?.details || {};
+  customerForm.value = {
+    first_name: d.first_name || "",
+    last_name: d.last_name || "",
+    company: d.company || "",
+    email: user?.email || "",
+    street: d.street || "",
+    house_number: d.house_number || "",
+    phone: d.mobile_number || "",
+    zip_code: d.zip_code || "",
+    city: d.city || "",
+    country: d.country || "",
+    user_type: (d.user_type === "COMPANY" ? "COMPANY" : "PERSON") as
+      | "PERSON"
+      | "COMPANY",
+    display_contact_person: Boolean(d.display_contact_person),
+  };
+};
+
+const buildRecipientPayload = () => ({
+  user_type: customerForm.value.user_type,
+  first_name: customerForm.value.first_name,
+  last_name: customerForm.value.last_name,
+  company: customerForm.value.company,
+  email: customerForm.value.email,
+  phone: customerForm.value.phone,
+  street: customerForm.value.street,
+  house_number: customerForm.value.house_number,
+  zip_code: customerForm.value.zip_code,
+  city: customerForm.value.city,
+  country: customerForm.value.country,
+  display_contact_person: customerForm.value.display_contact_person,
 });
 
 watch(
@@ -600,10 +618,11 @@ const formatVatPercent = (rate: number) => {
   return Number.isInteger(p) ? String(p) : String(p);
 };
 
-// User Handling
+// User Handling — Prefill behält user_id auch wenn Empfängerfelder danach geändert werden
 const selectUser = (user: any) => {
   form.value.user_id = user.id;
   userSearchQuery.value = user.details?.company || user.username;
+  fillCustomerFormFromUser(user);
   showUserDropdown.value = false;
 };
 
@@ -745,20 +764,25 @@ const loadData = async () => {
 };
 
 const save = async () => {
-  // Validate Required Fields
-  if (!form.value.user_id) {
-    if (customerForm.value.user_type === 'COMPANY' && !customerForm.value.company.trim()) {
-      alert("Bitte geben Sie einen Firmennamen an.");
-      return;
-    }
-    if (customerForm.value.user_type === 'PERSON' && (!customerForm.value.first_name.trim() || !customerForm.value.last_name.trim())) {
-      alert("Bitte geben Sie Vor- und Nachnamen an.");
-      return;
-    }
-    if (!customerForm.value.street.trim() || !customerForm.value.zip_code.trim() || !customerForm.value.city.trim()) {
-      alert("Bitte geben Sie die vollständige Adresse (Straße, PLZ, Ort) an.");
-      return;
-    }
+  // Empfängerfelder immer prüfen (auch bei verknüpftem user_id)
+  if (customerForm.value.user_type === "COMPANY" && !customerForm.value.company.trim()) {
+    alert("Bitte geben Sie einen Firmennamen an.");
+    return;
+  }
+  if (
+    customerForm.value.user_type === "PERSON" &&
+    (!customerForm.value.first_name.trim() || !customerForm.value.last_name.trim())
+  ) {
+    alert("Bitte geben Sie Vor- und Nachnamen an.");
+    return;
+  }
+  if (
+    !customerForm.value.street.trim() ||
+    !customerForm.value.zip_code.trim() ||
+    !customerForm.value.city.trim()
+  ) {
+    alert("Bitte geben Sie die vollständige Adresse (Straße, PLZ, Ort) an.");
+    return;
   }
 
   if (!form.value.invoice_date) {
@@ -792,21 +816,35 @@ const save = async () => {
   try {
     let finalUserId = form.value.user_id;
 
-    // Create new customer if no user selected
+    // Neuen Kunden nur anlegen, wenn kein Konto verknüpft ist
     if (!finalUserId) {
       const userPayload = {
-        username: customerForm.value.user_type === 'COMPANY'
-          ? customerForm.value.company
-          : `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim(),
+        username:
+          customerForm.value.user_type === "COMPANY"
+            ? customerForm.value.company
+            : `${customerForm.value.first_name} ${customerForm.value.last_name}`.trim(),
         email: customerForm.value.email,
         password: Math.random().toString(36).slice(-10),
         role: "USER",
-        details: { ...customerForm.value },
+        details: {
+          first_name: customerForm.value.first_name,
+          last_name: customerForm.value.last_name,
+          company: customerForm.value.company,
+          street: customerForm.value.street,
+          house_number: customerForm.value.house_number,
+          mobile_number: customerForm.value.phone,
+          zip_code: customerForm.value.zip_code,
+          city: customerForm.value.city,
+          country: customerForm.value.country,
+          user_type: customerForm.value.user_type,
+          display_contact_person: customerForm.value.display_contact_person,
+        },
       };
 
       const newUser: any = await api.users.create(userPayload as any);
       if (newUser && newUser.id) {
         finalUserId = newUser.id;
+        form.value.user_id = newUser.id;
       }
     }
 
@@ -820,6 +858,7 @@ const save = async () => {
       days_to_pay: Number(form.value.days_to_pay),
       notes: form.value.notes,
       items: cleanItems,
+      recipient: buildRecipientPayload(),
     };
 
     if (route.query.bookingId) {
@@ -828,7 +867,9 @@ const save = async () => {
 
     const result: any = await api.sales.create(payload as any);
 
-    if (result && result.invoice?.id) {
+    if (result && result.id) {
+      router.push(`/booking-system/invoices/${result.id}`);
+    } else if (result && result.invoice?.id) {
       router.push(`/booking-system/invoices/${result.invoice.id}`);
     } else {
       router.push("/booking-system/invoices");

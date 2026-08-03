@@ -5,7 +5,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="dialog-panel max-w-4xl">
+    <div class="dialog-panel !max-h-[calc(100dvh-2rem)] h-[calc(100dvh-2rem)] max-w-4xl">
       <div class="dialog-header">
         <div class="min-w-0 flex-1">
           <h3 class="dialog-title">Fläche bearbeiten</h3>
@@ -21,7 +21,7 @@
         </button>
       </div>
 
-      <div class="dialog-body flex gap-4 min-h-0 !overflow-hidden">
+      <div class="dialog-body flex min-h-0 flex-1 gap-4 !overflow-hidden">
         <!-- Map Area -->
         <div class="flex-1 border rounded-lg overflow-hidden relative min-h-[400px]">
           <div ref="mapContainer" class="w-full h-full"></div>
