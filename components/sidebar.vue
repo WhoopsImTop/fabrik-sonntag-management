@@ -31,7 +31,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 const { search: runGlobalSearch } = useGlobalSearch();
 const router = useRouter();
 
-const { hydrateFromStorage, role } = useAuth();
+const { hydrateFromStorage, role, logout } = useAuth();
 if (import.meta.client) {
   hydrateFromStorage();
 }
@@ -78,6 +78,7 @@ const mainGroups = ref<NavItem[][]>([
   ],
   [
     { label: "Campusplan", icon: IconMap, to: "/" },
+    { label: "Mediathek", icon: IconImage, to: "/mediathek" },
     {
       label: "Gebäude",
       icon: IconMeter,
@@ -101,16 +102,19 @@ const visibleMainGroups = computed(() => {
   }
   return mainGroups.value;
 });
-const settingsItem = ref<NavItem>({
+const settingsItem = computed<NavItem>(() => ({
   label: "Einstellungen",
   icon: IconSettings,
   to: "/booking-system/settings",
   defaultOpen: false,
   children: [
     { label: "Unternehmen", to: "/booking-system/settings" },
+    ...(role.value === "admin"
+      ? [{ label: "Analytics", to: "/analytics" }]
+      : []),
     { label: "Passwort ändern", to: "/change-password" },
   ],
-});
+}));
 
 const sectionKey = (prefix: string, index: number, label: string) =>
   `${prefix}${index}-${label}`;
@@ -267,6 +271,11 @@ const onSearchBlur = () => {
   setTimeout(() => {
     searchFocused.value = false;
   }, 150);
+};
+
+const handleLogout = () => {
+  logout();
+  navigateTo("/login");
 };
 
 const linkClass = (to?: string, nested = false) => [
@@ -431,57 +440,67 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-if="settingsVisible" class="mt-auto border-t border-neutral-200 p-2">
-      <div class="relative flex w-full items-center">
-        <NuxtLink
-          :to="settingsItem.to"
-          :class="linkClass(settingsItem.to)"
-          class="flex-1"
+    <div class="mt-auto border-t border-neutral-200 p-2">
+      <div v-if="settingsVisible">
+        <div class="relative flex w-full items-center">
+          <NuxtLink
+            :to="settingsItem.to"
+            :class="linkClass(settingsItem.to)"
+            class="flex-1"
+          >
+            <span
+              v-if="isActive(settingsItem.to)"
+              class="absolute bottom-1 left-0 top-1 w-0.5 bg-neutral-900"
+            />
+            <component
+              :is="settingsItem.icon"
+              v-if="settingsItem.icon"
+              class="size-4 shrink-0"
+            />
+            {{ settingsItem.label }}
+          </NuxtLink>
+          <button
+            type="button"
+            class="px-2 py-2 text-neutral-400 hover:text-neutral-700"
+            aria-label="Unterpunkte umschalten"
+            @click="toggleSection(sectionKey('settings/', 0, settingsItem.label))"
+          >
+            <UiIcon
+              :name="
+                openSections[sectionKey('settings/', 0, settingsItem.label)]
+                  ? 'i-lucide-chevron-down'
+                  : 'i-lucide-chevron-right'
+              "
+              class="size-3.5"
+            />
+          </button>
+        </div>
+        <div
+          v-if="openSections[sectionKey('settings/', 0, settingsItem.label)]"
+          class="flex flex-col pb-2"
         >
-          <span
-            v-if="isActive(settingsItem.to)"
-            class="absolute bottom-1 left-0 top-1 w-0.5 bg-neutral-900"
-          />
-          <component
-            :is="settingsItem.icon"
-            v-if="settingsItem.icon"
-            class="size-4 shrink-0"
-          />
-          {{ settingsItem.label }}
-        </NuxtLink>
-        <button
-          type="button"
-          class="px-2 py-2 text-neutral-400 hover:text-neutral-700"
-          aria-label="Unterpunkte umschalten"
-          @click="toggleSection(sectionKey('settings/', 0, settingsItem.label))"
-        >
-          <UiIcon
-            :name="
-              openSections[sectionKey('settings/', 0, settingsItem.label)]
-                ? 'i-lucide-chevron-down'
-                : 'i-lucide-chevron-right'
-            "
-            class="size-3.5"
-          />
-        </button>
+          <NuxtLink
+            v-for="(child, ci) in settingsItem.children"
+            :key="ci"
+            :to="child.to"
+            :class="linkClass(child.to, true)"
+          >
+            <span
+              v-if="isActive(child.to)"
+              class="absolute bottom-1 left-0 top-1 w-0.5 bg-neutral-900"
+            />
+            {{ child.label }}
+          </NuxtLink>
+        </div>
       </div>
-      <div
-        v-if="openSections[sectionKey('settings/', 0, settingsItem.label)]"
-        class="flex flex-col pb-2"
+      <button
+        type="button"
+        class="relative flex w-full items-center gap-2.5 px-3 py-2 text-sm font-normal text-neutral-600 hover:text-neutral-900"
+        @click="handleLogout"
       >
-        <NuxtLink
-          v-for="(child, ci) in settingsItem.children"
-          :key="ci"
-          :to="child.to"
-          :class="linkClass(child.to, true)"
-        >
-          <span
-            v-if="isActive(child.to)"
-            class="absolute bottom-1 left-0 top-1 w-0.5 bg-neutral-900"
-          />
-          {{ child.label }}
-        </NuxtLink>
-      </div>
+        <UiIcon name="i-lucide-log-out" class="size-4 shrink-0" />
+        Abmelden
+      </button>
     </div>
   </nav>
 </template>

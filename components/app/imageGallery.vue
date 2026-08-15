@@ -1,6 +1,7 @@
 <template>
   <section class="flex flex-col gap-6">
     <UiModal
+      class="z-50"
       :open="selectedImage"
       title="Bild löschen"
       description="Möchtest du das ausgewählte Bild wirklich löschen?"

@@ -50,8 +50,8 @@
             class="h-10 w-16 shrink-0 overflow-hidden border border-neutral-200 bg-neutral-100"
           >
             <img
-              v-if="scene.media?.url"
-              :src="mediaUrl(scene.media.url)"
+              v-if="scene.media?.previewUrl || scene.media?.url"
+              :src="mediaUrl(scene.media.previewUrl || scene.media.url)"
               :alt="scene.title"
               class="h-full w-full object-cover"
             />
@@ -148,7 +148,7 @@
                 class="flex items-center gap-3 border border-neutral-200 p-2"
               >
                 <img
-                  :src="mediaUrl(newSceneMedia.url)"
+                  :src="mediaUrl(newSceneMedia.previewUrl || newSceneMedia.url)"
                   alt=""
                   class="h-16 w-24 object-cover"
                 />

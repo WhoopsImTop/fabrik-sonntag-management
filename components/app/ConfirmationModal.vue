@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div
       v-if="open"
-      class="dialog-overlay z-[99]"
+      class="dialog-overlay dialog-overlay-top"
       role="dialog"
       aria-modal="true"
     >

@@ -63,6 +63,35 @@
               />
             </div>
 
+            <div class="space-y-2 border border-white/10 p-3">
+              <div>
+                <h3 class="text-sm font-medium">Startwinkel</h3>
+                <p class="text-xs text-white/50 mt-0.5">
+                  Blickrichtung beim Öffnen dieser Szene
+                </p>
+              </div>
+              <p class="text-xs text-white/70">
+                Horizontal {{ formatAngle(localYaw) }}, vertikal
+                {{ formatAngle(localPitch) }}
+              </p>
+              <div class="flex flex-col gap-2">
+                <button
+                  type="button"
+                  class="border border-[#f5af06]/50 bg-[#f5af06]/10 px-3 py-1.5 text-sm text-[#f5af06] hover:bg-[#f5af06]/20"
+                  @click="captureStartAngle"
+                >
+                  Aktuellen Blick übernehmen
+                </button>
+                <button
+                  type="button"
+                  class="border border-white/20 px-3 py-1.5 text-sm text-white/80 hover:bg-white/10"
+                  @click="resetStartAngle"
+                >
+                  Zurücksetzen (0° / 0°)
+                </button>
+              </div>
+            </div>
+
             <div>
               <h3 class="text-sm font-medium mb-2">Hotspots</h3>
               <ul v-if="hotspots.length" class="space-y-2">
@@ -136,19 +165,25 @@
                 />
               </div>
               <div v-if="draft.type === 'NAVIGATION'" class="flex flex-col gap-1">
-                <label class="text-xs text-white/60">Zielszene</label>
+                <label class="text-xs text-white/60">Zielszene (Campus)</label>
                 <select
                   v-model.number="draft.targetSceneId"
                   class="border border-white/20 bg-neutral-950 px-3 py-2 text-sm text-white"
                 >
                   <option :value="null">Bitte wählen…</option>
-                  <option
-                    v-for="s in otherScenes"
-                    :key="s.id"
-                    :value="s.id"
+                  <optgroup
+                    v-for="group in campusSceneGroups"
+                    :key="group.poiId"
+                    :label="group.label"
                   >
-                    {{ s.title }}
-                  </option>
+                    <option
+                      v-for="s in group.scenes"
+                      :key="s.id"
+                      :value="s.id"
+                    >
+                      {{ s.title }}
+                    </option>
+                  </optgroup>
                 </select>
               </div>
               <div v-else class="flex flex-col gap-1">
@@ -221,7 +256,14 @@ const imageBase = import.meta.env.VITE_INTERNAL_IMAGE_URL;
 
 const viewerEl = ref(null);
 const localTitle = ref(props.scene.title || "");
+const localYaw = ref(
+  props.scene.initialYaw != null ? Number(props.scene.initialYaw) : 0
+);
+const localPitch = ref(
+  props.scene.initialPitch != null ? Number(props.scene.initialPitch) : 0
+);
 const hotspots = ref([]);
+const campusScenes = ref([]);
 const placeMode = ref(false);
 const draft = ref(null);
 const editingHotspot = ref(null);
@@ -233,8 +275,22 @@ let clickHandler = null;
 let readyHandler = null;
 
 const otherScenes = computed(() =>
-  (props.allScenes || []).filter((s) => s.id !== props.scene.id)
+  campusScenes.value.filter((s) => s.id !== props.scene.id)
 );
+
+const campusSceneGroups = computed(() => {
+  const groups = new Map();
+  for (const s of otherScenes.value) {
+    const poiId = s.poiId ?? s.poi?.id ?? "other";
+    const label =
+      s.poi?.name || s.poi?.shortName || `Gebäude #${poiId}`;
+    if (!groups.has(poiId)) {
+      groups.set(poiId, { poiId, label, scenes: [] });
+    }
+    groups.get(poiId).scenes.push(s);
+  }
+  return Array.from(groups.values());
+});
 
 const canSaveDraft = computed(() => {
   if (!draft.value) return false;
@@ -268,10 +324,12 @@ function formatAngle(v) {
 function hotspotLabel(hs) {
   if (hs.type === "NAVIGATION") {
     const target =
-      hs.targetScene?.title ||
-      otherScenes.value.find((s) => s.id === hs.targetSceneId)?.title ||
-      hs.title;
-    return target ? `→ ${target}` : "Navigation";
+      campusScenes.value.find((s) => s.id === hs.targetSceneId) ||
+      hs.targetScene;
+    if (!target) return hs.title || "Navigation";
+    const building = target.poi?.name || target.poi?.shortName;
+    const room = target.title || hs.title || "Szene";
+    return building ? `→ ${building}: ${room}` : `→ ${room}`;
   }
   return hs.title || "Info";
 }
@@ -327,6 +385,21 @@ async function loadHotspots() {
   syncMarkers();
 }
 
+async function loadCampusScenes() {
+  try {
+    const res = await fetch(`${apiBase}/panorama-scenes`);
+    if (!res.ok) throw new Error("Campus-Szenen laden fehlgeschlagen");
+    campusScenes.value = await res.json();
+  } catch (e) {
+    console.error(e);
+    // Fallback: nur Szenen des aktuellen Gebäudes
+    campusScenes.value = (props.allScenes || []).map((s) => ({
+      ...s,
+      poiId: s.poiId ?? props.poiId ?? props.scene.poiId,
+    }));
+  }
+}
+
 function initViewer() {
   if (!viewerEl.value || !props.scene.media?.url) return;
 
@@ -334,8 +407,8 @@ function initViewer() {
     container: viewerEl.value,
     panorama: mediaUrl(props.scene.media.url),
     navbar: ["zoom", "move", "fullscreen"],
-    defaultYaw: props.scene.initialYaw ?? 0,
-    defaultPitch: props.scene.initialPitch ?? 0,
+    defaultYaw: localYaw.value ?? 0,
+    defaultPitch: localPitch.value ?? 0,
     plugins: [MarkersPlugin.withConfig({ markers: [] })],
   });
 
@@ -484,7 +557,11 @@ async function saveMeta() {
     const res = await fetch(`${apiBase}/panorama-scenes/${props.scene.id}`, {
       method: "PATCH",
       headers: authHeaders(),
-      body: JSON.stringify({ title: localTitle.value }),
+      body: JSON.stringify({
+        title: localTitle.value,
+        initialYaw: Number(localYaw.value) || 0,
+        initialPitch: Number(localPitch.value) || 0,
+      }),
     });
     if (!res.ok) throw new Error("Speichern fehlgeschlagen");
     emit("updated");
@@ -493,21 +570,43 @@ async function saveMeta() {
   }
 }
 
+function captureStartAngle() {
+  if (!viewer) {
+    alert("Viewer ist noch nicht bereit.");
+    return;
+  }
+  const pos = viewer.getPosition();
+  localYaw.value = Number(pos.yaw) || 0;
+  localPitch.value = Number(pos.pitch) || 0;
+}
+
+function resetStartAngle() {
+  localYaw.value = 0;
+  localPitch.value = 0;
+  if (viewer) {
+    viewer.rotate({ yaw: 0, pitch: 0 });
+  }
+}
+
 watch(
   () => [props.scene?.id, props.scene?.media?.url],
   async () => {
     localTitle.value = props.scene.title || "";
+    localYaw.value =
+      props.scene.initialYaw != null ? Number(props.scene.initialYaw) : 0;
+    localPitch.value =
+      props.scene.initialPitch != null ? Number(props.scene.initialPitch) : 0;
     destroyViewer();
     await nextTick();
     initViewer();
-    await loadHotspots();
+    await Promise.all([loadHotspots(), loadCampusScenes()]);
   }
 );
 
 onMounted(async () => {
   await nextTick();
   initViewer();
-  await loadHotspots();
+  await Promise.all([loadHotspots(), loadCampusScenes()]);
 });
 
 onBeforeUnmount(() => {

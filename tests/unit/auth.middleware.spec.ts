@@ -30,6 +30,7 @@ describe("getAuthRedirect", () => {
     expect(getAuthRedirect("/", "jwt-token", "admin")).toBeNull();
     expect(getAuthRedirect("/meters", "jwt-token", "admin")).toBeNull();
     expect(getAuthRedirect("/haus-5/haustechnik", "jwt-token", "admin")).toBeNull();
+    expect(getAuthRedirect("/analytics", "jwt-token", "admin")).toBeNull();
   });
 
   it("blockiert Admin-Routen für Sachbearbeiter", () => {
@@ -45,5 +46,8 @@ describe("getAuthRedirect", () => {
     expect(
       getAuthRedirect("/haus-5/haustechnik", "jwt-token", "sachbearbeiter"),
     ).toBe(BOOKING_HOME_PATH);
+    expect(getAuthRedirect("/analytics", "jwt-token", "sachbearbeiter")).toBe(
+      BOOKING_HOME_PATH,
+    );
   });
 });

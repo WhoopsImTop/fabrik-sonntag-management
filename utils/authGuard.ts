@@ -14,6 +14,7 @@ export const BOOKING_STAFF_ROLES = new Set(["admin", "sachbearbeiter"]);
 export const ADMIN_ONLY_PATH_PREFIXES = [
   "/meters",
   "/haus-5",
+  "/analytics",
 ] as const;
 
 /** Exact paths that are admin-only (campusplan / map). */

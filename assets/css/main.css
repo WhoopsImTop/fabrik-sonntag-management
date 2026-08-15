@@ -20,6 +20,10 @@
   @apply fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 p-4 backdrop-blur-sm;
 }
 
+.dialog-overlay-top {
+  @apply !z-[200];
+}
+
 .dialog-panel {
   @apply relative z-10 flex max-h-[90vh] w-full flex-col overflow-hidden border border-neutral-200 bg-white shadow-xl;
 }
