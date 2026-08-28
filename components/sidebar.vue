@@ -82,6 +82,13 @@ const mainGroups = ref<NavItem[][]>([
     {
       label: "Gebäude",
       icon: IconMeter,
+      defaultOpen: true,
+      children: [
+        { label: "Heizung", to: "/heating" },
+        { label: "Mieter", to: "/heating/tenants" },
+        { label: "Geräte", to: "/heating/register" },
+        { label: "Hausmeister", to: "/heating/admin" },
+      ],
     },
   ],
   [
@@ -96,25 +103,50 @@ const mainGroups = ref<NavItem[][]>([
 ]);
 
 const visibleMainGroups = computed(() => {
-  // Sachbearbeiter: nur Buchungssystem (erste Gruppe)
+  if (role.value === "tenant") {
+    return [
+      [
+        {
+          label: "Gebäude",
+          icon: IconMeter,
+          defaultOpen: true,
+          children: [{ label: "Heizung", to: "/heating" }],
+        },
+      ],
+    ];
+  }
   if (role.value === "sachbearbeiter") {
     return [mainGroups.value[0]];
   }
-  return mainGroups.value;
+  if (role.value === "admin") {
+    return mainGroups.value;
+  }
+  return [mainGroups.value[0]];
 });
-const settingsItem = computed<NavItem>(() => ({
-  label: "Einstellungen",
-  icon: IconSettings,
-  to: "/booking-system/settings",
-  defaultOpen: false,
-  children: [
-    { label: "Unternehmen", to: "/booking-system/settings" },
-    ...(role.value === "admin"
-      ? [{ label: "Analytics", to: "/analytics" }]
-      : []),
-    { label: "Passwort ändern", to: "/change-password" },
-  ],
-}));
+const settingsItem = computed<NavItem>(() => {
+  if (role.value === "tenant") {
+    return {
+      label: "Einstellungen",
+      icon: IconSettings,
+      to: "/change-password",
+      defaultOpen: false,
+      children: [{ label: "Passwort ändern", to: "/change-password" }],
+    };
+  }
+  return {
+    label: "Einstellungen",
+    icon: IconSettings,
+    to: "/booking-system/settings",
+    defaultOpen: false,
+    children: [
+      { label: "Unternehmen", to: "/booking-system/settings" },
+      ...(role.value === "admin"
+        ? [{ label: "Analytics", to: "/analytics" }]
+        : []),
+      { label: "Passwort ändern", to: "/change-password" },
+    ],
+  };
+});
 
 const sectionKey = (prefix: string, index: number, label: string) =>
   `${prefix}${index}-${label}`;
@@ -149,6 +181,13 @@ const isActive = (to?: string) => {
   }
   if (to === "/haus-5") {
     return route.path === "/haus-5";
+  }
+  if (to === "/heating") {
+    return (
+      route.path === "/heating" ||
+      route.path.startsWith("/heating/rooms/") ||
+      route.path.startsWith("/heating/entities/")
+    );
   }
   if (to === "/booking-system/settings") {
     return route.path === "/booking-system/settings";

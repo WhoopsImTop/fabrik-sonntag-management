@@ -1,4 +1,4 @@
-export type AppRole = "admin" | "sachbearbeiter" | "user";
+export type AppRole = "admin" | "sachbearbeiter" | "user" | "tenant";
 
 export type AuthUser = {
   id?: number;
@@ -21,6 +21,13 @@ export const ADMIN_ONLY_PATH_PREFIXES = [
 export const ADMIN_ONLY_EXACT_PATHS = ["/", "/settings"] as const;
 
 export const BOOKING_HOME_PATH = "/booking-system";
+export const HEATING_HOME_PATH = "/heating";
+
+export const HEATING_ADMIN_PATH_PREFIXES = [
+  "/heating/register",
+  "/heating/admin",
+  "/heating/tenants",
+] as const;
 
 export function isBookingStaff(role?: string | null): boolean {
   return !!role && BOOKING_STAFF_ROLES.has(role);
@@ -28,6 +35,14 @@ export function isBookingStaff(role?: string | null): boolean {
 
 export function isAdmin(role?: string | null): boolean {
   return role === "admin";
+}
+
+export function isTenant(role?: string | null): boolean {
+  return role === "tenant";
+}
+
+export function canAccessHeating(role?: string | null): boolean {
+  return isAdmin(role) || isTenant(role);
 }
 
 export function decodeJwtPayload(token: string | null): AuthUser | null {
@@ -75,6 +90,7 @@ export function clearAuthSession() {
 
 export function getDefaultHomePath(role?: string | null): string {
   if (isAdmin(role)) return "/";
+  if (isTenant(role)) return HEATING_HOME_PATH;
   if (isBookingStaff(role)) return BOOKING_HOME_PATH;
   return BOOKING_HOME_PATH;
 }
@@ -88,6 +104,16 @@ export function isAdminOnlyPath(path: string): boolean {
     return true;
   }
   return ADMIN_ONLY_PATH_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+}
+
+export function isHeatingPath(path: string): boolean {
+  return path === "/heating" || path.startsWith("/heating/");
+}
+
+export function isHeatingAdminOnlyPath(path: string): boolean {
+  return HEATING_ADMIN_PATH_PREFIXES.some(
     (prefix) => path === prefix || path.startsWith(`${prefix}/`),
   );
 }
@@ -112,6 +138,20 @@ export function getAuthRedirect(
   if (!token) return "/login";
 
   const resolvedRole = role ?? decodeJwtPayload(token)?.role ?? null;
+
+  if (isTenant(resolvedRole)) {
+    if (path === "/change-password") return null;
+    if (isHeatingPath(path) && !isHeatingAdminOnlyPath(path)) return null;
+    return HEATING_HOME_PATH;
+  }
+
+  if (isHeatingPath(path) && !canAccessHeating(resolvedRole)) {
+    return getDefaultHomePath(resolvedRole);
+  }
+
+  if (isHeatingAdminOnlyPath(path) && !isAdmin(resolvedRole)) {
+    return getDefaultHomePath(resolvedRole);
+  }
 
   // Non-admins may not access meters, campusplan, haus-5, etc.
   if (!isAdmin(resolvedRole) && isAdminOnlyPath(path)) {

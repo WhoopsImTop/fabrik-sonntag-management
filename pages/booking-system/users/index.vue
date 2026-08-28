@@ -218,6 +218,7 @@
                   <label class="dialog-label">Rolle</label>
                   <select v-model="newUser.role" class="dialog-input" required>
                     <option value="user">User (Kunde)</option>
+                    <option value="tenant">Mieter (Heizung)</option>
                     <option value="sachbearbeiter">Sachbearbeiter</option>
                     <option value="admin">Admin</option>
                   </select>
@@ -453,6 +454,7 @@ const getRoleLabel = (role: string) => {
   const map: Record<string, string> = {
     admin: "Admin",
     sachbearbeiter: "Sachbearbeiter",
+    tenant: "Mieter",
     user: "User",
   };
   return map[role] || role;

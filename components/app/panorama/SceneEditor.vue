@@ -63,6 +63,25 @@
               />
             </div>
 
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-white/60">Gebäude</label>
+              <select
+                v-model.number="localPoiId"
+                class="border border-white/20 bg-neutral-950 px-3 py-2 text-sm text-white"
+              >
+                <option
+                  v-for="poi in buildingPois"
+                  :key="poi.id"
+                  :value="poi.id"
+                >
+                  {{ poi.name || poi.shortName || `Gebäude #${poi.id}` }}
+                </option>
+              </select>
+              <p v-if="poiMoved" class="text-xs text-[#f5af06]">
+                Die Szene erscheint nach dem Speichern nur noch im neuen Gebäude.
+              </p>
+            </div>
+
             <div class="space-y-2 border border-white/10 p-3">
               <div>
                 <h3 class="text-sm font-medium">Startwinkel</h3>
@@ -256,6 +275,7 @@ const imageBase = import.meta.env.VITE_INTERNAL_IMAGE_URL;
 
 const viewerEl = ref(null);
 const localTitle = ref(props.scene.title || "");
+const localPoiId = ref(Number(props.poiId || props.scene.poiId) || null);
 const localYaw = ref(
   props.scene.initialYaw != null ? Number(props.scene.initialYaw) : 0
 );
@@ -264,6 +284,7 @@ const localPitch = ref(
 );
 const hotspots = ref([]);
 const campusScenes = ref([]);
+const buildingPois = ref([]);
 const placeMode = ref(false);
 const draft = ref(null);
 const editingHotspot = ref(null);
@@ -273,6 +294,16 @@ let viewer = null;
 let markersPlugin = null;
 let clickHandler = null;
 let readyHandler = null;
+
+const currentPoiId = computed(() =>
+  Number(props.poiId || props.scene.poiId)
+);
+
+const poiMoved = computed(
+  () =>
+    localPoiId.value != null &&
+    Number(localPoiId.value) !== currentPoiId.value
+);
 
 const otherScenes = computed(() =>
   campusScenes.value.filter((s) => s.id !== props.scene.id)
@@ -383,6 +414,25 @@ async function loadHotspots() {
     hotspots.value = (props.scene.hotspots || []).map(normalizeHotspot);
   }
   syncMarkers();
+}
+
+async function loadBuildingPois() {
+  try {
+    const res = await fetch(`${apiBase}/pois`);
+    if (!res.ok) throw new Error("Gebäude laden fehlgeschlagen");
+    const all = await res.json();
+    buildingPois.value = all
+      .filter((p) => p.poiType === "BUILDING")
+      .sort((a, b) =>
+        String(a.name || a.shortName || "").localeCompare(
+          String(b.name || b.shortName || ""),
+          "de"
+        )
+      );
+  } catch (e) {
+    console.error(e);
+    buildingPois.value = [];
+  }
 }
 
 async function loadCampusScenes() {
@@ -554,17 +604,26 @@ async function removeHotspot(hs) {
 
 async function saveMeta() {
   try {
+    const payload = {
+      title: localTitle.value,
+      initialYaw: Number(localYaw.value) || 0,
+      initialPitch: Number(localPitch.value) || 0,
+    };
+    if (localPoiId.value != null) {
+      payload.poiId = Number(localPoiId.value);
+    }
+    const moving = poiMoved.value;
     const res = await fetch(`${apiBase}/panorama-scenes/${props.scene.id}`, {
       method: "PATCH",
       headers: authHeaders(),
-      body: JSON.stringify({
-        title: localTitle.value,
-        initialYaw: Number(localYaw.value) || 0,
-        initialPitch: Number(localPitch.value) || 0,
-      }),
+      body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error("Speichern fehlgeschlagen");
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Speichern fehlgeschlagen");
+    }
     emit("updated");
+    if (moving) emit("close");
   } catch (e) {
     alert(e.message || "Fehler");
   }
@@ -592,6 +651,7 @@ watch(
   () => [props.scene?.id, props.scene?.media?.url],
   async () => {
     localTitle.value = props.scene.title || "";
+    localPoiId.value = Number(props.poiId || props.scene.poiId) || null;
     localYaw.value =
       props.scene.initialYaw != null ? Number(props.scene.initialYaw) : 0;
     localPitch.value =
@@ -599,14 +659,14 @@ watch(
     destroyViewer();
     await nextTick();
     initViewer();
-    await Promise.all([loadHotspots(), loadCampusScenes()]);
+    await Promise.all([loadHotspots(), loadCampusScenes(), loadBuildingPois()]);
   }
 );
 
 onMounted(async () => {
   await nextTick();
   initViewer();
-  await Promise.all([loadHotspots(), loadCampusScenes()]);
+  await Promise.all([loadHotspots(), loadCampusScenes(), loadBuildingPois()]);
 });
 
 onBeforeUnmount(() => {

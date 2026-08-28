@@ -5,6 +5,8 @@ import {
   getStoredAuthUser,
   isAdmin,
   isBookingStaff,
+  isTenant,
+  canAccessHeating,
   setStoredAuthUser,
   type AuthUser,
 } from "~/utils/authGuard";
@@ -16,6 +18,7 @@ export function useAuth() {
   const isLoggedIn = computed(() => !!user.value || !!getToken());
   const canAccessBooking = computed(() => isBookingStaff(role.value));
   const canAccessAdminAreas = computed(() => isAdmin(role.value));
+  const canAccessHeatingAreas = computed(() => canAccessHeating(role.value));
 
   function getToken(): string | null {
     if (import.meta.server) return null;
@@ -80,6 +83,7 @@ export function useAuth() {
     isLoggedIn,
     canAccessBooking,
     canAccessAdminAreas,
+    canAccessHeatingAreas,
     getToken,
     hydrateFromStorage,
     setSession,
@@ -88,5 +92,7 @@ export function useAuth() {
     homePathForCurrentUser,
     isAdmin,
     isBookingStaff,
+    isTenant,
+    canAccessHeating,
   };
 }

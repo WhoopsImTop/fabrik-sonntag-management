@@ -50,4 +50,34 @@ describe("getAuthRedirect", () => {
       BOOKING_HOME_PATH,
     );
   });
+
+  it("lässt Heizungs-Routen für Tenants zu, blockiert Admin-Heizung", () => {
+    expect(getAuthRedirect("/heating", "jwt-token", "tenant")).toBeNull();
+    expect(
+      getAuthRedirect("/heating/entities/1", "jwt-token", "tenant"),
+    ).toBeNull();
+    expect(
+      getAuthRedirect("/heating/rooms/1", "jwt-token", "tenant"),
+    ).toBeNull();
+    expect(getAuthRedirect("/change-password", "jwt-token", "tenant")).toBeNull();
+    expect(getAuthRedirect("/heating/register", "jwt-token", "tenant")).toBe(
+      "/heating",
+    );
+    expect(getAuthRedirect("/heating/admin", "jwt-token", "tenant")).toBe(
+      "/heating",
+    );
+    expect(getAuthRedirect("/heating/tenants", "jwt-token", "tenant")).toBe(
+      "/heating",
+    );
+    expect(getAuthRedirect("/", "jwt-token", "tenant")).toBe("/heating");
+    expect(getAuthRedirect("/booking-system", "jwt-token", "tenant")).toBe(
+      "/heating",
+    );
+  });
+
+  it("blockiert Heizung für Sachbearbeiter", () => {
+    expect(getAuthRedirect("/heating", "jwt-token", "sachbearbeiter")).toBe(
+      BOOKING_HOME_PATH,
+    );
+  });
 });

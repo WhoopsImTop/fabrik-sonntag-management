@@ -10,9 +10,15 @@
       <div class="rounded-full overflow-hidden border border-neutral-200 bg-white w-16 h-16 flex items-center justify-center shadow-md mb-4">
         <img src="../public/fabrik-sonntag_logo.png" class="h-16" />
       </div>
-      <h2 class="text-2xl font-bold text-center">Neues Passwort</h2>
+      <h2 class="text-2xl font-bold text-center">
+        {{ isInvite ? "Zugang einrichten" : "Neues Passwort" }}
+      </h2>
       <p class="text-sm text-neutral-600 text-center max-w-xs">
-        Waehle ein neues Passwort fuer dein Konto.
+        {{
+          isInvite
+            ? "Vergeben Sie ein Passwort für Ihren Zugang zur Heizungssteuerung."
+            : "Wählen Sie ein neues Passwort für Ihr Konto."
+        }}
       </p>
 
       <form
@@ -48,7 +54,7 @@
           :disabled="loading || !token"
           class="bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-1.5 rounded-none text-sm px-3 border border-black/10 shadow-sm w-full mb-2 disabled:opacity-50"
         >
-          {{ loading ? 'Speichere...' : 'Passwort setzen' }}
+          {{ loading ? "Speichere..." : isInvite ? "Zugang aktivieren" : "Passwort setzen" }}
         </button>
         <NuxtLink
           to="/login"
@@ -82,6 +88,7 @@ const message = ref('')
 const error = ref('')
 
 const token = computed(() => String(route.query.token || ''))
+const isInvite = computed(() => String(route.query.invite || '') === '1')
 
 const resetPassword = async () => {
   message.value = ''
@@ -116,7 +123,9 @@ const resetPassword = async () => {
       throw new Error(data?.error || 'Passwort konnte nicht gesetzt werden.')
     }
     const data = await response.json().catch(() => ({}))
-    message.value = data?.message || 'Passwort erfolgreich zurueckgesetzt.'
+    message.value = data?.message || (isInvite.value
+      ? "Passwort gespeichert. Sie können sich jetzt anmelden."
+      : "Passwort erfolgreich zurückgesetzt.");
     newPassword.value = ''
     confirmPassword.value = ''
   } catch (e) {

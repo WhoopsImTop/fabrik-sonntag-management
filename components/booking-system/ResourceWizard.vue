@@ -97,8 +97,76 @@
               class="flex min-h-[80px] w-full  border border-slate-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             ></textarea>
           </div>
+
+          <div class="col-span-full space-y-2">
+            <label class="text-sm font-medium leading-none text-slate-900"
+              >Bild</label
+            >
+            <div class="flex items-center gap-4">
+              <div
+                class="relative flex h-24 w-32 items-center justify-center overflow-hidden border border-slate-200 bg-slate-50"
+              >
+                <img
+                  v-if="form.resource.image_url"
+                  :src="resolveImageUrl(form.resource.image_url)"
+                  class="h-full w-full object-cover"
+                  alt="Ressourcenbild"
+                />
+                <span v-else class="px-2 text-center text-xs text-slate-400"
+                  >Kein Bild</span
+                >
+              </div>
+              <div class="flex flex-col gap-2">
+                <button
+                  type="button"
+                  class="text-left text-sm font-medium text-slate-900 underline-offset-2 hover:underline"
+                  @click="showMediaModal = true"
+                >
+                  Bild wählen
+                </button>
+                <button
+                  v-if="form.resource.image_url"
+                  type="button"
+                  class="text-left text-sm font-medium text-red-600 hover:text-red-700"
+                  @click="form.resource.image_url = null"
+                >
+                  Entfernen
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <Teleport to="body">
+        <div
+          v-if="showMediaModal"
+          class="dialog-overlay"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div class="absolute inset-0" @click="showMediaModal = false" />
+          <div class="dialog-panel max-w-4xl">
+            <div class="dialog-header">
+              <h3 class="dialog-title">Bild auswählen</h3>
+              <button
+                type="button"
+                class="dialog-close"
+                aria-label="Schließen"
+                @click="showMediaModal = false"
+              >
+                <UiIcon name="i-lucide-x" class="size-5" />
+              </button>
+            </div>
+            <div class="dialog-body bg-neutral-50">
+              <MediaLibrary
+                :is-multi-select="false"
+                @images-selected="onImagesSelected"
+              />
+            </div>
+          </div>
+        </div>
+      </Teleport>
 
       <div
         v-if="step === 2"
@@ -309,14 +377,42 @@
 </template>
 
 <script setup lang="ts">
+import MediaLibrary from "@/components/app/MediaLibrary.vue";
+
 const emit = defineEmits(["completed", "cancel"]);
 const api = useBookingApi();
+const toast = useToast();
 
 const step = ref(1);
 const submitting = ref(false);
+const showMediaModal = ref(false);
 const categories = ref<any[]>([]);
 const membershipTypes = ref<any[]>([]);
 const allServices = ref<any[]>([]);
+
+const resolveImageUrl = (url: string) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${import.meta.env.VITE_INTERNAL_IMAGE_URL || ""}${url}`;
+};
+
+const onImagesSelected = async (ids: number[]) => {
+  if (!ids.length) return;
+  try {
+    const token = localStorage.getItem("jwt");
+    const res = await fetch(
+      `${import.meta.env.VITE_INTERNAL_API_URL}/media/${ids[0]}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) throw new Error("Medienabruf fehlgeschlagen");
+    const media = await res.json();
+    form.value.resource.image_url = media.previewUrl || media.url;
+    showMediaModal.value = false;
+  } catch (e) {
+    console.error(e);
+    toast.add({ title: "Fehler beim Auswählen", color: "error" });
+  }
+};
 
 const form = ref({
   resource: {
@@ -325,6 +421,7 @@ const form = ref({
     capacity: 1,
     description: "",
     location_data: "",
+    image_url: null as string | null,
   },
   pricingPlans: [
     {
