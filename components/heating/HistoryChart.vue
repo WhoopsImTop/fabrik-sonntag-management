@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="border border-neutral-200 p-4">
+  <section class="border border-neutral-200 p-4 rounded-xl">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
       <h2 class="font-semibold">
         {{ roomId ? "Verlauf (Mittelwert aller Thermostate)" : "Verlauf" }}

@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
-import {
-  entityIsUnassigned,
-  entityLocationLabel,
-} from "~/utils/heatingRoom";
+import { entityIsUnassigned, entityLocationLabel } from "~/utils/heatingRoom";
 import type { HeatingEntity } from "~/composables/useHeatingApi";
 
 const heatingApi = useHeatingApi();
@@ -17,7 +14,10 @@ const devices = ref<any[]>([]);
 const entities = ref<HeatingEntity[]>([]);
 const models = ref<any[]>([]);
 const selected = ref<string[]>([]);
-const zigbee = ref({ permit_join: false, remaining_seconds: null as number | null });
+const zigbee = ref({
+  permit_join: false,
+  remaining_seconds: null as number | null,
+});
 const remaining = ref<number | null>(null);
 
 const form = ref({
@@ -33,7 +33,10 @@ const initialSelectDone = ref(false);
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-const applyZigbee = (status?: { permit_join?: boolean; remaining_seconds?: number | null }) => {
+const applyZigbee = (status?: {
+  permit_join?: boolean;
+  remaining_seconds?: number | null;
+}) => {
   zigbee.value = {
     permit_join: !!status?.permit_join,
     remaining_seconds: status?.remaining_seconds ?? null,
@@ -114,7 +117,8 @@ const startPairing = async (seconds = 120) => {
   applyZigbee(res.zigbee);
   toast.add({
     title: "Zigbee-Anlernen aktiv",
-    description: "Gerät in Pairing-Modus versetzen (meist Reset-Taste 3–10 Sekunden).",
+    description:
+      "Gerät in Pairing-Modus versetzen (meist Reset-Taste 3–10 Sekunden).",
     color: "primary",
   });
   await load(true, true);
@@ -202,7 +206,8 @@ const save = async () => {
   if (res?.data?.id) {
     toast.add({
       title: "Gerät registriert",
-      description: "Es erscheint in der Geräteliste. Einen Raum weisen Sie unter Heizung zu.",
+      description:
+        "Es erscheint in der Geräteliste. Einen Raum weisen Sie unter Heizung zu.",
       color: "primary",
     });
     await load(false);
@@ -303,12 +308,17 @@ const saveName = async (entity: HeatingEntity) => {
         <h1 class="text-2xl font-bold">Geräte</h1>
         <p class="mt-1 text-sm text-neutral-500">
           MQTT
-          {{ mqttConnected ? "verbunden" : "nicht verbunden" }}.
-          Neue Geräte anlernen und alle registrierten Thermostate verwalten.
+          {{ mqttConnected ? "verbunden" : "nicht verbunden" }}. Neue Geräte
+          anlernen und alle registrierten Thermostate verwalten.
         </p>
       </div>
       <div class="flex gap-2">
-        <UiButton variant="outline" icon="i-lucide-refresh-cw" :loading="loading" @click="load(true)">
+        <UiButton
+          variant="outline"
+          icon="i-lucide-refresh-cw"
+          :loading="loading"
+          @click="load(true)"
+        >
           Broker scannen
         </UiButton>
         <UiButton
@@ -324,7 +334,11 @@ const saveName = async (entity: HeatingEntity) => {
 
     <div
       class="mb-6 border p-4"
-      :class="zigbee.permit_join ? 'border-emerald-300 bg-emerald-50' : 'border-neutral-200'"
+      :class="
+        zigbee.permit_join
+          ? 'border-emerald-300 bg-emerald-50'
+          : 'border-neutral-200'
+      "
     >
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -332,8 +346,8 @@ const saveName = async (entity: HeatingEntity) => {
           <p class="mt-1 text-sm text-neutral-600">
             <template v-if="zigbee.permit_join">
               Netzwerk ist offen
-              <span v-if="remainingLabel"> — noch {{ remainingLabel }}</span>.
-              Gerät am Thermostat in den Pairing-Modus versetzen.
+              <span v-if="remainingLabel"> — noch {{ remainingLabel }}</span
+              >. Gerät am Thermostat in den Pairing-Modus versetzen.
             </template>
             <template v-else>
               Netzwerk geschlossen. Starten, dann das Thermostat 3–10 Sekunden
@@ -369,7 +383,9 @@ const saveName = async (entity: HeatingEntity) => {
     </p>
 
     <h2 class="mb-3 font-semibold">Neu am Broker</h2>
-    <p v-if="loading" class="mb-6 text-sm text-neutral-500">Broker wird gescannt…</p>
+    <p v-if="loading" class="mb-6 text-sm text-neutral-500">
+      Broker wird gescannt…
+    </p>
     <p v-else-if="devices.length === 0" class="mb-8 text-sm text-neutral-500">
       Keine unregistrierten Geräte. Für Zigbee zuerst „2 Minuten anlernen“
       starten; Comet WiFi erscheint, sobald MQTT-Nachrichten ankommen.
@@ -392,7 +408,12 @@ const saveName = async (entity: HeatingEntity) => {
         <input
           type="checkbox"
           :checked="selected.includes(row.original.mqtt_identifier)"
-          @change="toggle(row.original.mqtt_identifier, ($event.target as HTMLInputElement).checked)"
+          @change="
+            toggle(
+              row.original.mqtt_identifier,
+              ($event.target as HTMLInputElement).checked,
+            )
+          "
         />
       </template>
       <template #mqtt_identifier-cell="{ row }">
@@ -405,13 +426,17 @@ const saveName = async (entity: HeatingEntity) => {
         </span>
       </template>
       <template #status-cell="{ row }">
-        <span class="text-xs text-neutral-600">{{ interviewLabel(row.original) || "—" }}</span>
+        <span class="text-xs text-neutral-600">{{
+          interviewLabel(row.original) || "—"
+        }}</span>
       </template>
       <template #model-cell="{ row }">
         <HeatingModelPicker
           :models="models"
           :model-value="assignment[row.original.mqtt_identifier]"
-          @update:model-value="setAssignment(row.original.mqtt_identifier, $event)"
+          @update:model-value="
+            setAssignment(row.original.mqtt_identifier, $event)
+          "
         />
       </template>
       <template #actions-cell="{ row }">
@@ -431,6 +456,7 @@ const saveName = async (entity: HeatingEntity) => {
         { accessorKey: 'name', header: 'Gerät' },
         { id: 'location', header: 'Ort' },
         { id: 'status', header: 'Status' },
+        { id: 'battery', header: 'Batterie' },
         { accessorKey: 'mqtt_identifier', header: 'Identifier' },
       ]"
       :data="entities"
@@ -466,6 +492,11 @@ const saveName = async (entity: HeatingEntity) => {
       <template #location-cell="{ row }">
         {{ locationOf(row.original) }}
       </template>
+      <template #battery-cell="{ row }">
+        <span :class="row.original.battery < 10 ? 'text-red-600' : ''"
+          >{{ row.original.battery }} %</span
+        >
+      </template>
       <template #status-cell="{ row }">
         <HeatingOfflineBadge :offline="row.original.offline" />
       </template>
@@ -476,7 +507,11 @@ const saveName = async (entity: HeatingEntity) => {
         <label class="dialog-label">Name</label>
         <input v-model="form.name" class="dialog-input mb-3" />
         <label class="dialog-label">MQTT-Identifier</label>
-        <input v-model="form.mqtt_identifier" class="dialog-input mb-3" disabled />
+        <input
+          v-model="form.mqtt_identifier"
+          class="dialog-input mb-3"
+          disabled
+        />
         <label class="dialog-label">Topic-Präfix (Comet WiFi, optional)</label>
         <input v-model="form.mqtt_topic_prefix" class="dialog-input mb-3" />
         <label class="dialog-label">Hersteller / Modell</label>
@@ -488,11 +523,16 @@ const saveName = async (entity: HeatingEntity) => {
           v-model="form.device_model_id"
         />
         <p v-if="selectedModel" class="text-xs text-neutral-500">
-          Adapter {{ selectedModel.adapter_key }} — nach dem Speichern erscheint das Gerät in der Liste.
+          Adapter {{ selectedModel.adapter_key }} — nach dem Speichern erscheint
+          das Gerät in der Liste.
         </p>
       </template>
       <template #footer>
-        <button class="btn-dialog-cancel" type="button" @click="modalOpen = false">
+        <button
+          class="btn-dialog-cancel"
+          type="button"
+          @click="modalOpen = false"
+        >
           Abbrechen
         </button>
         <button class="btn-dialog-primary" type="button" @click="save">

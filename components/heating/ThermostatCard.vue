@@ -1,6 +1,6 @@
 <template>
   <div
-    class="border bg-white p-4"
+    class="border bg-white p-4 rounded-xl"
     :class="windowOpen ? 'border-sky-400' : 'border-neutral-200'"
   >
     <div

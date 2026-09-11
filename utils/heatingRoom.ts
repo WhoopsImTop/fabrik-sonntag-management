@@ -10,6 +10,22 @@ export function roomsOfBuilding(building: any): any[] {
   return (building?.units || []).flatMap((unit: any) => unit.rooms || []);
 }
 
+export function unitsOfBuilding(building: any): any[] {
+  return building?.units || [];
+}
+
+export function roomsOfUnit(unit: any): any[] {
+  return unit?.rooms || [];
+}
+
+export function unitLabel(unit: any): string {
+  if (!unit) return "";
+  if (unit.unit_number && unit.name) {
+    return `${unit.unit_number} · ${unit.name}`;
+  }
+  return unit.unit_number || unit.name || "";
+}
+
 function isLegacyDefaultName(value: unknown) {
   const name = String(value || "").trim().toLowerCase();
   return name === "standard" || name === "unzugeordnet";

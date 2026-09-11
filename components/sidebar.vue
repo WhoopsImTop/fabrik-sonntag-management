@@ -82,12 +82,11 @@ const mainGroups = ref<NavItem[][]>([
     {
       label: "Gebäude",
       icon: IconMeter,
-      defaultOpen: true,
+      defaultOpen: false,
       children: [
         { label: "Heizung", to: "/heating" },
         { label: "Mieter", to: "/heating/tenants" },
         { label: "Geräte", to: "/heating/register" },
-        { label: "Hausmeister", to: "/heating/admin" },
       ],
     },
   ],

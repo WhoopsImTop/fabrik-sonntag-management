@@ -1,11 +1,11 @@
 <template>
-  <div class="border border-neutral-200 bg-white p-4">
+  <div class="border border-neutral-200 bg-white p-4 rounded-xl">
     <div class="mb-3 flex flex-wrap items-end justify-between gap-3">
       <div>
         <h2 class="font-semibold">Heizplan</h2>
         <p class="mt-1 text-sm text-neutral-500">{{ hint }}</p>
       </div>
-      <label class="text-sm">
+      <label v-if="showEco" class="text-sm">
         <span class="dialog-label">Absenktemperatur °C</span>
         <input
           v-model.number="ecoDraft"
@@ -175,6 +175,8 @@ const props = withDefaults(
     step?: number;
     disabled?: boolean;
     saving?: boolean;
+    showEco?: boolean;
+    hint?: string;
   }>(),
   {
     intervals: () => [],
@@ -182,6 +184,7 @@ const props = withDefaults(
     min: 5,
     max: 30,
     step: 0.5,
+    showEco: true,
   },
 );
 
@@ -214,11 +217,12 @@ watch(
   { immediate: true, deep: true },
 );
 
-const hint = computed(() =>
-  props.native
+const hint = computed(() => {
+  if (props.hint) return props.hint;
+  return props.native
     ? "Auf dem Gerät gespeichert (Auto-Modus)."
-    : "Server schaltet per MQTT zur jeweiligen Uhrzeit.",
-);
+    : "Server schaltet per MQTT zur jeweiligen Uhrzeit.";
+});
 
 function pad(n: number) {
   return String(n).padStart(2, "0");

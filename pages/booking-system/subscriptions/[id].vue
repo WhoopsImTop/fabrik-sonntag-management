@@ -268,9 +268,10 @@
               <thead class="[&_tr]:border-b border-slate-200">
                 <tr class="border-b border-slate-200 transition-colors hover:bg-slate-100/50 data-[state=selected]:bg-slate-100">
                   <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[40%]">Beschreibung</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[15%]">Menge</th>
-                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[15%]">Einheit</th>
-                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[15%]">Preis (€)</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[10%]">Menge</th>
+                  <th class="h-10 px-4 text-left align-middle font-medium text-slate-500 w-[12%]">Einheit</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">Preis (€)</th>
+                  <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[14%]">Rabatt</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[12%]">MwSt.</th>
                   <th class="h-10 px-4 text-right align-middle font-medium text-slate-500 w-[18%]">Gesamt</th>
                   <th class="h-10 px-2 align-middle w-[5%]"></th>
@@ -328,6 +329,22 @@
                     </td>
 
                     <td class="p-4 align-middle text-right">
+                      <div class="flex h-9 w-full border border-slate-200 focus-within:border-slate-300">
+                        <input type="number" min="0" step="0.01"
+                          :value="discountDisplayValue(item)"
+                          @input="onDiscountInput(item, $event)"
+                          class="min-w-0 flex-1 bg-transparent px-2 py-1 text-right text-sm focus-visible:outline-none"
+                          placeholder="0" />
+                        <select :value="item.discount_type"
+                          @change="onDiscountTypeChange(item, $event)"
+                          class="w-10 shrink-0 border-l border-slate-200 bg-transparent text-xs text-slate-600 focus:outline-none">
+                          <option value="percent">%</option>
+                          <option value="amount">€</option>
+                        </select>
+                      </div>
+                    </td>
+
+                    <td class="p-4 align-middle text-right">
                       <select v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between  border border-slate-200 bg-transparent px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-slate-950">
                         <option :value="0">0%</option>
@@ -337,7 +354,7 @@
                     </td>
 
                     <td class="p-4 align-middle text-right font-medium">
-                      {{ formatMoney(item.quantity * item.amount) }} €
+                      {{ formatMoney(lineItemNet(item)) }} €
                     </td>
 
                     <td class="p-4 align-middle text-center relative">
@@ -353,7 +370,7 @@
                   </tr>
 
                   <tr class="border-b border-slate-100 hover:bg-slate-50/50">
-                    <td colspan="7" class="px-4 pb-4 pt-0">
+                    <td colspan="8" class="px-4 pb-4 pt-0">
                       <textarea v-model="item.long_description" placeholder="Zusätzliche Beschreibung oder Details..."
                         class="w-full  border border-slate-100 bg-transparent px-3 py-2 text-sm text-slate-500 transition-colors focus:bg-white focus:border-slate-300 focus-visible:outline-none"
                         rows="2"></textarea>
@@ -392,6 +409,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import {
+  emptyInvoiceLineItem,
+  mapApiLineItem,
+  lineItemNet,
+  discountDisplayValue,
+  onDiscountInput,
+  onDiscountTypeChange,
+} from "~/utils/invoiceLineItem";
 
 const route = useRoute();
 const router = useRouter();
@@ -420,7 +445,7 @@ const form = ref({
   status: "ACTIVE",
   next_billing_date: new Date().toISOString().split("T")[0],
   items: [
-    { description: "", quantity: 1, unit: "psch.", amount: 0, vat_rate: 0.19, long_description: "" },
+    emptyInvoiceLineItem(),
   ],
 });
 
@@ -510,8 +535,7 @@ const totals = computed(() => {
   const taxByRateMap = new Map<number, { net: number; tax: number }>();
   let net = 0;
   for (const item of form.value.items) {
-    const lineNet =
-      Number(item.amount || 0) * Number(item.quantity || 1);
+    const lineNet = lineItemNet(item);
     net += lineNet;
     const rate = parseVatRateFromApi(item.vat_rate);
     const key = Math.round(rate * 10000) / 10000;
@@ -635,25 +659,11 @@ const translateUnit = (unit: string) => {
 };
 
 const addItem = () =>
-  form.value.items.push({
-    description: "",
-    quantity: 1,
-    unit: "psch.",
-    amount: 0,
-    vat_rate: 0.19,
-    long_description: ""
-  });
+  form.value.items.push(emptyInvoiceLineItem());
 const removeItem = (index: number) => {
   if (form.value.items.length > 1) form.value.items.splice(index, 1);
   else
-    form.value.items[0] = {
-      description: "",
-      quantity: 1,
-      unit: "psch.",
-      amount: 0,
-      vat_rate: 0.19,
-      long_description: ""
-    };
+    form.value.items[0] = emptyInvoiceLineItem();
 };
 
 const loadData = async () => {
@@ -682,12 +692,8 @@ const loadData = async () => {
           next_billing_date: sub.next_billing_date ? new Date(sub.next_billing_date).toISOString().split("T")[0] : "",
           items:
             sub.LineItems?.map((li: any) => ({
-              description: li.description,
-              quantity: li.quantity,
-              unit: li.unit,
-              amount: li.amount,
+              ...mapApiLineItem(li),
               vat_rate: parseVatRateFromApi(li.vat_rate),
-              long_description: li.long_description,
             })) || [],
         };
         const linkedUser = users.value.find((u) => u.id === sub.user_id);

@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { HeatingEntity } from "~/composables/useHeatingApi";
-import {
-  aggregateRoomState,
-  buildingLabel,
-  entityBatteries,
-  roomLabel,
-} from "~/utils/heatingRoom";
+import { aggregateRoomState, roomLabel } from "~/utils/heatingRoom";
 
-const props = defineProps<{
-  room: {
-    id: number;
+const props = withDefaults(
+  defineProps<{
+    room: {
+      id: number;
+      name?: string;
+      room_number?: string | null;
+      entities?: HeatingEntity[];
+    };
     name?: string;
-    room_number?: string | null;
-    entities?: HeatingEntity[];
-  };
-  building?: any;
-}>();
+    link?: boolean;
+  }>(),
+  { link: true },
+);
 
 const emit = defineEmits<{
   change: [key: string, value: unknown];
@@ -24,21 +23,19 @@ const emit = defineEmits<{
 
 const entities = computed(() => props.room.entities || []);
 const aggregated = computed(() => aggregateRoomState(entities.value));
-const name = computed(() => roomLabel(props.room));
+const displayName = computed(() => props.name || roomLabel(props.room));
 const location = computed(() => {
   const count = entities.value.length;
-  const countLabel = count === 1 ? "1 Thermostat" : `${count} Thermostate`;
-  return countLabel;
+  return count === 1 ? "1 Thermostat" : `${count} Thermostate`;
 });
-const batteries = computed(() => entityBatteries(entities.value));
 </script>
 
 <template>
   <HeatingThermostatCard
-    class="min-w-86 shrink-0"
-    :name="name"
+    class="w-full min-w-0 sm:min-w-86 sm:w-auto shrink-0"
+    :name="displayName"
     :location="location"
-    :href="`/heating/rooms/${room.id}`"
+    :href="link ? `/heating/rooms/${room.id}` : undefined"
     :last-state="aggregated.lastState"
     :schema="aggregated.schema"
     :offline="aggregated.offline"

@@ -185,6 +185,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { lineItemNet } from "~/utils/invoiceLineItem";
 
 // Router importieren für die Navigation
 const router = useRouter();
@@ -225,7 +226,7 @@ const monthlyVolume = computed(() => {
       const subTotal =
         sub.LineItems?.reduce(
           (iSum: number, item: any) =>
-            iSum + Number(item.amount) * Number(item.quantity),
+            iSum + lineItemNet(item),
           0,
         ) || 0;
       const factor = sub.interval === "YEARLY" ? 1 / 12 : 1;

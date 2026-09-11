@@ -353,9 +353,10 @@
                 <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
                   <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[35%]">Beschreibung</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[15%]">Einheit</th>
+                  <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[12%]">Einheit</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]">Preis (€)</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[14%]">MwSt.</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[14%]">Rabatt</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]">MwSt.</th>
                   <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-neutral-500 w-[14%]">Gesamt</th>
                   <th v-if="isEditing && isDraft" class="h-10 px-2 align-middle w-[5%]"></th>
                 </tr>
@@ -409,6 +410,23 @@
                     </td>
 
                     <td class="p-1 align-middle text-right">
+                      <div v-if="isEditing && isDraft" class="flex h-9 w-full border border-neutral-200 focus-within:border-neutral-300">
+                        <input type="number" min="0" step="0.01"
+                          :value="discountDisplayValue(item)"
+                          @input="onDiscountInput(item, $event)"
+                          class="min-w-0 flex-1 bg-transparent px-2 py-1 text-right text-sm focus-visible:outline-none"
+                          placeholder="0" />
+                        <select :value="item.discount_type"
+                          @change="onDiscountTypeChange(item, $event)"
+                          class="w-10 shrink-0 border-l border-neutral-200 bg-transparent text-xs text-neutral-600 focus:outline-none">
+                          <option value="percent">%</option>
+                          <option value="amount">€</option>
+                        </select>
+                      </div>
+                      <span v-else class="text-neutral-600 block">{{ formatDiscountLabel(item) }}</span>
+                    </td>
+
+                    <td class="p-1 align-middle text-right">
                       <select v-if="isEditing && isDraft" v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950">
                         <option :value="0">0%</option>
@@ -420,7 +438,7 @@
                     </td>
 
                     <td class="pl-1 pr-4 align-middle text-right font-medium">
-                      {{ formatMoney((Number(item.quantity) || 0) * (Number(item.amount) || 0)) }} €
+                      {{ formatMoney(lineItemNet(item)) }} €
                     </td>
 
                     <td v-if="isEditing && isDraft" class="p-4 align-middle text-center relative">
@@ -437,7 +455,7 @@
 
                   <tr v-if="(isEditing && isDraft) || item.long_description"
                     class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/50">
-                    <td :colspan="(isEditing && isDraft) ? 7 : 6" class="px-4 pb-1 pt-0">
+                    <td :colspan="(isEditing && isDraft) ? 8 : 7" class="px-4 pb-1 pt-0">
                       <div>
                         <textarea v-if="isEditing && isDraft" v-model="item.long_description"
                           placeholder="Zusätzliche Beschreibung (optional)..."
@@ -453,7 +471,7 @@
                 </template>
 
                 <tr v-if="isEditing && isDraft && form.items.length === 0">
-                  <td colspan="7" class="p-8 text-center text-sm text-neutral-500">
+                  <td colspan="8" class="p-8 text-center text-sm text-neutral-500">
                     Keine Positionen vorhanden. <button @click="addItem"
                       class="text-neutral-900 font-medium hover:underline">Erste Zeile hinzufügen</button>
                   </td>
@@ -573,6 +591,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import {
+  emptyInvoiceLineItem,
+  mapApiLineItem,
+  lineItemNet,
+  discountDisplayValue,
+  onDiscountInput,
+  onDiscountTypeChange,
+  formatDiscountLabel,
+  type InvoiceLineItemForm,
+} from "~/utils/invoiceLineItem";
 
 const route = useRoute();
 const router = useRouter();
@@ -610,14 +638,7 @@ const form = ref({
   days_to_pay: 7,
   user_id: null as number | null,
   user_preview: null as any,
-  items: [] as Array<{
-    description: string;
-    quantity: number;
-    unit: string;
-    amount: number;
-    vat_rate?: number;
-    long_description: string,
-  }>
+  items: [] as InvoiceLineItemForm[],
 });
 
 const customerForm = ref({
@@ -868,8 +889,7 @@ const totals = computed(() => {
   const taxByRateMap = new Map<number, { net: number; tax: number }>();
   let net = 0;
   for (const item of form.value.items) {
-    const lineNet =
-      (Number(item.quantity) || 0) * (Number(item.amount) || 0);
+    const lineNet = lineItemNet(item);
     net += lineNet;
     const rate = parseVatRateFromApi(item.vat_rate);
     const key = Math.round(rate * 10000) / 10000;
@@ -935,12 +955,8 @@ const loadInvoice = async () => {
       // Map Items for Editing
       if (data.InvoiceLineItems && Array.isArray(data.InvoiceLineItems)) {
         form.value.items = data.InvoiceLineItems.map((i: any) => ({
-          description: i.description,
-          quantity: Number(i.quantity),
-          amount: Number(i.amount),
-          unit: i.unit || "pauschal",
+          ...mapApiLineItem(i),
           vat_rate: parseVatRateFromApi(i.vat_rate),
-          long_description: i.long_description || null,
         }));
       } else {
         form.value.items = [];
@@ -1064,14 +1080,7 @@ const translateUnit = (unit: string) => {
 };
 
 const addItem = () => {
-  form.value.items.push({
-    description: "",
-    quantity: 1,
-    unit: "Stück",
-    amount: 0,
-    vat_rate: 0.19,
-    long_description: "",
-  });
+  form.value.items.push(emptyInvoiceLineItem({ unit: "Stück" }));
 };
 
 const removeItem = (index: number) => {
@@ -1103,12 +1112,8 @@ const saveInvoice = async () => {
       // Wichtig: Auch Form Items updaten, falls Server Daten formatiert hat
       if (res.InvoiceLineItems) {
         form.value.items = res.InvoiceLineItems.map((i: any) => ({
-          description: i.description,
-          quantity: Number(i.quantity),
-          amount: Number(i.amount),
-          unit: i.unit || "pauschal",
+          ...mapApiLineItem(i),
           vat_rate: parseVatRateFromApi(i.vat_rate),
-          long_description: i.long_description || null,
         }));
       }
       form.value.user_id = res.user_id;

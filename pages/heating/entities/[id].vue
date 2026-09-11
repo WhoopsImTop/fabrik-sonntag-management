@@ -19,6 +19,9 @@ const saving = ref(false);
 const scheduleSaving = ref(false);
 const modelOpen = ref(false);
 const techOpen = ref(false);
+const detailsOpen = ref(false);
+const entityNumberDraft = ref("");
+const notesDraft = ref("");
 const editingName = ref(false);
 const nameDraft = ref("");
 const nameInput = ref<HTMLInputElement | null>(null);
@@ -127,6 +130,28 @@ const saveName = async () => {
   if (res?.data) entity.value = res.data;
 };
 
+const openDetails = () => {
+  entityNumberDraft.value = entity.value?.entity_number || "";
+  notesDraft.value = entity.value?.notes || "";
+  detailsOpen.value = true;
+};
+
+const saveDetails = async () => {
+  if (!entity.value) return;
+  const res = await heatingApi.updateEntity(entity.value.id, {
+    entity_number: entityNumberDraft.value.trim() || null,
+    notes: notesDraft.value.trim() || null,
+  });
+  if (res?.data) entity.value = res.data;
+  detailsOpen.value = false;
+};
+
+// Ein Level nach oben (zum Raum), damit man nicht bei jedem Zurück ganz nach oben springt
+const backLink = computed(() =>
+  entity.value?.room_id ? `/heating/rooms/${entity.value.room_id}` : "/heating",
+);
+const backLabel = computed(() => (entity.value?.room_id ? "← Raum" : "← Übersicht"));
+
 const locationLabel = computed(() => {
   const current = entity.value?.room;
   if (!current) return "Nicht zugeordnet";
@@ -183,8 +208,8 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <NuxtLink to="/heating" class="mb-4 inline-flex text-sm text-neutral-500 hover:text-neutral-800">
-      ← Übersicht
+    <NuxtLink :to="backLink" class="mb-4 inline-flex text-sm text-neutral-500 hover:text-neutral-800">
+      {{ backLabel }}
     </NuxtLink>
 
     <div v-if="loading && !entity" aria-busy="true">
@@ -231,18 +256,29 @@ onUnmounted(() => {
               {{ locationLabel }}
             </NuxtLink>
             <span v-else>{{ locationLabel }}</span>
+            <span v-if="entity.entity_number"> · Nr. {{ entity.entity_number }}</span>
             <span v-if="entity.deviceModel">
               · {{ entity.deviceModel.manufacturer }} {{ entity.deviceModel.model }}
             </span>
           </p>
-          <button
-            v-if="isAdminUser && models.length"
-            type="button"
-            class="mt-1 text-xs text-neutral-500 underline"
-            @click="modelOpen = !modelOpen"
-          >
-            Modell ändern
-          </button>
+          <div class="mt-1 flex flex-wrap items-center gap-3">
+            <button
+              v-if="isAdminUser && models.length"
+              type="button"
+              class="text-xs text-neutral-500 underline"
+              @click="modelOpen = !modelOpen"
+            >
+              Modell ändern
+            </button>
+            <button
+              v-if="isAdminUser"
+              type="button"
+              class="text-xs text-neutral-500 underline"
+              @click="detailsOpen ? (detailsOpen = false) : openDetails()"
+            >
+              {{ detailsOpen ? "Details schließen" : "Nummer & Bemerkung bearbeiten" }}
+            </button>
+          </div>
           <div v-if="modelOpen" class="mt-2 max-w-md">
             <HeatingModelPicker
               stacked
@@ -252,6 +288,27 @@ onUnmounted(() => {
               @update:model-value="onModelChange"
             />
           </div>
+          <div v-if="detailsOpen" class="mt-2 max-w-md space-y-2">
+            <div>
+              <label class="dialog-label">Heizkörper-Nr.</label>
+              <input v-model="entityNumberDraft" class="dialog-input" placeholder="z. B. 01" />
+            </div>
+            <div>
+              <label class="dialog-label">Bemerkung</label>
+              <textarea
+                v-model="notesDraft"
+                class="dialog-input"
+                rows="3"
+                placeholder="Freie Notizen zu diesem Heizkörper..."
+              />
+            </div>
+            <button type="button" class="btn-dialog-primary" @click="saveDetails">
+              Speichern
+            </button>
+          </div>
+          <p v-if="entity.notes" class="mt-2 text-sm text-neutral-600 whitespace-pre-line">
+            {{ entity.notes }}
+          </p>
         </div>
         <HeatingOfflineBadge :offline="entity.offline" />
       </div>

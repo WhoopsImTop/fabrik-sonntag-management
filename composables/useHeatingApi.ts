@@ -71,6 +71,8 @@ export type HeatingEntity = {
   offline?: boolean;
   battery?: number | null;
   eco_temperature?: number;
+  entity_number?: string | null;
+  notes?: string | null;
   supports_native_schedule?: boolean;
   schema: CapabilitySchema[];
   deviceModel?: {
@@ -130,7 +132,12 @@ export const useHeatingApi = () => {
       return res?.data || [];
     },
 
-    createBuilding: (data: { name: string; number?: string; address?: string }) =>
+    createBuilding: (data: {
+      name: string;
+      number?: string;
+      address?: string;
+      notes?: string;
+    }) =>
       apiCall(
         () =>
           $fetch(`${baseURL}/heating/buildings`, {
@@ -166,6 +173,7 @@ export const useHeatingApi = () => {
       building_id: number;
       name: string;
       unit_number?: string;
+      notes?: string;
     }) =>
       apiCall(
         () =>
@@ -175,6 +183,17 @@ export const useHeatingApi = () => {
             body: data,
           }),
         "createUnit",
+      ),
+
+    updateUnit: (id: number, data: Record<string, unknown>) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/units/${id}`, {
+            method: "PATCH",
+            headers: jsonHeaders(),
+            body: data,
+          }),
+        "updateUnit",
       ),
 
     deleteUnit: (id: number) =>
@@ -192,6 +211,7 @@ export const useHeatingApi = () => {
       unit_id?: number;
       name?: string;
       room_number?: string;
+      notes?: string;
     }) =>
       apiCall(
         () =>
@@ -443,6 +463,28 @@ export const useHeatingApi = () => {
             body: data,
           }),
         "replaceEntitySchedule",
+      ),
+
+    replaceRoomSchedule: (
+      id: number,
+      data: {
+        eco_temperature?: number;
+        intervals: {
+          weekday: number;
+          start: string;
+          end: string;
+          target_temperature: number;
+        }[];
+      },
+    ) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/rooms/${id}/schedule`, {
+            method: "PUT",
+            headers: jsonHeaders(),
+            body: data,
+          }),
+        "replaceRoomSchedule",
       ),
 
     getDiscovery: async () => {

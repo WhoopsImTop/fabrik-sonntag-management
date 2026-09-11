@@ -253,6 +253,7 @@
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[50px]">Menge</th>
                   <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[100px]">Einheit</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[75px]">Preis (€)</th>
+                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[110px]">Rabatt</th>
                   <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[100px]">MwSt.</th>
                   <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-neutral-500 w-[100px]">Gesamt</th>
                   <th class="h-10 px-2 align-middle w-[5%]"></th>
@@ -310,6 +311,22 @@
                     </td>
 
                     <td class="p-1 align-middle text-right">
+                      <div class="flex h-9 w-full border border-neutral-200 focus-within:border-neutral-300">
+                        <input type="number" min="0" step="0.01"
+                          :value="discountDisplayValue(item)"
+                          @input="onDiscountInput(item, $event)"
+                          class="min-w-0 flex-1 bg-transparent px-2 py-1 text-right text-sm focus-visible:outline-none"
+                          placeholder="0" />
+                        <select :value="item.discount_type"
+                          @change="onDiscountTypeChange(item, $event)"
+                          class="w-10 shrink-0 border-l border-neutral-200 bg-transparent text-xs text-neutral-600 focus:outline-none">
+                          <option value="percent">%</option>
+                          <option value="amount">€</option>
+                        </select>
+                      </div>
+                    </td>
+
+                    <td class="p-1 align-middle text-right">
                       <select v-model="item.vat_rate"
                         class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950">
                         <option :value="0">0%</option>
@@ -319,7 +336,7 @@
                     </td>
 
                     <td class="pl-1 pr-4 align-middle text-right font-medium">
-                      {{ formatMoney(item.quantity * item.amount) }} €
+                      {{ formatMoney(lineItemNet(item)) }} €
                     </td>
 
                     <td class="p-1 align-middle text-center relative">
@@ -335,7 +352,7 @@
                   </tr>
 
                   <tr class="border-b border-neutral-100/50 hover:bg-neutral-50/30">
-                    <td colspan="7" class="px-4 pb-1 pt-0">
+                    <td colspan="8" class="px-4 pb-1 pt-0">
                       <textarea v-model="item.long_description"
                         placeholder="Zusätzliche Details oder Nachricht eingeben..."
                         class="w-full rounded-none border border-neutral-200 bg-transparent p-3 text-sm text-neutral-600 focus-visible:outline-none focus:border-neutral-300 focus:bg-white transition-all"
@@ -374,6 +391,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
+import {
+  emptyInvoiceLineItem,
+  lineItemNet,
+  discountDisplayValue,
+  onDiscountInput,
+  onDiscountTypeChange,
+} from "~/utils/invoiceLineItem";
 const route = useRoute();
 const router = useRouter();
 const api = useBookingApi();
@@ -406,14 +430,7 @@ const form = ref({
   days_to_pay: 7,
   notes: "",
   items: [
-    {
-      description: "",
-      quantity: 1,
-      unit: "Psch.",
-      amount: 0,
-      vat_rate: 0.19,
-      long_description: ""
-    },
+    emptyInvoiceLineItem({ unit: "Psch." }),
   ],
 });
 
@@ -591,8 +608,7 @@ const totals = computed(() => {
   const taxByRateMap = new Map<number, { net: number; tax: number }>();
   let net = 0;
   for (const item of form.value.items) {
-    const lineNet =
-      Number(item.amount || 0) * Number(item.quantity || 1);
+    const lineNet = lineItemNet(item);
     net += lineNet;
     const rate = parseVatRateFromApi(item.vat_rate);
     const key = Math.round(rate * 10000) / 10000;
@@ -686,25 +702,11 @@ const translateUnit = (unit: string) => {
 };
 
 const addItem = () =>
-  form.value.items.push({
-    description: "",
-    quantity: 1,
-    unit: "Psch.",
-    amount: 0,
-    vat_rate: 0.19,
-    long_description: ""
-  });
+  form.value.items.push(emptyInvoiceLineItem({ unit: "Psch." }));
 const removeItem = (index: number) => {
   if (form.value.items.length > 1) form.value.items.splice(index, 1);
   else
-    form.value.items[0] = {
-      description: "",
-      quantity: 1,
-      unit: "Psch.",
-      amount: 0,
-      vat_rate: 0.19,
-      long_description: ""
-    };
+    form.value.items[0] = emptyInvoiceLineItem({ unit: "Psch." });
 };
 
 const populateFromBooking = () => {
