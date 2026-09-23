@@ -11,7 +11,11 @@ export function roomsOfBuilding(building: any): any[] {
 }
 
 export function unitsOfBuilding(building: any): any[] {
-  return building?.units || [];
+  const units = building?.units || [];
+  const sortedUnits = units.sort((a, b) => {
+    return a.unit_number - b.unit_number;
+  });
+  return sortedUnits;
 }
 
 export function roomsOfUnit(unit: any): any[] {
@@ -27,7 +31,9 @@ export function unitLabel(unit: any): string {
 }
 
 function isLegacyDefaultName(value: unknown) {
-  const name = String(value || "").trim().toLowerCase();
+  const name = String(value || "")
+    .trim()
+    .toLowerCase();
   return name === "standard" || name === "unzugeordnet";
 }
 
@@ -47,7 +53,9 @@ export function visibleRoomsOfBuilding(building: any): any[] {
   return roomsOfBuilding(building).filter((room) => !isLegacyDefaultRoom(room));
 }
 
-export function entityIsUnassigned(entity: Pick<HeatingEntity, "room_id" | "room">) {
+export function entityIsUnassigned(
+  entity: Pick<HeatingEntity, "room_id" | "room">,
+) {
   if (!entity?.room_id) return true;
   return isLegacyDefaultRoom(entity.room);
 }
@@ -62,7 +70,13 @@ export function buildingLabel(building: any): string {
 
 export function roomLabel(room: any): string {
   if (!room) return "";
-  return room.room_number || room.name || "";
+  if (room.room_number && room.name) {
+    return room.room_number + " · " + room.name;
+  } else if (room.room_number) {
+    return room.room_number;
+  } else {
+    return "";
+  }
 }
 
 export function locationLabel(building: any, room: any): string {
@@ -98,7 +112,11 @@ function isHeating(state: Record<string, unknown>): boolean {
 const WRITEABLE = new Set(["readwrite", "write"]);
 
 export function intersectWritableSchema(
-  entities: Array<Pick<HeatingEntity, "schema"> & { deviceModel?: { capability_schema?: unknown } }>,
+  entities: Array<
+    Pick<HeatingEntity, "schema"> & {
+      deviceModel?: { capability_schema?: unknown };
+    }
+  >,
 ): CapabilitySchema[] {
   const list = entities || [];
   if (!list.length) return [];
@@ -112,9 +130,7 @@ export function intersectWritableSchema(
   const writableSets = schemas.map(
     (schema) =>
       new Set(
-        schema
-          .filter((cap) => WRITEABLE.has(cap.access))
-          .map((cap) => cap.key),
+        schema.filter((cap) => WRITEABLE.has(cap.access)).map((cap) => cap.key),
       ),
   );
   let common = [...writableSets[0]];
@@ -138,9 +154,15 @@ export function intersectWritableSchema(
       if (!caps.length) return null;
       const base: CapabilitySchema = { ...caps[0] };
       if (base.type === "number" || base.type === "percent") {
-        const mins = caps.map((cap) => cap.min).filter((n): n is number => n != null);
-        const maxs = caps.map((cap) => cap.max).filter((n): n is number => n != null);
-        const steps = caps.map((cap) => cap.step).filter((n): n is number => n != null);
+        const mins = caps
+          .map((cap) => cap.min)
+          .filter((n): n is number => n != null);
+        const maxs = caps
+          .map((cap) => cap.max)
+          .filter((n): n is number => n != null);
+        const steps = caps
+          .map((cap) => cap.step)
+          .filter((n): n is number => n != null);
         if (mins.length) base.min = Math.max(...mins);
         if (maxs.length) base.max = Math.min(...maxs);
         if (steps.length) base.step = Math.max(...steps);
@@ -188,8 +210,9 @@ export function aggregateRoomState(entities: HeatingEntity[]) {
     targets.some((value) => Math.abs(value - targets[0]) >= 0.05);
   const avg = (values: number[]) =>
     values.length
-      ? Math.round((values.reduce((sum, n) => sum + n, 0) / values.length) * 10) /
-        10
+      ? Math.round(
+          (values.reduce((sum, n) => sum + n, 0) / values.length) * 10,
+        ) / 10
       : null;
   const sameMode = modes.length > 0 && modes.every((mode) => mode === modes[0]);
 

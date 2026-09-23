@@ -3,8 +3,18 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import {
   normalizeHeatingSchema,
   type HeatingEntity,
+  type ZigbeeCoordinator,
 } from "~/composables/useHeatingApi";
-import { locationLabel as formatLocation } from "~/utils/heatingRoom";
+import {
+  buildingLabel,
+  entityIsUnassigned,
+  isLegacyDefaultBuilding,
+  isLegacyDefaultRoom,
+  locationLabel as formatLocation,
+  roomLabel,
+  unitLabel,
+  unitsOfBuilding,
+} from "~/utils/heatingRoom";
 
 const route = useRoute();
 const heatingApi = useHeatingApi();
@@ -13,11 +23,14 @@ const isAdminUser = computed(() => role.value === "admin");
 
 const entity = ref<HeatingEntity | null>(null);
 const models = ref<any[]>([]);
+const coordinators = ref<ZigbeeCoordinator[]>([]);
 const intervals = ref<any[]>([]);
 const loading = ref(false);
 const saving = ref(false);
 const scheduleSaving = ref(false);
 const modelOpen = ref(false);
+const coordinatorOpen = ref(false);
+const coordinatorSaving = ref(false);
 const techOpen = ref(false);
 const detailsOpen = ref(false);
 const entityNumberDraft = ref("");
@@ -51,6 +64,7 @@ const load = async () => {
   entity.value = await heatingApi.getEntity(id.value);
   if (isAdminUser.value) {
     models.value = await heatingApi.getDeviceModels();
+    coordinators.value = await heatingApi.getCoordinators();
   }
   intervals.value = await heatingApi.getSchedules({ entity_id: id.value });
   loading.value = false;
@@ -63,6 +77,31 @@ const onModelChange = async (modelId: number | null) => {
   });
   if (res?.data) entity.value = res.data;
   else await load();
+};
+
+// Das Gerät wurde physisch an einen anderen Koordinator umgepaart (z. B. bei
+// einem Standortwechsel) – hier nur nachziehen, wohin die App Kommandos schickt.
+const isZigbeeEntity = computed(
+  () => entity.value?.deviceModel?.protocol === "zigbee2mqtt",
+);
+
+const onCoordinatorChange = async (coordinatorId: number | null) => {
+  if (!entity.value || coordinatorId == null) return;
+  coordinatorSaving.value = true;
+  const res = await heatingApi.updateEntity(entity.value.id, {
+    coordinator_id: coordinatorId,
+  });
+  coordinatorSaving.value = false;
+  if (res?.data) {
+    entity.value = res.data;
+    coordinatorOpen.value = false;
+    useToast().add({
+      title: "Koordinator geändert",
+      description:
+        "Kommandos gehen ab sofort an den neuen Koordinator. Das Gerät muss dort zuvor angelernt worden sein.",
+      color: "primary",
+    });
+  }
 };
 
 const onCapabilityChange = async (key: string, value: unknown) => {
@@ -144,6 +183,64 @@ const saveDetails = async () => {
   });
   if (res?.data) entity.value = res.data;
   detailsOpen.value = false;
+};
+
+// --- RAUM ZUORDNEN / ÄNDERN ---
+
+const roomModalOpen = ref(false);
+const roomSaving = ref(false);
+const roomSearch = ref("");
+const hierarchy = ref<any[]>([]);
+
+const openRoomModal = async () => {
+  roomSearch.value = "";
+  roomModalOpen.value = true;
+  hierarchy.value = await heatingApi.getHierarchy();
+};
+
+const roomOptions = computed(() => {
+  const options: { id: number; label: string; subtitle: string }[] = [];
+  for (const building of hierarchy.value) {
+    for (const unit of unitsOfBuilding(building)) {
+      for (const room of unit.rooms || []) {
+        if (isLegacyDefaultRoom(room)) continue;
+        options.push({
+          id: room.id,
+          label: `Raum ${roomLabel(room) || room.name}`,
+          subtitle: [
+            isLegacyDefaultBuilding(building) ? "" : buildingLabel(building),
+            unitLabel(unit) ? `Einheit ${unitLabel(unit)}` : "",
+          ]
+            .filter(Boolean)
+            .join(" · "),
+        });
+      }
+    }
+  }
+  const query = roomSearch.value.trim().toLowerCase();
+  if (!query) return options;
+  return options.filter((option) =>
+    `${option.label} ${option.subtitle}`.toLowerCase().includes(query),
+  );
+});
+
+const onRoomChange = async (roomId: number | null) => {
+  if (!entity.value || roomSaving.value) return;
+  if (roomId === entity.value.room_id) {
+    roomModalOpen.value = false;
+    return;
+  }
+  roomSaving.value = true;
+  const res = await heatingApi.updateEntity(entity.value.id, { room_id: roomId });
+  roomSaving.value = false;
+  if (!res?.data) return;
+  entity.value = res.data;
+  roomModalOpen.value = false;
+  useToast().add({
+    title: roomId ? "Raum geändert" : "Raumzuordnung entfernt",
+    description: "",
+    color: "primary",
+  });
 };
 
 // Ein Level nach oben (zum Raum), damit man nicht bei jedem Zurück ganz nach oben springt
@@ -263,12 +360,28 @@ onUnmounted(() => {
           </p>
           <div class="mt-1 flex flex-wrap items-center gap-3">
             <button
+              v-if="isAdminUser"
+              type="button"
+              class="text-xs text-neutral-500 underline"
+              @click="openRoomModal"
+            >
+              {{ entityIsUnassigned(entity) ? "Raum zuordnen" : "Raum ändern" }}
+            </button>
+            <button
               v-if="isAdminUser && models.length"
               type="button"
               class="text-xs text-neutral-500 underline"
               @click="modelOpen = !modelOpen"
             >
               Modell ändern
+            </button>
+            <button
+              v-if="isAdminUser && isZigbeeEntity && coordinators.length"
+              type="button"
+              class="text-xs text-neutral-500 underline"
+              @click="coordinatorOpen = !coordinatorOpen"
+            >
+              Koordinator ändern
             </button>
             <button
               v-if="isAdminUser"
@@ -287,6 +400,19 @@ onUnmounted(() => {
               :model-value="entity.device_model_id"
               @update:model-value="onModelChange"
             />
+          </div>
+          <div v-if="coordinatorOpen" class="mt-2 max-w-md">
+            <HeatingCoordinatorPicker
+              show-labels
+              :coordinators="coordinators"
+              :model-value="entity.coordinator_id"
+              :disabled="coordinatorSaving"
+              @update:model-value="onCoordinatorChange"
+            />
+            <p class="mt-1 text-xs text-neutral-500">
+              Nur wählen, wenn das Gerät bereits am Ziel-Koordinator
+              angelernt ist – sonst gehen Kommandos ins Leere.
+            </p>
           </div>
           <div v-if="detailsOpen" class="mt-2 max-w-md space-y-2">
             <div>
@@ -376,5 +502,62 @@ onUnmounted(() => {
         @save="onScheduleSave"
       />
     </template>
+
+    <UiModal
+      v-model:open="roomModalOpen"
+      title="Raum zuordnen"
+      description="Wähle den Raum, in dem dieses Thermostat hängt."
+      max-width="lg"
+    >
+      <template #body>
+        <input
+          v-model="roomSearch"
+          type="search"
+          class="dialog-input mb-3"
+          placeholder="Raum suchen (Gebäude, Einheit, Raum)…"
+        />
+        <p v-if="!roomOptions.length" class="text-sm text-neutral-500">
+          {{ roomSearch ? "Keine Räume gefunden." : "Noch keine Räume angelegt." }}
+        </p>
+        <div v-else class="max-h-80 space-y-2 overflow-y-auto">
+          <button
+            v-for="option in roomOptions"
+            :key="option.id"
+            type="button"
+            class="flex w-full items-center justify-between gap-3 border px-3 py-2.5 text-left hover:bg-neutral-50"
+            :class="option.id === entity?.room_id ? 'border-brand-accent bg-neutral-50' : 'border-neutral-200'"
+            :disabled="roomSaving"
+            @click="onRoomChange(option.id)"
+          >
+            <span class="min-w-0">
+              <span class="block font-medium text-neutral-900">{{ option.label }}</span>
+              <span class="block text-xs text-neutral-500">{{ option.subtitle }}</span>
+            </span>
+            <span v-if="option.id === entity?.room_id" class="text-xs text-neutral-500">
+              Aktuell
+            </span>
+          </button>
+        </div>
+      </template>
+      <template #footer>
+        <button
+          v-if="entity?.room_id"
+          class="btn-dialog-cancel mr-auto"
+          type="button"
+          :disabled="roomSaving"
+          @click="onRoomChange(null)"
+        >
+          Zuordnung entfernen
+        </button>
+        <button
+          class="btn-dialog-cancel"
+          type="button"
+          :disabled="roomSaving"
+          @click="roomModalOpen = false"
+        >
+          Abbrechen
+        </button>
+      </template>
+    </UiModal>
   </div>
 </template>

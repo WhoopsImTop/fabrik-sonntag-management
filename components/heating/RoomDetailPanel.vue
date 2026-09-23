@@ -57,8 +57,11 @@ const load = async (full = true) => {
 
 // --- THERMOSTATE ANZEIGEN / HINZUFÜGEN / ENTFERNEN ---
 
+const pickerSearch = ref("");
+
 const pickerItems = computed(() => {
   const roomId = room.value?.id;
+  const query = pickerSearch.value.trim().toLowerCase();
   const unassigned: { id: number; name: string; subtitle: string }[] = [];
   const current: { id: number; name: string; subtitle: string }[] = [];
   const others: { id: number; name: string; subtitle: string }[] = [];
@@ -71,6 +74,18 @@ const pickerItems = computed(() => {
         ? `Thermostat · in ${location}`
         : "Thermostat · Nicht zugeordnet",
     };
+    if (query) {
+      const haystack = [
+        entity.name,
+        entity.entity_number,
+        entity.mqtt_identifier,
+        location,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      if (!haystack.includes(query)) continue;
+    }
     if (entityIsUnassigned(entity) && entity.room_id !== roomId) {
       unassigned.push(item);
     } else if (entity.room_id === roomId) current.push(item);
@@ -112,6 +127,7 @@ const selectedIds = ref<number[]>([]);
 
 const openAssignModal = () => {
   selectedIds.value = (room.value?.entities || []).map((entity: any) => entity.id);
+  pickerSearch.value = "";
   assignModalOpen.value = true;
 };
 
@@ -333,8 +349,18 @@ watch(
     max-width="lg"
   >
     <template #body>
-      <p v-if="!pickerItems.length" class="text-sm text-neutral-500">
+      <input
+        v-if="allEntities.length"
+        v-model="pickerSearch"
+        type="search"
+        class="dialog-input mb-3"
+        placeholder="Thermostat suchen (Name, Nummer, Raum)…"
+      />
+      <p v-if="!allEntities.length" class="text-sm text-neutral-500">
         Keine Thermostate registriert. Lerne zuerst Geräte an.
+      </p>
+      <p v-else-if="!pickerItems.length" class="text-sm text-neutral-500">
+        Keine Thermostate gefunden.
       </p>
       <div v-else class="max-h-80 space-y-2 overflow-y-auto">
         <label

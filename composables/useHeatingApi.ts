@@ -61,6 +61,8 @@ export type HeatingEntity = {
   device_model_id: number;
   mqtt_identifier: string;
   mqtt_topic_prefix?: string | null;
+  coordinator_id?: number | null;
+  coordinator?: ZigbeeCoordinator | null;
   last_state: Record<string, unknown>;
   last_seen_at?: string | null;
   manual_override?: {
@@ -89,6 +91,32 @@ export type HeatingEntity = {
     weekday: number;
     time: string;
   } | null;
+};
+
+export type ZigbeeCoordinator = {
+  id: number;
+  key: string;
+  base_topic: string;
+  label: string;
+  enabled: boolean;
+  notes?: string | null;
+  last_seen_at?: string | null;
+  permit_join?: boolean;
+  remaining_seconds?: number | null;
+};
+
+// Form der Einträge in `zigbee_coordinators` (Discovery + permit-join-Antwort):
+// dort heißt das Feld "coordinator_id", NICHT "id" – anders als bei
+// GET /heating/coordinators. Nicht mit ZigbeeCoordinator vermischen.
+export type ZigbeeCoordinatorStatus = {
+  coordinator_id: number;
+  key: string;
+  label: string;
+  base_topic: string;
+  enabled: boolean;
+  last_seen_at?: string | null;
+  permit_join: boolean;
+  remaining_seconds: number | null;
 };
 
 export const useHeatingApi = () => {
@@ -499,6 +527,8 @@ export const useHeatingApi = () => {
         devices: res?.data || [],
         mqtt_connected: !!res?.mqtt_connected,
         zigbee: res?.zigbee || { permit_join: false, remaining_seconds: null },
+        zigbeeCoordinators: (res?.zigbee_coordinators ||
+          []) as ZigbeeCoordinatorStatus[],
       };
     },
 
@@ -515,18 +545,73 @@ export const useHeatingApi = () => {
         devices: res?.data || [],
         mqtt_connected: !!res?.mqtt_connected,
         zigbee: res?.zigbee || { permit_join: false, remaining_seconds: null },
+        zigbeeCoordinators: (res?.zigbee_coordinators ||
+          []) as ZigbeeCoordinatorStatus[],
       };
     },
 
-    setPermitJoin: (time: number) =>
+    // Ohne coordinatorId werden alle aktivierten Koordinatoren gleichzeitig geöffnet.
+    setPermitJoin: (time: number, coordinatorId?: number | null) =>
       apiCall(
         () =>
           $fetch(`${baseURL}/heating/zigbee/permit-join`, {
             method: "POST",
             headers: jsonHeaders(),
-            body: { time },
+            body: {
+              time,
+              ...(coordinatorId != null ? { coordinator_id: coordinatorId } : {}),
+            },
           }),
         "setPermitJoin",
+      ),
+
+    getCoordinators: async (): Promise<ZigbeeCoordinator[]> => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/coordinators`, {
+            headers: getAuthHeaders(),
+          }),
+        "getCoordinators",
+      );
+      return res?.data || [];
+    },
+
+    createCoordinator: (data: {
+      key: string;
+      base_topic: string;
+      label: string;
+      enabled?: boolean;
+      notes?: string;
+    }) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/coordinators`, {
+            method: "POST",
+            headers: jsonHeaders(),
+            body: data,
+          }),
+        "createCoordinator",
+      ),
+
+    updateCoordinator: (id: number, data: Record<string, unknown>) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/coordinators/${id}`, {
+            method: "PATCH",
+            headers: jsonHeaders(),
+            body: data,
+          }),
+        "updateCoordinator",
+      ),
+
+    deleteCoordinator: (id: number) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/coordinators/${id}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+          }),
+        "deleteCoordinator",
       ),
 
     bulkCreateEntities: (data: {

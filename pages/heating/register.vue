@@ -1,85 +1,108 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { entityIsUnassigned, entityLocationLabel } from "~/utils/heatingRoom";
-import type { HeatingEntity } from "~/composables/useHeatingApi";
+import type {
+  HeatingEntity,
+  ZigbeeCoordinator,
+  ZigbeeCoordinatorStatus,
+} from "~/composables/useHeatingApi";
 
 const heatingApi = useHeatingApi();
 const toast = useToast();
+const confirm = useConfirm();
 
 const loading = ref(false);
 const adding = ref(false);
-const pairingBusy = ref(false);
 const mqttConnected = ref(false);
 const devices = ref<any[]>([]);
 const entities = ref<HeatingEntity[]>([]);
 const models = ref<any[]>([]);
 const selected = ref<string[]>([]);
-const zigbee = ref({
-  permit_join: false,
-  remaining_seconds: null as number | null,
-});
-const remaining = ref<number | null>(null);
+const coordinators = ref<ZigbeeCoordinator[]>([]);
+// Pro Koordinator eigener lokal heruntergezählter Restsekunden-Wert.
+const pairingState = ref<Record<number, number | null>>({});
+const pairingBusyId = ref<number | "all" | null>(null);
 
 const form = ref({
   mqtt_identifier: "",
   mqtt_topic_prefix: "",
   name: "",
   device_model_id: null as number | null,
+  coordinator_id: null as number | null,
 });
 const modalOpen = ref(false);
 const assignment = ref<Record<string, number | null>>({});
 const initialSelectDone = ref(false);
 
+const coordinatorModalOpen = ref(false);
+const coordinatorSaving = ref(false);
+const coordinatorForm = ref({ key: "", base_topic: "", label: "" });
+
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let countdownTimer: ReturnType<typeof setInterval> | null = null;
 
-const applyZigbee = (status?: {
-  permit_join?: boolean;
-  remaining_seconds?: number | null;
-}) => {
-  zigbee.value = {
-    permit_join: !!status?.permit_join,
-    remaining_seconds: status?.remaining_seconds ?? null,
-  };
-  remaining.value = zigbee.value.permit_join
-    ? zigbee.value.remaining_seconds
-    : null;
+const coordinatorLabel = (id: number | null | undefined) => {
+  if (id == null) return "Comet WiFi";
+  const found = coordinators.value.find((c) => c.id === id);
+  return found ? `${found.label} (${found.base_topic})` : `#${id}`;
+};
+
+// Der Backend-Fix erlaubt denselben mqtt_identifier bewusst an mehreren
+// Koordinatoren gleichzeitig (das ist der ganze Zweck dieser Funktion) – die
+// Auswahl-/Zuordnungs-Maps unten müssen deshalb auf (coordinator_id,
+// mqtt_identifier) schlüsseln, sonst checkt/ordnet ein Klick auf "Buero_1"
+// an Koordinator 1 versehentlich auch "Buero_1" an Koordinator 2 mit.
+const deviceKey = (device: { coordinator_id?: number | null; mqtt_identifier: string }) =>
+  `${device.coordinator_id ?? "-"}:${device.mqtt_identifier}`;
+
+// Nur den Pairing-Status übernehmen. Achtung: dieses Objekt heißt
+// "coordinator_id" statt "id" (anders als GET /heating/coordinators) –
+// coordinators.value hier NICHT überschreiben, sonst brechen alle .id-Lookups
+// (z. B. coordinatorLabel) auf den nächsten Poll hin.
+const applyZigbeeCoordinators = (list?: ZigbeeCoordinatorStatus[]) => {
+  if (!list) return;
+  const next: Record<number, number | null> = {};
+  for (const status of list) {
+    next[status.coordinator_id] = status.permit_join
+      ? (status.remaining_seconds ?? null)
+      : null;
+  }
+  pairingState.value = next;
 };
 
 const applyDiscovery = (
   discovery: {
     devices: any[];
     mqtt_connected: boolean;
-    zigbee?: { permit_join?: boolean; remaining_seconds?: number | null };
+    zigbeeCoordinators?: ZigbeeCoordinatorStatus[];
   },
   { firstLoad = false } = {},
 ) => {
-  const previousIds = new Set(devices.value.map((d) => d.mqtt_identifier));
+  const previousKeys = new Set(devices.value.map(deviceKey));
   devices.value = discovery.devices;
   mqttConnected.value = discovery.mqtt_connected;
-  applyZigbee(discovery.zigbee);
+  applyZigbeeCoordinators(discovery.zigbeeCoordinators);
   const next = { ...assignment.value };
   const newlyJoined: string[] = [];
   for (const device of discovery.devices) {
-    if (next[device.mqtt_identifier] == null) {
-      next[device.mqtt_identifier] =
-        device.device_model_id || models.value[0]?.id || null;
+    const key = deviceKey(device);
+    // Herstellerdaten kommen oft erst nach den ersten Zustandsnachrichten –
+    // den Vorschlag deshalb nachziehen, solange niemand manuell gewählt hat.
+    if (!manualAssignment.has(key)) {
+      next[key] =
+        device.device_model_id || next[key] || models.value[0]?.id || null;
     }
-    if (
-      !firstLoad &&
-      !previousIds.has(device.mqtt_identifier) &&
-      device.just_joined
-    ) {
-      newlyJoined.push(device.mqtt_identifier);
+    if (!firstLoad && !previousKeys.has(key) && device.just_joined) {
+      newlyJoined.push(key);
     }
   }
   assignment.value = next;
   if (firstLoad || !initialSelectDone.value) {
-    selected.value = discovery.devices.map((d: any) => d.mqtt_identifier);
+    selected.value = discovery.devices.map(deviceKey);
     initialSelectDone.value = true;
     return;
   }
-  const visible = new Set(discovery.devices.map((d: any) => d.mqtt_identifier));
+  const visible = new Set(discovery.devices.map(deviceKey));
   selected.value = [
     ...new Set([
       ...selected.value.filter((id) => visible.has(id)),
@@ -88,7 +111,11 @@ const applyDiscovery = (
   ];
 };
 
+// Manuell gewählte Modelle nicht vom Discovery-Vorschlag überschreiben.
+const manualAssignment = new Set<string>();
+
 const setAssignment = (identifier: string, modelId: number | null) => {
+  manualAssignment.add(identifier);
   assignment.value = { ...assignment.value, [identifier]: modelId };
 };
 
@@ -99,22 +126,24 @@ const load = async (scan = true, silent = false) => {
   }
   if (!silent) {
     entities.value = await heatingApi.getEntities();
+    coordinators.value = await heatingApi.getCoordinators();
   }
   const discovery = scan
     ? await heatingApi.refreshDiscovery()
     : await heatingApi.getDiscovery();
-  applyDiscovery(discovery || { devices: [], mqtt_connected: false }, {
-    firstLoad: !silent && !initialSelectDone.value,
-  });
+  applyDiscovery(
+    discovery || { devices: [], mqtt_connected: false, zigbeeCoordinators: [] },
+    { firstLoad: !silent && !initialSelectDone.value },
+  );
   if (!silent) loading.value = false;
 };
 
-const startPairing = async (seconds = 120) => {
-  pairingBusy.value = true;
-  const res = await heatingApi.setPermitJoin(seconds);
-  pairingBusy.value = false;
-  if (!res?.zigbee) return;
-  applyZigbee(res.zigbee);
+// coordinatorId = null -> alle aktivierten Koordinatoren gleichzeitig öffnen/schließen.
+const startPairing = async (coordinatorId: number | null, seconds = 120) => {
+  pairingBusyId.value = coordinatorId ?? "all";
+  const res = await heatingApi.setPermitJoin(seconds, coordinatorId);
+  pairingBusyId.value = null;
+  if (res?.zigbee_coordinators) applyZigbeeCoordinators(res.zigbee_coordinators);
   toast.add({
     title: "Zigbee-Anlernen aktiv",
     description:
@@ -124,21 +153,23 @@ const startPairing = async (seconds = 120) => {
   await load(true, true);
 };
 
-const stopPairing = async () => {
-  pairingBusy.value = true;
-  const res = await heatingApi.setPermitJoin(0);
-  pairingBusy.value = false;
-  if (res?.zigbee) applyZigbee(res.zigbee);
-  remaining.value = null;
+const stopPairing = async (coordinatorId: number | null) => {
+  pairingBusyId.value = coordinatorId ?? "all";
+  const res = await heatingApi.setPermitJoin(0, coordinatorId);
+  pairingBusyId.value = null;
+  if (res?.zigbee_coordinators) applyZigbeeCoordinators(res.zigbee_coordinators);
 };
 
-const remainingLabel = computed(() => {
-  const n = remaining.value;
-  if (n == null || n <= 0) return "";
-  const m = Math.floor(n / 60);
-  const s = n % 60;
+const anyPairingActive = computed(() =>
+  coordinators.value.some((c) => (pairingState.value[c.id] ?? 0) > 0),
+);
+
+const formatRemaining = (seconds: number | null | undefined) => {
+  if (seconds == null || seconds <= 0) return "";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
-});
+};
 
 const interviewLabel = (device: any) => {
   if (device.interview_status === "successful") return "Bereit";
@@ -152,11 +183,15 @@ onMounted(() => {
   load(true);
   pollTimer = setInterval(() => load(false, true), 3000);
   countdownTimer = setInterval(() => {
-    if (remaining.value == null || remaining.value <= 0) return;
-    remaining.value -= 1;
-    if (remaining.value <= 0) {
-      zigbee.value = { permit_join: false, remaining_seconds: 0 };
+    const next = { ...pairingState.value };
+    let changed = false;
+    for (const id of Object.keys(next)) {
+      const value = next[Number(id)];
+      if (value == null || value <= 0) continue;
+      next[Number(id)] = value - 1;
+      changed = true;
     }
+    if (changed) pairingState.value = next;
   }, 1000);
 });
 
@@ -179,10 +214,13 @@ const openRegister = (device: any) => {
     mqtt_topic_prefix: device.mqtt_topic_prefix || "",
     name: device.mqtt_identifier,
     device_model_id:
-      assignment.value[device.mqtt_identifier] ||
+      assignment.value[deviceKey(device)] ||
       device.device_model_id ||
       models.value[0]?.id ||
       null,
+    // Der Koordinator ist durch das Pairing physisch festgelegt – hier nur
+    // übernommen, nicht frei wählbar.
+    coordinator_id: device.coordinator_id ?? null,
   };
   modalOpen.value = true;
 };
@@ -201,6 +239,7 @@ const save = async () => {
     name: form.value.name,
     mqtt_identifier: form.value.mqtt_identifier,
     mqtt_topic_prefix: form.value.mqtt_topic_prefix || null,
+    coordinator_id: form.value.coordinator_id,
   });
   modalOpen.value = false;
   if (res?.data?.id) {
@@ -217,9 +256,7 @@ const save = async () => {
 };
 
 const addSelected = async () => {
-  const chosen = devices.value.filter((d) =>
-    selected.value.includes(d.mqtt_identifier),
-  );
+  const chosen = devices.value.filter((d) => selected.value.includes(deviceKey(d)));
   if (!chosen.length) {
     toast.add({
       title: "Keine Geräte ausgewählt",
@@ -232,7 +269,8 @@ const addSelected = async () => {
     mqtt_identifier: d.mqtt_identifier,
     mqtt_topic_prefix: d.mqtt_topic_prefix || null,
     name: d.mqtt_identifier,
-    device_model_id: assignment.value[d.mqtt_identifier] || d.device_model_id,
+    device_model_id: assignment.value[deviceKey(d)] || d.device_model_id,
+    coordinator_id: d.coordinator_id ?? null,
   }));
   if (payload.some((d) => !d.device_model_id)) {
     toast.add({
@@ -299,6 +337,72 @@ const saveName = async (entity: HeatingEntity) => {
   if (res?.data?.name) entity.name = res.data.name;
   else entity.name = previous;
 };
+
+const removeEntity = async (entity: HeatingEntity) => {
+  const ok = await confirm.confirm({
+    title: "Gerät löschen?",
+    message: `${entity.name} wird endgültig gelöscht, inklusive Verlauf und eigenem Zeitplan. Das Gerät taucht danach wieder unter den unregistrierten Geräten auf, solange es noch sendet.`,
+    variant: "danger",
+  });
+  if (!ok) return;
+  const res = await heatingApi.deleteEntity(entity.id);
+  if (!res?.success) return;
+  entities.value = entities.value.filter((e) => e.id !== entity.id);
+  toast.add({ title: "Gerät gelöscht", description: "", color: "primary" });
+  await load(false, true);
+};
+
+// --- Koordinatoren verwalten ---------------------------------------------
+
+const openCreateCoordinator = () => {
+  coordinatorForm.value = { key: "", base_topic: "", label: "" };
+  coordinatorModalOpen.value = true;
+};
+
+const saveCoordinator = async () => {
+  if (
+    !coordinatorForm.value.key ||
+    !coordinatorForm.value.base_topic ||
+    !coordinatorForm.value.label
+  ) {
+    toast.add({
+      title: "Bitte alle Felder ausfüllen",
+      description: "",
+      color: "red",
+    });
+    return;
+  }
+  coordinatorSaving.value = true;
+  const res = await heatingApi.createCoordinator(coordinatorForm.value);
+  coordinatorSaving.value = false;
+  if (!res?.data) return;
+  coordinatorModalOpen.value = false;
+  coordinators.value = await heatingApi.getCoordinators();
+  toast.add({
+    title: "Koordinator angelegt",
+    description: `Wird jetzt live abonniert: ${res.data.base_topic}/#`,
+    color: "primary",
+  });
+};
+
+const toggleCoordinatorEnabled = async (coordinator: ZigbeeCoordinator) => {
+  const res = await heatingApi.updateCoordinator(coordinator.id, {
+    enabled: !coordinator.enabled,
+  });
+  if (res?.data) coordinators.value = await heatingApi.getCoordinators();
+};
+
+const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
+  const res = await heatingApi.deleteCoordinator(coordinator.id);
+  if (res?.success) {
+    coordinators.value = await heatingApi.getCoordinators();
+    toast.add({
+      title: "Koordinator gelöscht",
+      description: "",
+      color: "primary",
+    });
+  }
+};
 </script>
 
 <template>
@@ -332,48 +436,105 @@ const saveName = async (entity: HeatingEntity) => {
       </div>
     </div>
 
-    <div
-      class="mb-6 border p-4"
-      :class="
-        zigbee.permit_join
-          ? 'border-emerald-300 bg-emerald-50'
-          : 'border-neutral-200'
-      "
-    >
-      <div class="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p class="text-sm font-medium text-neutral-900">Zigbee anlernen</p>
-          <p class="mt-1 text-sm text-neutral-600">
-            <template v-if="zigbee.permit_join">
-              Netzwerk ist offen
-              <span v-if="remainingLabel"> — noch {{ remainingLabel }}</span
-              >. Gerät am Thermostat in den Pairing-Modus versetzen.
-            </template>
-            <template v-else>
-              Netzwerk geschlossen. Starten, dann das Thermostat 3–10 Sekunden
-              auf Reset/Pairing halten. Es erscheint unten in der Liste.
-            </template>
-          </p>
-        </div>
+    <div class="mb-6 border border-neutral-200 p-4">
+      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="font-semibold">Zigbee-Koordinatoren</h2>
         <div class="flex gap-2">
           <UiButton
-            v-if="zigbee.permit_join"
+            v-if="coordinators.length > 1"
+            size="xs"
             variant="outline"
-            :loading="pairingBusy"
+            :loading="pairingBusyId === 'all'"
             :disabled="!mqttConnected"
-            @click="stopPairing"
+            @click="
+              anyPairingActive ? stopPairing(null) : startPairing(null)
+            "
           >
-            Anlernen beenden
+            {{ anyPairingActive ? "Alle beenden" : "Alle 2 Min. anlernen" }}
           </UiButton>
-          <UiButton
-            v-else
-            icon="i-lucide-radio"
-            :loading="pairingBusy"
-            :disabled="!mqttConnected"
-            @click="startPairing(120)"
-          >
-            2 Minuten anlernen
+          <UiButton size="xs" icon="i-lucide-plus" @click="openCreateCoordinator">
+            Koordinator hinzufügen
           </UiButton>
+        </div>
+      </div>
+
+      <p v-if="!coordinators.length" class="text-sm text-neutral-500">
+        Noch kein Zigbee-Koordinator angelegt. Jede zusätzliche
+        zigbee2mqtt-Instanz auf dem Server bekommt hier einen eigenen Eintrag
+        (Base-Topic, z. B. „zigbee2mqtt_Haus9“).
+      </p>
+
+      <div v-else class="grid gap-3 sm:grid-cols-2">
+        <div
+          v-for="coordinator in coordinators"
+          :key="coordinator.id"
+          class="border p-3"
+          :class="
+            (pairingState[coordinator.id] ?? 0) > 0
+              ? 'border-emerald-300 bg-emerald-50'
+              : 'border-neutral-200'
+          "
+        >
+          <div class="mb-1 flex items-center justify-between gap-2">
+            <div>
+              <p class="text-sm font-medium text-neutral-900">
+                {{ coordinator.label }}
+              </p>
+              <p class="font-mono text-xs text-neutral-500">
+                {{ coordinator.base_topic }}
+              </p>
+            </div>
+            <span
+              v-if="!coordinator.enabled"
+              class="border border-neutral-300 px-1.5 py-0.5 text-xs text-neutral-500"
+            >
+              Deaktiviert
+            </span>
+          </div>
+
+          <p class="mb-2 text-xs text-neutral-600">
+            <template v-if="(pairingState[coordinator.id] ?? 0) > 0">
+              Netzwerk offen — noch
+              {{ formatRemaining(pairingState[coordinator.id]) }}
+            </template>
+            <template v-else> Netzwerk geschlossen </template>
+          </p>
+
+          <div class="flex flex-wrap gap-2">
+            <UiButton
+              v-if="(pairingState[coordinator.id] ?? 0) > 0"
+              size="xs"
+              variant="outline"
+              :loading="pairingBusyId === coordinator.id"
+              @click="stopPairing(coordinator.id)"
+            >
+              Anlernen beenden
+            </UiButton>
+            <UiButton
+              v-else
+              size="xs"
+              icon="i-lucide-radio"
+              :loading="pairingBusyId === coordinator.id"
+              :disabled="!mqttConnected || !coordinator.enabled"
+              @click="startPairing(coordinator.id)"
+            >
+              2 Min. anlernen
+            </UiButton>
+            <button
+              type="button"
+              class="text-xs text-neutral-500 underline"
+              @click="toggleCoordinatorEnabled(coordinator)"
+            >
+              {{ coordinator.enabled ? "deaktivieren" : "aktivieren" }}
+            </button>
+            <button
+              type="button"
+              class="text-xs text-red-600 underline"
+              @click="removeCoordinator(coordinator)"
+            >
+              löschen
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -387,8 +548,9 @@ const saveName = async (entity: HeatingEntity) => {
       Broker wird gescannt…
     </p>
     <p v-else-if="devices.length === 0" class="mb-8 text-sm text-neutral-500">
-      Keine unregistrierten Geräte. Für Zigbee zuerst „2 Minuten anlernen“
-      starten; Comet WiFi erscheint, sobald MQTT-Nachrichten ankommen.
+      Keine unregistrierten Geräte. Für Zigbee zuerst an einem Koordinator
+      „anlernen“ starten; Comet WiFi erscheint, sobald MQTT-Nachrichten
+      ankommen.
     </p>
 
     <UiTable
@@ -397,7 +559,7 @@ const saveName = async (entity: HeatingEntity) => {
       :columns="[
         { id: 'select', header: '' },
         { accessorKey: 'mqtt_identifier', header: 'Identifier' },
-        { accessorKey: 'protocol', header: 'Protokoll' },
+        { id: 'coordinator', header: 'Koordinator' },
         { id: 'status', header: 'Status' },
         { id: 'model', header: 'Hersteller / Modell' },
         { id: 'actions', header: '' },
@@ -407,10 +569,10 @@ const saveName = async (entity: HeatingEntity) => {
       <template #select-cell="{ row }">
         <input
           type="checkbox"
-          :checked="selected.includes(row.original.mqtt_identifier)"
+          :checked="selected.includes(deviceKey(row.original))"
           @change="
             toggle(
-              row.original.mqtt_identifier,
+              deviceKey(row.original),
               ($event.target as HTMLInputElement).checked,
             )
           "
@@ -425,6 +587,11 @@ const saveName = async (entity: HeatingEntity) => {
           Neu
         </span>
       </template>
+      <template #coordinator-cell="{ row }">
+        <span class="text-xs text-neutral-600">{{
+          coordinatorLabel(row.original.coordinator_id)
+        }}</span>
+      </template>
       <template #status-cell="{ row }">
         <span class="text-xs text-neutral-600">{{
           interviewLabel(row.original) || "—"
@@ -433,10 +600,8 @@ const saveName = async (entity: HeatingEntity) => {
       <template #model-cell="{ row }">
         <HeatingModelPicker
           :models="models"
-          :model-value="assignment[row.original.mqtt_identifier]"
-          @update:model-value="
-            setAssignment(row.original.mqtt_identifier, $event)
-          "
+          :model-value="assignment[deviceKey(row.original)]"
+          @update:model-value="setAssignment(deviceKey(row.original), $event)"
         />
       </template>
       <template #actions-cell="{ row }">
@@ -455,12 +620,24 @@ const saveName = async (entity: HeatingEntity) => {
       :columns="[
         { accessorKey: 'name', header: 'Gerät' },
         { id: 'location', header: 'Ort' },
+        { id: 'coordinator', header: 'Koordinator' },
         { id: 'status', header: 'Status' },
         { id: 'battery', header: 'Batterie' },
         { accessorKey: 'mqtt_identifier', header: 'Identifier' },
+        { id: 'actions', header: '' },
       ]"
       :data="entities"
     >
+      <template #actions-cell="{ row }">
+        <button
+          type="button"
+          class="text-neutral-400 hover:text-red-600"
+          aria-label="Gerät löschen"
+          @click="removeEntity(row.original)"
+        >
+          <UiIcon name="i-lucide-trash-2" class="size-4" />
+        </button>
+      </template>
       <template #name-cell="{ row }">
         <div v-if="editingId === row.original.id" class="max-w-xs">
           <input
@@ -492,6 +669,11 @@ const saveName = async (entity: HeatingEntity) => {
       <template #location-cell="{ row }">
         {{ locationOf(row.original) }}
       </template>
+      <template #coordinator-cell="{ row }">
+        <span class="text-xs text-neutral-600">{{
+          coordinatorLabel(row.original.coordinator_id)
+        }}</span>
+      </template>
       <template #battery-cell="{ row }">
         <span :class="row.original.battery < 10 ? 'text-red-600' : ''"
           >{{ row.original.battery }} %</span
@@ -522,6 +704,17 @@ const saveName = async (entity: HeatingEntity) => {
           :models="models"
           v-model="form.device_model_id"
         />
+        <template v-if="form.coordinator_id != null">
+          <label class="dialog-label">Zigbee-Koordinator</label>
+          <p class="dialog-input mb-3 bg-neutral-50 text-neutral-600">
+            {{ coordinatorLabel(form.coordinator_id) }}
+          </p>
+          <p class="mb-3 text-xs text-neutral-500">
+            Durch das Anlernen an diesem Koordinator festgelegt. Ändern Sie
+            das nach dem Speichern über die Geräteseite, falls es umgehängt
+            werden soll.
+          </p>
+        </template>
         <p v-if="selectedModel" class="text-xs text-neutral-500">
           Adapter {{ selectedModel.adapter_key }} — nach dem Speichern erscheint
           das Gerät in der Liste.
@@ -537,6 +730,54 @@ const saveName = async (entity: HeatingEntity) => {
         </button>
         <button class="btn-dialog-primary" type="button" @click="save">
           Hinzufügen
+        </button>
+      </template>
+    </UiModal>
+
+    <UiModal
+      v-model:open="coordinatorModalOpen"
+      title="Zigbee-Koordinator hinzufügen"
+      max-width="md"
+    >
+      <template #body>
+        <label class="dialog-label">Bezeichnung</label>
+        <input
+          v-model="coordinatorForm.label"
+          class="dialog-input mb-3"
+          placeholder="z. B. Haus 9"
+        />
+        <label class="dialog-label">Base-Topic</label>
+        <input
+          v-model="coordinatorForm.base_topic"
+          class="dialog-input mb-3 font-mono"
+          placeholder="z. B. zigbee2mqtt_Haus9"
+        />
+        <label class="dialog-label">Interner Schlüssel</label>
+        <input
+          v-model="coordinatorForm.key"
+          class="dialog-input mb-3"
+          placeholder="z. B. z2m-haus9"
+        />
+        <p class="text-xs text-neutral-500">
+          Entspricht dem Namen der zigbee2mqtt-Instanz, die auf dem Server für
+          diesen Koordinator läuft.
+        </p>
+      </template>
+      <template #footer>
+        <button
+          class="btn-dialog-cancel"
+          type="button"
+          @click="coordinatorModalOpen = false"
+        >
+          Abbrechen
+        </button>
+        <button
+          class="btn-dialog-primary"
+          type="button"
+          :disabled="coordinatorSaving"
+          @click="saveCoordinator"
+        >
+          Anlegen
         </button>
       </template>
     </UiModal>
