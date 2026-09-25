@@ -8,6 +8,7 @@ import {
 import {
   buildingLabel,
   entityIsUnassigned,
+  entityLocationLabel,
   isLegacyDefaultBuilding,
   isLegacyDefaultRoom,
   locationLabel as formatLocation,
@@ -18,6 +19,7 @@ import {
 
 const route = useRoute();
 const heatingApi = useHeatingApi();
+const confirm = useConfirm();
 const { role } = useAuth();
 const isAdminUser = computed(() => role.value === "admin");
 
@@ -146,6 +148,113 @@ const onScheduleSave = async (payload: {
       });
     }
   }
+};
+
+// --- HEIZPLAN AUF ANDERE THERMOSTATE KOPIEREN ---
+
+type SchedulePayload = {
+  eco_temperature: number;
+  intervals: { weekday: number; start: string; end: string; target_temperature: number }[];
+};
+
+const copyModalOpen = ref(false);
+const copyPayload = ref<SchedulePayload | null>(null);
+const copyTargets = ref<{ id: number; name: string; subtitle: string }[]>([]);
+const copySelectedIds = ref<number[]>([]);
+const copySearch = ref("");
+const copyLoading = ref(false);
+const copying = ref(false);
+
+const filteredCopyTargets = computed(() => {
+  const query = copySearch.value.trim().toLowerCase();
+  if (!query) return copyTargets.value;
+  return copyTargets.value.filter((item) =>
+    `${item.name} ${item.subtitle}`.toLowerCase().includes(query),
+  );
+});
+
+const allCopyTargetsSelected = computed(
+  () =>
+    filteredCopyTargets.value.length > 0 &&
+    filteredCopyTargets.value.every((item) => copySelectedIds.value.includes(item.id)),
+);
+
+const toggleCopyTarget = (entityId: number) => {
+  copySelectedIds.value = copySelectedIds.value.includes(entityId)
+    ? copySelectedIds.value.filter((existingId) => existingId !== entityId)
+    : [...copySelectedIds.value, entityId];
+};
+
+const toggleAllCopyTargets = () => {
+  const visibleIds = filteredCopyTargets.value.map((item) => item.id);
+  if (allCopyTargetsSelected.value) {
+    copySelectedIds.value = copySelectedIds.value.filter((id) => !visibleIds.includes(id));
+    return;
+  }
+  copySelectedIds.value = [...new Set([...copySelectedIds.value, ...visibleIds])];
+};
+
+const openCopyModal = async (payload: SchedulePayload) => {
+  copyPayload.value = payload;
+  copySelectedIds.value = [];
+  copySearch.value = "";
+  copyModalOpen.value = true;
+  copyLoading.value = true;
+  const entities = await heatingApi.getEntities();
+  copyTargets.value = entities
+    .filter((item) => item.id !== entity.value?.id)
+    .map((item) => ({
+      id: item.id,
+      name: item.name,
+      subtitle: entityLocationLabel(item) || "Nicht zugeordnet",
+    }));
+  copyLoading.value = false;
+};
+
+const copySchedule = async () => {
+  if (!copyPayload.value || !copySelectedIds.value.length) return;
+  const count = copySelectedIds.value.length;
+  const ok = await confirm.confirm({
+    title: "Heizpläne überschreiben?",
+    message: `Der eigene Heizplan von ${count} ${
+      count === 1 ? "Thermostat" : "Thermostaten"
+    } wird durch diesen Plan ersetzt. Er hat Vorrang vor dem Raum-Heizplan.`,
+    variant: "warning",
+    confirmLabel: "Ja, überschreiben",
+  });
+  if (!ok) return;
+  copying.value = true;
+  const failed: string[] = [];
+  const unreachable: string[] = [];
+  for (const targetId of copySelectedIds.value) {
+    const label = copyTargets.value.find((item) => item.id === targetId)?.name || `#${targetId}`;
+    const res = await heatingApi.replaceEntitySchedule(targetId, copyPayload.value);
+    if (!res?.data) failed.push(label);
+    else if (res.data.native_error) unreachable.push(label);
+  }
+  copying.value = false;
+  const succeeded = count - failed.length;
+  if (succeeded > 0) {
+    useToast().add({
+      title: `Heizplan auf ${succeeded} ${succeeded === 1 ? "Thermostat" : "Thermostate"} kopiert`,
+      color: "green",
+    });
+  }
+  if (failed.length) {
+    useToast().add({
+      title: "Kopieren teilweise fehlgeschlagen",
+      description: failed.join(", "),
+      color: "red",
+    });
+  }
+  if (unreachable.length) {
+    useToast().add({
+      title: "Plan kopiert, nicht alle Geräte erreicht",
+      description: unreachable.join(", "),
+      color: "red",
+    });
+  }
+  if (!failed.length) copyModalOpen.value = false;
 };
 
 const startEditName = async () => {
@@ -499,7 +608,10 @@ onUnmounted(() => {
         :max="targetCap?.max ?? 30"
         :step="targetCap?.step ?? 0.5"
         :saving="scheduleSaving"
+        copyable
+        copy-label="Auf andere Thermostate kopieren"
         @save="onScheduleSave"
+        @copy="openCopyModal"
       />
     </template>
 
@@ -556,6 +668,80 @@ onUnmounted(() => {
           @click="roomModalOpen = false"
         >
           Abbrechen
+        </button>
+      </template>
+    </UiModal>
+
+    <UiModal
+      v-model:open="copyModalOpen"
+      title="Heizplan kopieren"
+      description="Wähle die Thermostate, die diesen Heizplan inkl. Absenktemperatur als eigenen Zeitplan übernehmen sollen. Ihr bisheriger eigener Zeitplan wird ersetzt."
+      max-width="lg"
+    >
+      <template #body>
+        <p v-if="copyLoading" class="text-sm text-neutral-400">Lade Thermostate…</p>
+        <p v-else-if="!copyTargets.length" class="text-sm text-neutral-500">
+          Keine weiteren Thermostate vorhanden.
+        </p>
+        <template v-else>
+          <input
+            v-model="copySearch"
+            type="search"
+            class="dialog-input mb-3"
+            placeholder="Thermostat suchen (Name, Raum, Gebäude)…"
+          />
+          <label
+            v-if="filteredCopyTargets.length"
+            class="mb-2 flex cursor-pointer items-center gap-3 px-3 text-sm text-neutral-600"
+          >
+            <input
+              type="checkbox"
+              :checked="allCopyTargetsSelected"
+              :disabled="copying"
+              @change="toggleAllCopyTargets"
+            />
+            Alle auswählen
+          </label>
+          <p v-if="!filteredCopyTargets.length" class="text-sm text-neutral-500">
+            Keine Thermostate gefunden.
+          </p>
+          <div v-else class="max-h-80 space-y-2 overflow-y-auto">
+            <label
+              v-for="item in filteredCopyTargets"
+              :key="item.id"
+              class="flex cursor-pointer items-start gap-3 border border-neutral-200 px-3 py-2.5 hover:bg-neutral-50"
+            >
+              <input
+                type="checkbox"
+                class="mt-1"
+                :checked="copySelectedIds.includes(item.id)"
+                :disabled="copying"
+                @change="toggleCopyTarget(item.id)"
+              />
+              <span class="min-w-0">
+                <span class="block font-medium text-neutral-900">{{ item.name }}</span>
+                <span class="block text-xs text-neutral-500">{{ item.subtitle }}</span>
+              </span>
+            </label>
+          </div>
+        </template>
+      </template>
+      <template #footer>
+        <button
+          class="btn-dialog-cancel"
+          type="button"
+          :disabled="copying"
+          @click="copyModalOpen = false"
+        >
+          Abbrechen
+        </button>
+        <button
+          class="btn-dialog-primary"
+          type="button"
+          :disabled="copying || !copySelectedIds.length"
+          @click="copySchedule"
+        >
+          {{ copying ? "Kopiere…" : `Auf ${copySelectedIds.length} ${copySelectedIds.length === 1 ? "Thermostat" : "Thermostate"} kopieren` }}
         </button>
       </template>
     </UiModal>

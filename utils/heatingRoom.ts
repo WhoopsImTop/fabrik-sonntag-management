@@ -18,6 +18,15 @@ export function unitsOfBuilding(building: any): any[] {
   return sortedUnits;
 }
 
+export function unitOfRoom(building: any, room: any): any | null {
+  if (room?.unit) return room.unit;
+  return (
+    (building?.units || []).find((unit: any) =>
+      (unit.rooms || []).some((r: any) => r.id === room?.id),
+    ) || null
+  );
+}
+
 export function roomsOfUnit(unit: any): any[] {
   return unit?.rooms || [];
 }
@@ -77,6 +86,30 @@ export function roomLabel(room: any): string {
   } else {
     return "";
   }
+}
+
+export function roomWithUnitLabel(building: any, room: any): string {
+  return [unitLabel(unitOfRoom(building, room)), roomLabel(room)]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+const compareNatural = (a: unknown, b: unknown) =>
+  String(a ?? "").localeCompare(String(b ?? ""), "de", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+// Sortiert nach Einheitsnummer, dann nach Raumnummer (bzw. Name als Fallback)
+export function sortRoomsByUnit(building: any, rooms: any[]): any[] {
+  return [...rooms].sort((a, b) => {
+    const unitA = unitOfRoom(building, a);
+    const unitB = unitOfRoom(building, b);
+    return (
+      compareNatural(unitA?.unit_number || unitA?.name, unitB?.unit_number || unitB?.name) ||
+      compareNatural(a.room_number || a.name, b.room_number || b.name)
+    );
+  });
 }
 
 export function locationLabel(building: any, room: any): string {

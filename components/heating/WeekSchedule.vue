@@ -97,7 +97,18 @@
       </div>
     </div>
 
-    <div class="mt-3 flex justify-end">
+    <div class="mt-3 flex flex-wrap justify-end gap-2">
+      <UiButton
+        v-if="copyable"
+        size="sm"
+        variant="outline"
+        color="neutral"
+        icon="i-lucide-copy"
+        :disabled="disabled || saving"
+        @click="copy"
+      >
+        {{ copyLabel }}
+      </UiButton>
       <UiButton size="sm" :disabled="disabled || saving" :loading="saving" @click="save">
         Heizplan speichern
       </UiButton>
@@ -177,8 +188,11 @@ const props = withDefaults(
     saving?: boolean;
     showEco?: boolean;
     hint?: string;
+    copyable?: boolean;
+    copyLabel?: string;
   }>(),
   {
+    copyLabel: "In andere Räume kopieren",
     intervals: () => [],
     ecoTemperature: 16,
     min: 5,
@@ -190,6 +204,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   save: [payload: { eco_temperature: number; intervals: ScheduleInterval[] }];
+  copy: [payload: { eco_temperature: number; intervals: ScheduleInterval[] }];
 }>();
 
 const days = DAYS;
@@ -476,8 +491,8 @@ function removeEditing() {
   editOpen.value = false;
 }
 
-function save() {
-  emit("save", {
+function currentPayload() {
+  return {
     eco_temperature: Number(ecoDraft.value) || 16,
     intervals: local.value.map(({ weekday, start, end, target_temperature }) => ({
       weekday,
@@ -485,6 +500,15 @@ function save() {
       end,
       target_temperature,
     })),
-  });
+  };
+}
+
+function save() {
+  emit("save", currentPayload());
+}
+
+// Kopiert den aktuell angezeigten Stand (inkl. ungespeicherter Änderungen)
+function copy() {
+  emit("copy", currentPayload());
 }
 </script>

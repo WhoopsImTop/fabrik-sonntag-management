@@ -4,7 +4,8 @@ import {
   buildingLabel,
   isLegacyDefaultBuilding,
   isLegacyDefaultRoom,
-  roomLabel,
+  roomWithUnitLabel,
+  sortRoomsByUnit,
   visibleRoomsOfBuilding,
 } from "~/utils/heatingRoom";
 
@@ -85,7 +86,7 @@ const tenantAccessLabels = (tenant: HeatingTenant) => {
       }
       labels.push(
         found
-          ? `${buildingLabel(found.building)} / ${roomLabel(found.room)}`
+          ? `${buildingLabel(found.building)} / ${roomWithUnitLabel(found.building, found.room)}`
           : `Raum ${grant.scope_id}`,
       );
     }
@@ -414,7 +415,7 @@ const tenantMenu = (tenant: HeatingTenant) => [
               class="mt-2 ml-7 space-y-1.5"
             >
               <label
-                v-for="room in visibleRoomsOfBuilding(building)"
+                v-for="room in sortRoomsByUnit(building, visibleRoomsOfBuilding(building))"
                 :key="room.id"
                 class="flex cursor-pointer items-center gap-2 text-sm text-neutral-700"
               >
@@ -424,7 +425,7 @@ const tenantMenu = (tenant: HeatingTenant) => [
                   :disabled="saving"
                   @change="onRoomChange(room, $event)"
                 />
-                {{ roomLabel(room) }}
+                {{ roomWithUnitLabel(building, room) }}
               </label>
             </div>
           </div>
