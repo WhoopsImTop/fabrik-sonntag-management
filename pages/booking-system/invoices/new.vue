@@ -709,6 +709,23 @@ const removeItem = (index: number) => {
     form.value.items[0] = emptyInvoiceLineItem({ unit: "Psch." });
 };
 
+// z.B. "1.10.2026, 08:00 bis 13:00 Uhr" bzw. "1.10.2026, 08:00 bis 2.10.2026, 16:00 Uhr"
+const formatBookingPeriod = (start?: string | null, end?: string | null) => {
+  if (!start) return "";
+  const tz = "Europe/Berlin";
+  const day = (d: Date) =>
+    d.toLocaleDateString("de-DE", { timeZone: tz, day: "numeric", month: "numeric", year: "numeric" });
+  const time = (d: Date) =>
+    d.toLocaleTimeString("de-DE", { timeZone: tz, hour: "2-digit", minute: "2-digit" });
+  const s = new Date(start);
+  if (!end) return day(s);
+  const e = new Date(end);
+  const from = `${day(s)}, ${time(s)}`;
+  return day(s) === day(e)
+    ? `${from} bis ${time(e)} Uhr`
+    : `${from} bis ${day(e)}, ${time(e)} Uhr`;
+};
+
 const populateFromBooking = () => {
   const bookingId = Number(route.query.bookingId);
   if (!bookingId || isNaN(bookingId)) return;
@@ -723,11 +740,10 @@ const populateFromBooking = () => {
     }
 
     // Attempt to prepopulate description and price based on resource/pricing
-    if (b.Resource && b.PricingPlan) {
-      form.value.items[0].description = `Buchung: ${b.Resource.name} - ${b.PricingPlan.name}`;
-      form.value.items[0].amount = b.PricingPlan.price;
-    } else if (b.Resource) {
-      form.value.items[0].description = `Buchung: ${b.Resource.name}`;
+    if (b.Resource) {
+      form.value.items[0].description = b.Resource.name;
+      form.value.items[0].long_description = formatBookingPeriod(b.start_at, b.end_at);
+      if (b.PricingPlan) form.value.items[0].amount = b.PricingPlan.price;
     }
 
     if (b.start_at) {

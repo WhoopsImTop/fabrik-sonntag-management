@@ -639,6 +639,27 @@ export const useHeatingApi = () => {
       return { entities: res?.data || [], mqtt_connected: !!res?.mqtt_connected };
     },
 
+    getScheduleWarnings: async () => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/admin/schedule-warnings`, {
+            headers: getAuthHeaders(),
+          }),
+        "getScheduleWarnings",
+      );
+      return (res?.data || []) as {
+        entity_id: number;
+        name: string;
+        room_id: number | null;
+        room_name: string | null;
+        expected_temperature: number;
+        reported_temperature: number | null;
+        attempts: number;
+        since: string;
+        last_attempt_at: string;
+      }[];
+    },
+
     getGrants: async (query: Record<string, unknown> = {}) => {
       const res = await apiCall(
         () =>

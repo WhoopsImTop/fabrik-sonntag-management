@@ -221,7 +221,7 @@
                 {{ invoice.invoice_number }}
               </div>
               <div class="text-xs text-neutral-500">
-                {{ formatDate(invoice.createdAt) }}
+                {{ formatDate(invoice.invoice_date) }}
               </div>
             </td>
             <td class="py-4 pr-4">

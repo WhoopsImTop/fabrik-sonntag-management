@@ -34,18 +34,51 @@ const props = defineProps<{
 }>();
 
 const heatingApi = useHeatingApi();
-const hours = ref(24);
+const startOfDay = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+// Angezeigter Tag (immer 00:00 – 23:59)
+const day = ref(startOfDay(new Date()));
+const dayStartMs = computed(() => day.value.getTime());
+const dayEndMs = computed(() => {
+  const d = new Date(day.value);
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+});
+const isToday = computed(() => dayStartMs.value === startOfDay(new Date()).getTime());
+const dayLabel = computed(() =>
+  day.value.toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }),
+);
+const dayInputValue = computed({
+  get: () => {
+    const d = day.value;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  },
+  set: (value: string) => {
+    if (!value) return;
+    const [y, m, d] = value.split("-").map(Number);
+    day.value = new Date(y, m - 1, d);
+  },
+});
+const shiftDay = (delta: number) => {
+  const d = new Date(day.value);
+  d.setDate(d.getDate() + delta);
+  if (d.getTime() > startOfDay(new Date()).getTime()) return;
+  day.value = d;
+};
 const loading = ref(false);
 const series = ref<HistorySeries>({});
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let chart: Chart<"line"> | null = null;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
-
-const ranges = [
-  { hours: 24, label: "24 Stunden" },
-  { hours: 168, label: "7 Tage" },
-  { hours: 720, label: "30 Tage" },
-];
 
 const toPoints = (rows?: SeriesPoint[]) =>
   (rows || []).map((row) => ({ x: Date.parse(row.t), y: row.v }));
@@ -60,15 +93,8 @@ const hasData = computed(() => {
 const formatTick = (value: number) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  if (hours.value <= 24) {
-    return date.toLocaleTimeString("de-DE", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-  return date.toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
+  if (value >= dayEndMs.value) return "23:59";
+  return date.toLocaleTimeString("de-DE", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -163,10 +189,23 @@ const buildChart = () => {
       scales: {
         x: {
           type: "linear",
+          min: dayStartMs.value,
+          max: dayEndMs.value,
+          // Feste Beschriftung: 00:00, 03:00, … 21:00 und Tagesende 23:59
+          afterBuildTicks: (axis: any) => {
+            const step = 3 * 3600 * 1000;
+            const ticks = [];
+            for (let t = dayStartMs.value; t <= dayEndMs.value; t += step) {
+              ticks.push({ value: t });
+            }
+            ticks.push({ value: dayEndMs.value });
+            axis.ticks = ticks;
+          },
           ticks: {
             color: "#737373",
             font: { size: 10 },
-            maxTicksLimit: 8,
+            autoSkip: false,
+            maxRotation: 0,
             callback: (value) => formatTick(Number(value)),
           },
           grid: { display: false },
@@ -198,9 +237,14 @@ const buildChart = () => {
 const load = async () => {
   if (!props.entityId && !props.roomId) return;
   loading.value = true;
+  // Für heute nur bis jetzt abfragen, damit der letzte Wert nicht in die Zukunft fortgeschrieben wird.
+  const query = {
+    from: new Date(dayStartMs.value).toISOString(),
+    to: new Date(Math.min(dayEndMs.value, Date.now())).toISOString(),
+  };
   const data = props.roomId
-    ? await heatingApi.getRoomHistory(props.roomId, { hours: hours.value })
-    : await heatingApi.getHistory(props.entityId as number, { hours: hours.value });
+    ? await heatingApi.getRoomHistory(props.roomId, query)
+    : await heatingApi.getHistory(props.entityId as number, query);
   series.value = data?.series || {};
   loading.value = false;
   await nextTick();
@@ -209,10 +253,12 @@ const load = async () => {
 
 onMounted(() => {
   load();
-  refreshTimer = setInterval(load, 60_000);
+  refreshTimer = setInterval(() => {
+    if (isToday.value) load();
+  }, 60_000);
 });
 
-watch([hours, () => props.entityId, () => props.roomId], load);
+watch([day, () => props.entityId, () => props.roomId], load);
 
 onBeforeUnmount(() => {
   if (refreshTimer) clearInterval(refreshTimer);
@@ -227,27 +273,44 @@ onBeforeUnmount(() => {
       <h2 class="font-semibold">
         {{ roomId ? "Verlauf (Mittelwert aller Thermostate)" : "Verlauf" }}
       </h2>
-      <div class="flex border border-neutral-200">
+      <div class="flex items-center gap-1">
         <button
-          v-for="range in ranges"
-          :key="range.hours"
           type="button"
-          class="px-2 py-1 text-xs"
-          :class="
-            hours === range.hours
-              ? 'bg-neutral-900 text-white'
-              : 'bg-white text-neutral-700 hover:bg-neutral-50'
-          "
-          @click="hours = range.hours"
+          class="border border-neutral-200 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-50"
+          aria-label="Vorheriger Tag"
+          @click="shiftDay(-1)"
         >
-          {{ range.label }}
+          ‹
+        </button>
+        <input
+          v-model="dayInputValue"
+          type="date"
+          :max="new Date().toISOString().slice(0, 10)"
+          :title="dayLabel"
+          class="border border-neutral-200 px-2 py-1 text-xs text-neutral-700"
+        />
+        <button
+          type="button"
+          class="border border-neutral-200 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-40"
+          :disabled="isToday"
+          aria-label="Nächster Tag"
+          @click="shiftDay(1)"
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          class="border border-neutral-200 px-2 py-1 text-xs text-neutral-700 hover:bg-neutral-50 disabled:opacity-40"
+          :disabled="isToday"
+          @click="day = startOfDay(new Date())"
+        >
+          Heute
         </button>
       </div>
     </div>
     <p v-if="loading && !hasData" class="text-sm text-neutral-500">Laden…</p>
     <p v-else-if="!hasData" class="text-sm text-neutral-500">
-      Noch keine Verlaufsdaten. Ist, Soll und Fenster-offen erscheinen, sobald
-      {{ roomId ? "die Thermostate Werte senden" : "das Thermostat Werte sendet" }}.
+      Keine Verlaufsdaten für {{ dayLabel }}.
     </p>
     <div v-show="hasData" class="h-64 w-full">
       <canvas ref="canvasRef" />

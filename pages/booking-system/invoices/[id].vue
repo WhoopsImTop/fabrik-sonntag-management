@@ -1,35 +1,81 @@
 <template>
-  <div v-if="loading" class="flex justify-center flex-col gap-4 items-center min-h-[50vh]">
-    <svg class="animate-spin w-8 h-8 text-neutral-400" fill="none" viewBox="0 0 24 24">
-      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-      <path class="opacity-75" fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-      </path>
+  <div
+    v-if="loading"
+    class="flex justify-center flex-col gap-4 items-center min-h-[50vh]"
+  >
+    <svg
+      class="animate-spin w-8 h-8 text-neutral-400"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        class="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        stroke-width="4"
+      ></circle>
+      <path
+        class="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
     </svg>
-    <p class="text-sm font-medium text-neutral-500 animate-pulse">Lade Daten...</p>
+    <p class="text-sm font-medium text-neutral-500 animate-pulse">
+      Lade Daten...
+    </p>
   </div>
 
   <div v-else-if="!invoice" class="text-center py-12">
-    <h2 class="text-xl font-semibold text-neutral-900">Rechnung nicht gefunden</h2>
-    <button @click="router.back()" class="mt-4 text-brand-accent underline underline-offset-2 hover:brightness-90">Zurück</button>
+    <h2 class="text-xl font-semibold text-neutral-900">
+      Rechnung nicht gefunden
+    </h2>
+    <button
+      @click="router.back()"
+      class="mt-4 text-brand-accent underline underline-offset-2 hover:brightness-90"
+    >
+      Zurück
+    </button>
   </div>
 
-  <div v-else class="max-w-7xl mx-auto space-y-6 pb-24 font-sans text-neutral-900">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+  <div
+    v-else
+    class="max-w-7xl mx-auto space-y-6 pb-24 font-sans text-neutral-900"
+  >
+    <div
+      class="flex flex-col md:flex-row md:items-end md:justify-between gap-4"
+    >
       <div class="space-y-1">
         <div class="flex items-center gap-2">
-          <button @click="router.back()"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-none hover:bg-neutral-100 text-neutral-500 transition-colors">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          <button
+            @click="router.back()"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-none hover:bg-neutral-100 text-neutral-500 transition-colors"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div class="flex items-center gap-3">
-            <h2 class="text-2xl font-semibold tracking-tight">{{ invoice.invoice_number }}</h2>
-            <span :class="[
-              'inline-flex items-center rounded-none border px-2.5 py-0.5 text-xs font-semibold transition-colors',
-              getStatusClass(invoice.status),
-            ]">
+            <h2 class="text-2xl font-semibold tracking-tight">
+              {{ invoice.invoice_number }}
+            </h2>
+            <span
+              :class="[
+                'inline-flex items-center rounded-none border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+                getStatusClass(invoice.status),
+              ]"
+            >
               {{ getStatusLabel(invoice.status) }}
             </span>
           </div>
@@ -38,24 +84,59 @@
 
       <div class="flex flex-wrap items-center gap-2">
         <template v-if="isEditing && isDraft">
-          <button type="button" class="btn-dialog-cancel" @click="toggleEditMode">
+          <button
+            type="button"
+            class="btn-dialog-cancel"
+            @click="toggleEditMode"
+          >
             Abbrechen
           </button>
-          <button type="button" class="btn-dialog-primary" :disabled="saving" @click="saveInvoice">
-            <svg v-if="saving" class="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
+          <button
+            type="button"
+            class="btn-dialog-primary"
+            :disabled="saving"
+            @click="saveInvoice"
+          >
+            <svg
+              v-if="saving"
+              class="mr-2 h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
             </svg>
             Speichern
           </button>
         </template>
         <template v-else>
-          <button type="button" class="btn-dialog-cancel gap-2" @click="handleDownload">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          <button
+            type="button"
+            class="btn-dialog-cancel gap-2"
+            @click="handleDownload"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
             </svg>
             PDF Laden
           </button>
@@ -105,55 +186,106 @@
 
     <div class="space-y-4">
       <div class="border border-neutral-200 bg-white text-neutral-950">
-        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100">
+        <div
+          class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100"
+        >
           <div class="min-w-0">
             <h3 class="font-semibold leading-none tracking-tight">Empfänger</h3>
             <p class="text-xs text-neutral-500 mt-1 truncate">
-              {{ isEditing && isDraft
-                ? 'Suche füllt vor — Änderungen gelten nur für diese Rechnung.'
-                : 'Empfänger dieser Rechnung (Snapshot).' }}
+              {{
+                isEditing && isDraft
+                  ? "Suche füllt vor — Änderungen gelten nur für diese Rechnung."
+                  : "Empfänger dieser Rechnung (Snapshot)."
+              }}
             </p>
           </div>
-          <span v-if="form.user_id || invoice.User"
-            class="shrink-0 inline-flex items-center rounded-none border border-emerald-200 px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800">Verknüpft</span>
-          <span v-else
-            class="shrink-0 inline-flex items-center rounded-none border border-neutral-200 px-2 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500">Ohne Konto</span>
+          <span
+            v-if="form.user_id || invoice.User"
+            class="shrink-0 inline-flex items-center rounded-none border border-emerald-200 px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800"
+            >Verknüpft</span
+          >
+          <span
+            v-else
+            class="shrink-0 inline-flex items-center rounded-none border border-neutral-200 px-2 py-0.5 text-xs font-semibold bg-neutral-100 text-neutral-500"
+            >Ohne Konto</span
+          >
         </div>
 
         <div class="p-4 space-y-3">
           <template v-if="isEditing && isDraft">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Kunden suchen</label>
-                <div v-if="form.user_id"
-                  class="flex h-9 items-center justify-between px-2 rounded-none border border-neutral-200 bg-neutral-50">
+                <label class="text-xs font-medium text-neutral-600"
+                  >Kunden suchen</label
+                >
+                <div
+                  v-if="form.user_id"
+                  class="flex h-9 items-center justify-between px-2 rounded-none border border-neutral-200 bg-neutral-50"
+                >
                   <div class="flex flex-col overflow-hidden min-w-0">
-                    <span class="text-sm font-medium truncate">{{ form.user_preview?.username || "User ID: " + form.user_id }}</span>
+                    <span class="text-sm font-medium truncate">{{
+                      form.user_preview?.username || "User ID: " + form.user_id
+                    }}</span>
                   </div>
-                  <button type="button" @click="removeUser"
+                  <button
+                    type="button"
+                    @click="removeUser"
                     class="shrink-0 text-neutral-400 hover:text-red-500 p-1"
-                    title="Verknüpfung entfernen">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    title="Verknüpfung entfernen"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
                 <div v-else class="relative group">
-                  <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    class="absolute left-2.5 top-2.5 h-4 w-4 text-neutral-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
-                  <input type="text" v-model="userSearchQuery" @input="handleUserSearch"
+                  <input
+                    type="text"
+                    v-model="userSearchQuery"
+                    @input="handleUserSearch"
                     class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 pl-9 text-sm transition-colors placeholder:text-neutral-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
-                    placeholder="Name, Firma oder E-Mail..." />
-                  <div v-if="userSearchResults.length > 0"
-                    class="absolute z-50 mt-1 w-full rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none">
+                    placeholder="Name, Firma oder E-Mail..."
+                  />
+                  <div
+                    v-if="userSearchResults.length > 0"
+                    class="absolute z-50 mt-1 w-full rounded-none border border-neutral-200 bg-white text-neutral-950 shadow-md outline-none"
+                  >
                     <div class="max-h-60 overflow-y-auto p-1">
-                      <div v-for="user in userSearchResults" :key="user.id" @click="selectUser(user)"
-                        class="relative flex cursor-pointer select-none flex-col px-2 py-1.5 text-sm outline-none hover:bg-neutral-100">
-                        <span class="font-medium">{{ user.details?.company || user.username }}</span>
-                        <span class="text-xs text-neutral-500">{{ user.email }}</span>
+                      <div
+                        v-for="user in userSearchResults"
+                        :key="user.id"
+                        @click="selectUser(user)"
+                        class="relative flex cursor-pointer select-none flex-col px-2 py-1.5 text-sm outline-none hover:bg-neutral-100"
+                      >
+                        <span class="font-medium">{{
+                          user.details?.company || user.username
+                        }}</span>
+                        <span class="text-xs text-neutral-500">{{
+                          user.email
+                        }}</span>
                       </div>
                     </div>
                   </div>
@@ -161,104 +293,201 @@
               </div>
 
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Kundentyp</label>
+                <label class="text-xs font-medium text-neutral-600"
+                  >Kundentyp</label
+                >
                 <div class="flex border border-neutral-200 overflow-hidden h-9">
-                  <button type="button" @click="customerForm.user_type = 'PERSON'"
-                    :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'PERSON' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Person</button>
-                  <button type="button" @click="customerForm.user_type = 'COMPANY'"
-                    :class="['flex-1 px-3 text-xs font-medium transition-colors', customerForm.user_type === 'COMPANY' ? 'bg-neutral-900 text-white' : 'bg-white text-neutral-700 hover:bg-neutral-50']">Firma</button>
+                  <button
+                    type="button"
+                    @click="customerForm.user_type = 'PERSON'"
+                    :class="[
+                      'flex-1 px-3 text-xs font-medium transition-colors',
+                      customerForm.user_type === 'PERSON'
+                        ? 'bg-neutral-900 text-white'
+                        : 'bg-white text-neutral-700 hover:bg-neutral-50',
+                    ]"
+                  >
+                    Person
+                  </button>
+                  <button
+                    type="button"
+                    @click="customerForm.user_type = 'COMPANY'"
+                    :class="[
+                      'flex-1 px-3 text-xs font-medium transition-colors',
+                      customerForm.user_type === 'COMPANY'
+                        ? 'bg-neutral-900 text-white'
+                        : 'bg-white text-neutral-700 hover:bg-neutral-50',
+                    ]"
+                  >
+                    Firma
+                  </button>
                 </div>
               </div>
 
-              <div v-if="customerForm.user_type === 'COMPANY'" class="flex items-end pb-2">
+              <div
+                v-if="customerForm.user_type === 'COMPANY'"
+                class="flex items-end pb-2"
+              >
                 <div class="flex items-center gap-2">
-                  <input id="edit_display_contact_person" type="checkbox" v-model="customerForm.display_contact_person"
-                    class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none" />
-                  <label for="edit_display_contact_person" class="text-xs text-neutral-700">Ansprechpartner anzeigen</label>
+                  <input
+                    id="edit_display_contact_person"
+                    type="checkbox"
+                    v-model="customerForm.display_contact_person"
+                    class="border-neutral-300 text-neutral-900 focus:ring-neutral-900 rounded-none"
+                  />
+                  <label
+                    for="edit_display_contact_person"
+                    class="text-xs text-neutral-700"
+                    >Ansprechpartner anzeigen</label
+                  >
                 </div>
               </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Vorname</label>
-                <input v-model="customerForm.first_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Vorname</label
+                >
+                <input
+                  v-model="customerForm.first_name"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Nachname</label>
-                <input v-model="customerForm.last_name"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Nachname</label
+                >
+                <input
+                  v-model="customerForm.last_name"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Firma</label>
-                <input v-model="customerForm.company"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Firma</label
+                >
+                <input
+                  v-model="customerForm.company"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">E-Mail</label>
-                <input v-model="customerForm.email" type="email"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >E-Mail</label
+                >
+                <input
+                  v-model="customerForm.email"
+                  type="email"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Telefon</label>
-                <input v-model="customerForm.phone" type="tel"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Telefon</label
+                >
+                <input
+                  v-model="customerForm.phone"
+                  type="tel"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-xs font-medium text-neutral-600">Land</label>
-                <input v-model="customerForm.country"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <input
+                  v-model="customerForm.country"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
               <div class="col-span-2 sm:col-span-3 space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Straße</label>
-                <input v-model="customerForm.street"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Straße</label
+                >
+                <input
+                  v-model="customerForm.street"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-xs font-medium text-neutral-600">Nr.</label>
-                <input v-model="customerForm.house_number"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <input
+                  v-model="customerForm.house_number"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-xs font-medium text-neutral-600">PLZ</label>
-                <input v-model="customerForm.zip_code"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <input
+                  v-model="customerForm.zip_code"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
               <div class="col-span-2 sm:col-span-1 space-y-1">
-                <label class="text-xs font-medium text-neutral-600">Stadt</label>
-                <input v-model="customerForm.city"
-                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
+                <label class="text-xs font-medium text-neutral-600"
+                  >Stadt</label
+                >
+                <input
+                  v-model="customerForm.city"
+                  class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+                />
               </div>
             </div>
           </template>
           <template v-else>
             <div class="space-y-3 text-sm">
-              <div v-if="form.user_id || invoice.User" class="flex items-center gap-3 pb-2 border-b border-neutral-100">
+              <div
+                v-if="form.user_id || invoice.User"
+                class="flex items-center gap-3 pb-2 border-b border-neutral-100"
+              >
                 <div
-                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900">
-                  {{ (invoice.User?.username || '?').substring(0, 2).toUpperCase() }}
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900"
+                >
+                  {{
+                    (invoice.User?.username || "?")
+                      .substring(0, 2)
+                      .toUpperCase()
+                  }}
                 </div>
                 <div class="overflow-hidden">
-                  <p class="font-medium text-neutral-900 truncate">{{ invoice.User?.username || 'Konto #' + form.user_id }}</p>
-                  <p class="text-xs text-neutral-500 truncate">Verknüpftes Kundenkonto</p>
+                  <p class="font-medium text-neutral-900 truncate">
+                    {{ invoice.User?.username || "Konto #" + form.user_id }}
+                  </p>
+                  <p class="text-xs text-neutral-500 truncate">
+                    Verknüpftes Kundenkonto
+                  </p>
                 </div>
               </div>
               <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
                   <div class="text-xs text-neutral-500">Typ</div>
-                  <div>{{ customerForm.user_type === 'COMPANY' ? 'Firma' : 'Person' }}</div>
+                  <div>
+                    {{
+                      customerForm.user_type === "COMPANY" ? "Firma" : "Person"
+                    }}
+                  </div>
                 </div>
                 <div v-if="customerForm.company">
                   <div class="text-xs text-neutral-500">Firma</div>
                   <div>{{ customerForm.company }}</div>
                 </div>
                 <div v-if="customerForm.first_name || customerForm.last_name">
-                  <div class="text-xs text-neutral-500">{{ customerForm.user_type === 'COMPANY' ? 'Ansprechpartner' : 'Name' }}</div>
-                  <div>{{ [customerForm.first_name, customerForm.last_name].filter(Boolean).join(' ') }}</div>
+                  <div class="text-xs text-neutral-500">
+                    {{
+                      customerForm.user_type === "COMPANY"
+                        ? "Ansprechpartner"
+                        : "Name"
+                    }}
+                  </div>
+                  <div>
+                    {{
+                      [customerForm.first_name, customerForm.last_name]
+                        .filter(Boolean)
+                        .join(" ")
+                    }}
+                  </div>
                 </div>
                 <div v-if="customerForm.email">
                   <div class="text-xs text-neutral-500">E-Mail</div>
@@ -271,11 +500,22 @@
                 <div v-if="customerForm.street || customerForm.city">
                   <div class="text-xs text-neutral-500">Adresse</div>
                   <div>
-                    {{ [customerForm.street, customerForm.house_number].filter(Boolean).join(' ') }}
+                    {{
+                      [customerForm.street, customerForm.house_number]
+                        .filter(Boolean)
+                        .join(" ")
+                    }}
                     <template v-if="customerForm.zip_code || customerForm.city">
-                      · {{ [customerForm.zip_code, customerForm.city].filter(Boolean).join(' ') }}
+                      ·
+                      {{
+                        [customerForm.zip_code, customerForm.city]
+                          .filter(Boolean)
+                          .join(" ")
+                      }}
                     </template>
-                    <template v-if="customerForm.country"> · {{ customerForm.country }}</template>
+                    <template v-if="customerForm.country">
+                      · {{ customerForm.country }}</template
+                    >
                   </div>
                 </div>
               </div>
@@ -286,48 +526,112 @@
 
       <div class="border border-neutral-200 bg-white text-neutral-950">
         <div class="px-4 py-3 border-b border-neutral-100">
-          <h3 class="font-semibold leading-none tracking-tight">Einstellungen</h3>
+          <h3 class="font-semibold leading-none tracking-tight">
+            Einstellungen
+          </h3>
         </div>
         <div class="p-4">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
             <div class="space-y-1">
               <label class="text-xs font-medium text-neutral-600">Status</label>
-              <select v-if="isEditing && isDraft" v-model="form.status"
-                class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-950">
+              <select
+                v-if="isEditing && isDraft"
+                v-model="form.status"
+                class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-950"
+              >
                 <option value="DRAFT">Entwurf</option>
                 <option value="SENT">Versendet</option>
                 <option value="PAID">Bezahlt</option>
                 <option value="OVERDUE">Überfällig</option>
               </select>
-              <div v-else
-                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500">
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500"
+              >
                 {{ getStatusLabel(invoice.status) }}
               </div>
             </div>
             <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-600">Rechnungsdatum</label>
-              <input v-if="isEditing && isDraft" type="date" v-model="form.invoice_date"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              <div v-else
-                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+              <label class="text-xs font-medium text-neutral-600"
+                >Rechnungsdatum</label
+              >
+              <input
+                v-if="isEditing && isDraft"
+                type="date"
+                v-model="form.invoice_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+              />
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500"
+              >
                 {{ formatDate(invoice.invoice_date || invoice.createdAt) }}
               </div>
             </div>
             <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-600">Fälligkeitsdatum</label>
-              <input v-if="isEditing && isDraft" type="date" v-model="form.due_date"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              <div v-else
-                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+              <label class="text-xs font-medium text-neutral-600"
+                >Leistungsbeginn</label
+              >
+              <input
+                v-if="isEditing && isDraft"
+                type="date"
+                v-model="form.service_period_start"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+              />
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500"
+              >
+                {{ formatDate(invoice.service_period_start) }}
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600"
+                >Leistungsende</label
+              >
+              <input
+                v-if="isEditing && isDraft"
+                type="date"
+                v-model="form.service_period_end"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+              />
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500"
+              >
+                {{ formatDate(invoice.service_period_end) }}
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-neutral-600"
+                >Fälligkeitsdatum</label
+              >
+              <input
+                v-if="isEditing && isDraft"
+                type="date"
+                v-model="form.due_date"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+              />
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500"
+              >
                 {{ formatDate(invoice.due_date) }}
               </div>
             </div>
             <div class="space-y-1">
               <label class="text-xs font-medium text-neutral-600">Tage</label>
-              <input v-if="isEditing" type="number" min="0" v-model="form.days_to_pay"
-                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950" />
-              <div v-else
-                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500">
+              <input
+                v-if="isEditing"
+                type="number"
+                min="0"
+                v-model="form.days_to_pay"
+                class="flex h-9 w-full rounded-none border border-neutral-200 bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950"
+              />
+              <div
+                v-else
+                class="flex h-9 w-full items-center rounded-none border border-neutral-200 bg-neutral-50 px-3 py-1 text-sm text-neutral-500"
+              >
                 {{ invoice.days_to_pay ?? form.days_to_pay }}
               </div>
             </div>
@@ -335,172 +639,323 @@
         </div>
       </div>
 
-      <div class="border border-neutral-200 bg-white text-neutral-950 ">
-        <div class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100">
+      <div class="border border-neutral-200 bg-white text-neutral-950">
+        <div
+          class="flex items-center justify-between p-6 pb-4 border-b border-neutral-100"
+        >
           <h3 class="font-semibold leading-none tracking-tight">Positionen</h3>
-          <button v-if="isEditing && isDraft" @click="addItem"
-              class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium  transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              Zeile hinzufügen
-            </button>
-          </div>
+          <button
+            v-if="isEditing && isDraft"
+            @click="addItem"
+            class="inline-flex h-8 items-center justify-center rounded-none border border-neutral-200 bg-white px-3 text-xs font-medium transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-950 gap-1.5"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Zeile hinzufügen
+          </button>
+        </div>
 
-          <div class="w-full">
-            <table class="w-full caption-bottom text-sm">
-              <thead class="[&_tr]:border-b border-neutral-200">
-                <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100">
-                  <th class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[35%]">Beschreibung</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[10%]">Menge</th>
-                  <th class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[12%]">Einheit</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]">Preis (€)</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[14%]">Rabatt</th>
-                  <th class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]">MwSt.</th>
-                  <th class="h-10 pl-1 pr-4 text-right align-middle font-medium text-neutral-500 w-[14%]">Gesamt</th>
-                  <th v-if="isEditing && isDraft" class="h-10 px-2 align-middle w-[5%]"></th>
-                </tr>
-              </thead>
-              <tbody class="[&_tr:last-child]:border-0">
-                <template v-for="(item, index) in form.items" :key="index">
-                  <tr class="border-b border-neutral-200 transition-colors hover:bg-neutral-50/50 group">
-                    <td class="pl-4 pr-1 py-2 align-middle relative">
-                      <div v-if="isEditing && isDraft" class="relative">
-                        <input v-model="item.description" @focus="focusRow(index)" @blur="blurRow(index)"
-                          class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
-                          placeholder="Leistung eingeben..." />
+        <div class="w-full">
+          <table class="w-full caption-bottom text-sm">
+            <thead class="[&_tr]:border-b border-neutral-200">
+              <tr
+                class="border-b border-neutral-200 transition-colors hover:bg-neutral-100/50 data-[state=selected]:bg-neutral-100"
+              >
+                <th
+                  class="h-10 pl-4 pr-1 text-left align-middle font-medium text-neutral-500 w-[35%]"
+                >
+                  Beschreibung
+                </th>
+                <th
+                  class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[10%]"
+                >
+                  Menge
+                </th>
+                <th
+                  class="h-10 px-1 text-left align-middle font-medium text-neutral-500 w-[12%]"
+                >
+                  Einheit
+                </th>
+                <th
+                  class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]"
+                >
+                  Preis (€)
+                </th>
+                <th
+                  class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[14%]"
+                >
+                  Rabatt
+                </th>
+                <th
+                  class="h-10 px-1 text-right align-middle font-medium text-neutral-500 w-[12%]"
+                >
+                  MwSt.
+                </th>
+                <th
+                  class="h-10 pl-1 pr-4 text-right align-middle font-medium text-neutral-500 w-[14%]"
+                >
+                  Gesamt
+                </th>
+                <th
+                  v-if="isEditing && isDraft"
+                  class="h-10 px-2 align-middle w-[5%]"
+                ></th>
+              </tr>
+            </thead>
+            <tbody class="[&_tr:last-child]:border-0">
+              <template v-for="(item, index) in form.items" :key="index">
+                <tr
+                  class="border-b border-neutral-200 transition-colors hover:bg-neutral-50/50 group"
+                >
+                  <td class="pl-4 pr-1 py-2 align-middle relative">
+                    <div v-if="isEditing && isDraft" class="relative">
+                      <input
+                        v-model="item.description"
+                        @focus="focusRow(index)"
+                        @blur="blurRow(index)"
+                        class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                        placeholder="Leistung eingeben..."
+                      />
 
-                        <div v-if="focusedRowIndex === index && suggestions.length > 0"
-                          class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-none border border-neutral-200 bg-white shadow-md outline-none"
-                          @mousedown.prevent>
-                          <div class="p-1 max-h-60 overflow-y-auto">
-                            <div v-for="sugg in suggestions" :key="sugg.id" @click="applySuggestion(index, sugg)"
-                              class="relative flex cursor-pointer select-none items-center justify-between  px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900">
-                              <div class="flex flex-col">
-                                <span class="font-medium">{{ sugg.label }}</span>
-                                <span class="text-[10px] text-neutral-500 uppercase">{{ sugg.type }}</span>
-                              </div>
-                              <span class="font-medium text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded">{{
-                                formatMoney(sugg.price) }} €</span>
+                      <div
+                        v-if="
+                          focusedRowIndex === index && suggestions.length > 0
+                        "
+                        class="absolute z-50 left-0 top-full mt-1 w-[300px] rounded-none border border-neutral-200 bg-white shadow-md outline-none"
+                        @mousedown.prevent
+                      >
+                        <div class="p-1 max-h-60 overflow-y-auto">
+                          <div
+                            v-for="sugg in suggestions"
+                            :key="sugg.id"
+                            @click="applySuggestion(index, sugg)"
+                            class="relative flex cursor-pointer select-none items-center justify-between px-2 py-1.5 text-sm outline-none hover:bg-neutral-100 hover:text-neutral-900"
+                          >
+                            <div class="flex flex-col">
+                              <span class="font-medium">{{ sugg.label }}</span>
+                              <span
+                                class="text-[10px] text-neutral-500 uppercase"
+                                >{{ sugg.type }}</span
+                              >
                             </div>
+                            <span
+                              class="font-medium text-neutral-900 bg-neutral-100 px-1.5 py-0.5 rounded"
+                              >{{ formatMoney(sugg.price) }} €</span
+                            >
                           </div>
                         </div>
                       </div>
-                      <span v-else class="font-medium text-neutral-900 block">{{ item.description }}</span>
-                    </td>
+                    </div>
+                    <span v-else class="font-medium text-neutral-900 block">{{
+                      item.description
+                    }}</span>
+                  </td>
 
-                    <td class="p-1 align-middle text-right">
-                      <input v-if="isEditing && isDraft" type="number" v-model="item.quantity" min="1"
-                        class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white" />
-                      <span v-else class="text-neutral-600 block">{{ item.quantity }}</span>
-                    </td>
+                  <td class="p-1 align-middle text-right">
+                    <input
+                      v-if="isEditing && isDraft"
+                      type="number"
+                      v-model="item.quantity"
+                      min="1"
+                      class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                    />
+                    <span v-else class="text-neutral-600 block">{{
+                      item.quantity
+                    }}</span>
+                  </td>
 
-                    <td class="p-1 align-middle text-left">
-                      <input v-if="isEditing && isDraft" type="text" v-model="item.unit"
-                        class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm text-neutral-500 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
-                        placeholder="Einheit" name="suggestions" list="suggestions" />
-                      <span v-else class="text-neutral-500 block">{{ item.unit || '-' }}</span>
-                    </td>
+                  <td class="p-1 align-middle text-left">
+                    <input
+                      v-if="isEditing && isDraft"
+                      type="text"
+                      v-model="item.unit"
+                      class="flex h-9 w-full rounded-none border border-neutral-200 px-3 py-1 text-sm text-neutral-500 focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                      placeholder="Einheit"
+                      name="suggestions"
+                      list="suggestions"
+                    />
+                    <span v-else class="text-neutral-500 block">{{
+                      item.unit || "-"
+                    }}</span>
+                  </td>
 
-                    <td class="p-1 align-middle text-right">
-                      <input v-if="isEditing && isDraft" type="number" v-model="item.amount" step="0.01"
-                        class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
-                        placeholder="0.00" />
-                      <span v-else class="text-neutral-900 block">{{ formatMoney(item.amount) }} €</span>
-                    </td>
+                  <td class="p-1 align-middle text-right">
+                    <input
+                      v-if="isEditing && isDraft"
+                      type="number"
+                      v-model="item.amount"
+                      step="0.01"
+                      class="flex h-9 w-full text-right rounded-none border border-neutral-200 px-3 py-1 text-sm focus-visible:outline-none focus:border-neutral-300 focus:bg-white"
+                      placeholder="0.00"
+                    />
+                    <span v-else class="text-neutral-900 block"
+                      >{{ formatMoney(item.amount) }} €</span
+                    >
+                  </td>
 
-                    <td class="p-1 align-middle text-right">
-                      <div v-if="isEditing && isDraft" class="flex h-9 w-full border border-neutral-200 focus-within:border-neutral-300">
-                        <input type="number" min="0" step="0.01"
-                          :value="discountDisplayValue(item)"
-                          @input="onDiscountInput(item, $event)"
-                          class="min-w-0 flex-1 bg-transparent px-2 py-1 text-right text-sm focus-visible:outline-none"
-                          placeholder="0" />
-                        <select :value="item.discount_type"
-                          @change="onDiscountTypeChange(item, $event)"
-                          class="w-10 shrink-0 border-l border-neutral-200 bg-transparent text-xs text-neutral-600 focus:outline-none">
-                          <option value="percent">%</option>
-                          <option value="amount">€</option>
-                        </select>
-                      </div>
-                      <span v-else class="text-neutral-600 block">{{ formatDiscountLabel(item) }}</span>
-                    </td>
-
-                    <td class="p-1 align-middle text-right">
-                      <select v-if="isEditing && isDraft" v-model="item.vat_rate"
-                        class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm  focus:outline-none focus:ring-1 focus:ring-neutral-950">
-                        <option :value="0">0%</option>
-                        <option :value="0.07">7%</option>
-                        <option :value="0.19">19%</option>
+                  <td class="p-1 align-middle text-right">
+                    <div
+                      v-if="isEditing && isDraft"
+                      class="flex h-9 w-full border border-neutral-200 focus-within:border-neutral-300"
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        :value="discountDisplayValue(item)"
+                        @input="onDiscountInput(item, $event)"
+                        class="min-w-0 flex-1 bg-transparent px-2 py-1 text-right text-sm focus-visible:outline-none"
+                        placeholder="0"
+                      />
+                      <select
+                        :value="item.discount_type"
+                        @change="onDiscountTypeChange(item, $event)"
+                        class="w-10 shrink-0 border-l border-neutral-200 bg-transparent text-xs text-neutral-600 focus:outline-none"
+                      >
+                        <option value="percent">%</option>
+                        <option value="amount">€</option>
                       </select>
-                      <span v-else class="text-neutral-600 block">{{ formatVatPercent(parseVatRateFromApi(item.vat_rate))
-                        }}%</span>
-                    </td>
+                    </div>
+                    <span v-else class="text-neutral-600 block">{{
+                      formatDiscountLabel(item)
+                    }}</span>
+                  </td>
 
-                    <td class="pl-1 pr-4 align-middle text-right font-medium">
-                      {{ formatMoney(lineItemNet(item)) }} €
-                    </td>
+                  <td class="p-1 align-middle text-right">
+                    <select
+                      v-if="isEditing && isDraft"
+                      v-model="item.vat_rate"
+                      class="flex h-9 w-full items-center justify-between rounded-none border border-neutral-200 px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-neutral-950"
+                    >
+                      <option :value="0">0%</option>
+                      <option :value="0.07">7%</option>
+                      <option :value="0.19">19%</option>
+                    </select>
+                    <span v-else class="text-neutral-600 block"
+                      >{{
+                        formatVatPercent(parseVatRateFromApi(item.vat_rate))
+                      }}%</span
+                    >
+                  </td>
 
-                    <td v-if="isEditing && isDraft" class="p-4 align-middle text-center relative">
-                      <button @click="removeItem(index)"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-none text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                        title="Löschen">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
+                  <td class="pl-1 pr-4 align-middle text-right font-medium">
+                    {{ formatMoney(lineItemNet(item)) }} €
+                  </td>
 
-                  <tr v-if="(isEditing && isDraft) || item.long_description"
-                    class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/50">
-                    <td :colspan="(isEditing && isDraft) ? 8 : 7" class="px-4 pb-1 pt-0">
-                      <div>
-                        <textarea v-if="isEditing && isDraft" v-model="item.long_description"
-                          placeholder="Zusätzliche Beschreibung (optional)..."
-                          class="w-full rounded-none border border-neutral-200 bg-white/50 p-2 text-sm text-neutral-600 focus-visible:outline-none focus:border-neutral-300 focus:bg-white transition-all"
-                          rows="2"></textarea>
-                        <p v-else-if="item.long_description"
-                          class="text-xs text-neutral-500 whitespace-pre-wrap leading-relaxed">
-                          {{ item.long_description }}
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                </template>
-
-                <tr v-if="isEditing && isDraft && form.items.length === 0">
-                  <td colspan="8" class="p-8 text-center text-sm text-neutral-500">
-                    Keine Positionen vorhanden. <button @click="addItem"
-                      class="text-neutral-900 font-medium hover:underline">Erste Zeile hinzufügen</button>
+                  <td
+                    v-if="isEditing && isDraft"
+                    class="p-4 align-middle text-center relative"
+                  >
+                    <button
+                      @click="removeItem(index)"
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-none text-neutral-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      title="Löschen"
+                    >
+                      <svg
+                        class="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                   </td>
                 </tr>
-              </tbody>
-            </table>
-          </div>
 
-          <div class="border-t border-neutral-200 bg-neutral-50 p-4 pb-6">
-            <div class="flex justify-end">
-              <div class="w-full max-w-md space-y-2">
-                <div class="flex justify-between text-sm text-neutral-500">
-                  <span>Netto</span>
-                  <span class="font-medium text-neutral-900">{{ formatMoney(totals.net) }} €</span>
-                </div>
-                <div v-for="row in totals.taxByRate" :key="row.rate"
-                  class="flex justify-between gap-3 text-sm text-neutral-500">
-                  <span class="text-left leading-snug">Umsatzsteuer {{ formatVatPercent(row.rate) }}% (aus {{
-                    formatMoney(row.net) }} € netto)</span>
-                  <span class="font-medium text-neutral-900 shrink-0">{{ formatMoney(row.amount) }} €</span>
-                </div>
-                <div class="flex justify-between pt-2 border-t border-neutral-200 mt-2 font-semibold text-base">
-                  <span>Gesamtbetrag</span>
-                  <span>{{ formatMoney(totals.gross) }} €</span>
-                </div>
+                <tr
+                  v-if="(isEditing && isDraft) || item.long_description"
+                  class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/50"
+                >
+                  <td
+                    :colspan="isEditing && isDraft ? 8 : 7"
+                    class="px-4 pb-1 pt-0"
+                  >
+                    <div>
+                      <textarea
+                        v-if="isEditing && isDraft"
+                        v-model="item.long_description"
+                        placeholder="Zusätzliche Beschreibung (optional)..."
+                        class="w-full rounded-none border border-neutral-200 bg-white/50 p-2 text-sm text-neutral-600 focus-visible:outline-none focus:border-neutral-300 focus:bg-white transition-all"
+                        rows="2"
+                      ></textarea>
+                      <p
+                        v-else-if="item.long_description"
+                        class="text-xs text-neutral-500 whitespace-pre-wrap leading-relaxed"
+                      >
+                        {{ item.long_description }}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+
+              <tr v-if="isEditing && isDraft && form.items.length === 0">
+                <td
+                  colspan="8"
+                  class="p-8 text-center text-sm text-neutral-500"
+                >
+                  Keine Positionen vorhanden.
+                  <button
+                    @click="addItem"
+                    class="text-neutral-900 font-medium hover:underline"
+                  >
+                    Erste Zeile hinzufügen
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="border-t border-neutral-200 bg-neutral-50 p-4 pb-6">
+          <div class="flex justify-end">
+            <div class="w-full max-w-md space-y-2">
+              <div class="flex justify-between text-sm text-neutral-500">
+                <span>Netto</span>
+                <span class="font-medium text-neutral-900"
+                  >{{ formatMoney(totals.net) }} €</span
+                >
+              </div>
+              <div
+                v-for="row in totals.taxByRate"
+                :key="row.rate"
+                class="flex justify-between gap-3 text-sm text-neutral-500"
+              >
+                <span class="text-left leading-snug"
+                  >Umsatzsteuer {{ formatVatPercent(row.rate) }}% (aus
+                  {{ formatMoney(row.net) }} € netto)</span
+                >
+                <span class="font-medium text-neutral-900 shrink-0"
+                  >{{ formatMoney(row.amount) }} €</span
+                >
+              </div>
+              <div
+                class="flex justify-between pt-2 border-t border-neutral-200 mt-2 font-semibold text-base"
+              >
+                <span>Gesamtbetrag</span>
+                <span>{{ formatMoney(totals.gross) }} €</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
   </div>
 
@@ -519,7 +974,9 @@
             <h3 class="dialog-title">Rechnung per E-Mail senden</h3>
             <p class="dialog-desc">
               Vorschau der PDF-Rechnung vor dem Versand an
-              <strong class="text-neutral-900">{{ emailRecipientLabel }}</strong>
+              <strong class="text-neutral-900">{{
+                emailRecipientLabel
+              }}</strong>
             </p>
           </div>
           <button
@@ -537,8 +994,19 @@
             v-if="emailPreviewLoading"
             class="flex min-h-[420px] flex-col items-center justify-center gap-3 text-sm text-neutral-500"
           >
-            <svg class="h-8 w-8 animate-spin text-neutral-400" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <svg
+              class="h-8 w-8 animate-spin text-neutral-400"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
               <path
                 class="opacity-75"
                 fill="currentColor"
@@ -573,7 +1041,9 @@
           <button
             type="button"
             class="btn-dialog-primary"
-            :disabled="emailSending || emailPreviewLoading || !!emailPreviewError"
+            :disabled="
+              emailSending || emailPreviewLoading || !!emailPreviewError
+            "
             @click="confirmSendInvoiceEmail"
           >
             <span
@@ -634,6 +1104,8 @@ const form = ref({
   status: "DRAFT",
   notes: "",
   invoice_date: "",
+  service_period_start: "",
+  service_period_end: "",
   due_date: "",
   days_to_pay: 7,
   user_id: null as number | null,
@@ -674,9 +1146,9 @@ const fillCustomerFormFromInvoice = (data: any) => {
       zip_code: data.recipient_zip_code || "",
       city: data.recipient_city || "",
       country: data.recipient_country || "",
-      user_type: (data.recipient_user_type === "COMPANY" ? "COMPANY" : "PERSON") as
-        | "PERSON"
-        | "COMPANY",
+      user_type: (data.recipient_user_type === "COMPANY"
+        ? "COMPANY"
+        : "PERSON") as "PERSON" | "COMPANY",
       display_contact_person: Boolean(data.recipient_display_contact_person),
     };
     return;
@@ -821,7 +1293,8 @@ const formatDate = (dateString: string) => {
 watch(
   () => [form.value.invoice_date, form.value.days_to_pay],
   ([newInvoiceDate, newDays]) => {
-    if (syncingPaymentTerms.value || !isEditing.value || !newInvoiceDate) return;
+    if (syncingPaymentTerms.value || !isEditing.value || !newInvoiceDate)
+      return;
     syncingPaymentTerms.value = true;
     form.value.due_date = calculateDueDateFromDays(
       String(newInvoiceDate),
@@ -834,7 +1307,13 @@ watch(
 watch(
   () => form.value.due_date,
   (newDueDate) => {
-    if (syncingPaymentTerms.value || !isEditing.value || !form.value.invoice_date || !newDueDate) return;
+    if (
+      syncingPaymentTerms.value ||
+      !isEditing.value ||
+      !form.value.invoice_date ||
+      !newDueDate
+    )
+      return;
     const days = calculateDaysBetweenDates(form.value.invoice_date, newDueDate);
     if (days === null) return;
     syncingPaymentTerms.value = true;
@@ -868,14 +1347,21 @@ const allProducts = computed(() => {
         }),
       );
     } else {
-      list.push({ id: `res-${r.id}`, label: r.name, price: 0, type: "Raum", unit: "Stunde" });
+      list.push({
+        id: `res-${r.id}`,
+        label: r.name,
+        price: 0,
+        type: "Raum",
+        unit: "Stunde",
+      });
     }
   });
   return list;
 });
 
 const suggestions = computed(() => {
-  if (focusedRowIndex.value === null || !isEditing.value || !isDraft.value) return [];
+  if (focusedRowIndex.value === null || !isEditing.value || !isDraft.value)
+    return [];
   const itemDesc = form.value.items[focusedRowIndex.value]?.description;
   const currentInput = itemDesc ? String(itemDesc).toLowerCase() : "";
   if (!currentInput) return allProducts.value;
@@ -940,9 +1426,18 @@ const loadInvoice = async () => {
       form.value.due_date = data.due_date
         ? new Date(data.due_date).toISOString().split("T")[0]
         : "";
+      form.value.service_period_start = data.service_period_start
+        ? new Date(data.service_period_start).toISOString().split("T")[0]
+        : "";
+      form.value.service_period_end = data.service_period_end
+        ? new Date(data.service_period_end).toISOString().split("T")[0]
+        : "";
       const calculatedDays =
         form.value.invoice_date && form.value.due_date
-          ? calculateDaysBetweenDates(form.value.invoice_date, form.value.due_date)
+          ? calculateDaysBetweenDates(
+              form.value.invoice_date,
+              form.value.due_date,
+            )
           : null;
       form.value.days_to_pay = Number.isFinite(Number(data.days_to_pay))
         ? Number(data.days_to_pay)
@@ -1044,8 +1539,6 @@ const applySuggestion = (index: number, suggestion: any) => {
   focusedRowIndex.value = null;
 };
 
-
-
 const translateUnit = (unit: string) => {
   switch (unit) {
     case "PER_HOUR":
@@ -1095,10 +1588,22 @@ const saveInvoice = async () => {
       saving.value = false;
       return;
     }
+
+    if (
+      form.value.service_period_start &&
+      form.value.service_period_end &&
+      form.value.service_period_end < form.value.service_period_start
+    ) {
+      alert("Leistungsende darf nicht vor Leistungsbeginn liegen.");
+      return;
+    }
+
     const res: any = await api.sales.update(Number(invoiceId), {
       status: form.value.status,
       notes: form.value.notes,
       invoice_date: form.value.invoice_date,
+      service_period_start: form.value.service_period_start || null,
+      service_period_end: form.value.service_period_end || null,
       due_date: form.value.due_date,
       days_to_pay: Number(form.value.days_to_pay),
       user_id: form.value.user_id,
@@ -1160,10 +1665,7 @@ const handleDelete = async () => {
     router.push("/booking-system/invoices");
   } catch (e: any) {
     console.error(e);
-    const message =
-      e?.data?.error ||
-      e?.message ||
-      "Fehler beim Löschen.";
+    const message = e?.data?.error || e?.message || "Fehler beim Löschen.";
     alert(message);
   }
 };

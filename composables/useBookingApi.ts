@@ -574,6 +574,21 @@ export const useBookingApi = () => {
       return result;
     },
 
+    updateAssignment: async (id: number, data: any) => {
+      const result = await apiCall(
+        () =>
+          $fetch(`${baseURL}/memberships/assign/${id}/update`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: data,
+          }),
+        "updateMembershipAssignment",
+      );
+      if (result)
+        toast.add({ title: "Erfolg", description: "", color: "green" });
+      return result;
+    },
+
     removeAssignment: async (id: number) => {
       const result = await apiCall(
         () =>
@@ -1020,7 +1035,10 @@ export const useBookingApi = () => {
     },
 
     // Update payment status
-    updatePaymentStatus: async (id: number, data: { paid_amount?: number; status?: string }) => {
+    updatePaymentStatus: async (
+      id: number,
+      data: { paid_amount?: number; status?: string },
+    ) => {
       const res = await apiCall(
         () =>
           $fetch(`${baseURL}/sales/invoices/${id}/payment`, {
@@ -1033,7 +1051,8 @@ export const useBookingApi = () => {
           }),
         "sales.updatePaymentStatus",
       );
-      if (res) toast.add({ title: "Zahlungsstatus aktualisiert", color: "green" });
+      if (res)
+        toast.add({ title: "Zahlungsstatus aktualisiert", color: "green" });
       return res;
     },
   };
@@ -1208,7 +1227,11 @@ export const useBookingApi = () => {
         "createTask",
       );
       if (result)
-        toast.add({ title: "Erfolg", description: "Task angelegt", color: "green" });
+        toast.add({
+          title: "Erfolg",
+          description: "Task angelegt",
+          color: "green",
+        });
       return result;
     },
 
@@ -1226,7 +1249,11 @@ export const useBookingApi = () => {
         "updateTask",
       );
       if (result)
-        toast.add({ title: "Erfolg", description: "Task gespeichert", color: "green" });
+        toast.add({
+          title: "Erfolg",
+          description: "Task gespeichert",
+          color: "green",
+        });
       return result;
     },
 
@@ -1240,7 +1267,11 @@ export const useBookingApi = () => {
         "deleteTask",
       );
       if (result !== null)
-        toast.add({ title: "Erfolg", description: "Task gelöscht", color: "green" });
+        toast.add({
+          title: "Erfolg",
+          description: "Task gelöscht",
+          color: "green",
+        });
       return result;
     },
 
@@ -1257,7 +1288,11 @@ export const useBookingApi = () => {
         "uploadTaskFile",
       );
       if (result)
-        toast.add({ title: "Erfolg", description: "Datei hochgeladen", color: "green" });
+        toast.add({
+          title: "Erfolg",
+          description: "Datei hochgeladen",
+          color: "green",
+        });
       return result;
     },
 
@@ -1271,7 +1306,11 @@ export const useBookingApi = () => {
         "deleteTaskFile",
       );
       if (result !== null)
-        toast.add({ title: "Erfolg", description: "Datei gelöscht", color: "green" });
+        toast.add({
+          title: "Erfolg",
+          description: "Datei gelöscht",
+          color: "green",
+        });
       return result;
     },
   };
@@ -1300,10 +1339,7 @@ export const useBookingApi = () => {
   };
 
   const auth = {
-    changePassword: async (
-      currentPassword: string,
-      newPassword: string,
-    ) => {
+    changePassword: async (currentPassword: string, newPassword: string) => {
       try {
         return await $fetch<{ message: string }>(
           `${baseURL}/auth/change-password`,

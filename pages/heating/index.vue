@@ -288,8 +288,23 @@ const removeRoom = async (room: any) => {
   await loadHierarchy();
 };
 
+// Nur Admins: Thermostate, die den Plan-Soll trotz Nachsendens nicht bestätigen
+const scheduleWarnings = ref<Awaited<ReturnType<typeof heatingApi.getScheduleWarnings>>>([]);
+const loadScheduleWarnings = async () => {
+  if (!isAdminUser.value) return;
+  scheduleWarnings.value = await heatingApi.getScheduleWarnings();
+};
+const formatSince = (iso: string) =>
+  new Date(iso).toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
 onMounted(() => {
   loadHierarchy();
+  loadScheduleWarnings();
 });
 </script>
 
@@ -298,6 +313,29 @@ onMounted(() => {
     <h1 class="text-3xl font-bold tracking-tight text-neutral-900">
       Heizungssteuerung
     </h1>
+
+    <div
+      v-if="isAdminUser && scheduleWarnings.length"
+      class="mt-4 border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+      role="alert"
+    >
+      <p class="font-semibold">
+        {{ scheduleWarnings.length }}
+        {{ scheduleWarnings.length === 1 ? "Thermostat reagiert" : "Thermostate reagieren" }}
+        nicht auf den Heizplan
+      </p>
+      <ul class="mt-1 space-y-0.5">
+        <li v-for="w in scheduleWarnings" :key="w.entity_id">
+          <NuxtLink :to="`/heating/entities/${w.entity_id}`" class="underline">
+            {{ w.name }}
+          </NuxtLink>
+          <span v-if="w.room_name"> ({{ w.room_name }})</span>
+          – Soll {{ w.expected_temperature }} °C, gemeldet
+          {{ w.reported_temperature ?? "–" }} °C, seit {{ formatSince(w.since) }}
+          ({{ w.attempts }} Versuche)
+        </li>
+      </ul>
+    </div>
 
     <div class="flex items-center mt-4 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
       <span

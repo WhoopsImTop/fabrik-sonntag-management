@@ -197,14 +197,16 @@ Shared Client: `useBookingApi`.
 | POST | `/welcome/send-welcome-email` | Welcome-Mail |
 | GET | `/communications` | Kommunikationshistorie |
 
-### `/booking-system/users` — `pages/booking-system/users/index.vue`
+### `/booking-system/users` und `/booking-system/customers` — `components/users/UserList.vue`
+
+Gemeinsame Liste (`mode="staff"` = Rolle ≠ user, `mode="customers"` = Rolle user).
 
 | Methode | API-Pfad | Kontext |
 |---------|----------|---------|
 | GET | `/users` | Nutzerliste |
 | POST | `/users` | Nutzer anlegen |
 
-### `/booking-system/users/:id` — `pages/booking-system/users/[id].vue`
+### `/booking-system/users/:id` (und `/booking-system/customers/:id`) — `pages/booking-system/users/[id].vue`
 
 | Methode | API-Pfad | Kontext |
 |---------|----------|---------|

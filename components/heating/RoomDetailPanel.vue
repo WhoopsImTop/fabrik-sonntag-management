@@ -166,6 +166,46 @@ const targetCap = computed(() =>
   (room.value?.schema || []).find((cap: any) => cap.key === "target_temperature"),
 );
 
+// --- FROSTSCHUTZ (gilt für alle Thermostate im Raum) ---
+
+const frostCap = computed(() =>
+  (room.value?.schema || []).find(
+    (cap: any) => cap.key === "frost_protection_temperature",
+  ),
+);
+
+const frostValues = computed(() =>
+  (room.value?.entities || [])
+    .map((entity: any) =>
+      Number(normalizeHeatingLastState(entity.last_state).frost_protection_temperature),
+    )
+    .filter((n: number) => Number.isFinite(n)),
+);
+
+const frostMixed = computed(
+  () =>
+    frostValues.value.length >= 2 &&
+    frostValues.value.some((n: number) => Math.abs(n - frostValues.value[0]) >= 0.05),
+);
+
+const frostSliderValue = computed(
+  () => frostValues.value[0] ?? frostCap.value?.min ?? 7,
+);
+
+const frostDisplay = computed(() => {
+  if (frostMixed.value) return "unterschiedlich";
+  if (!frostValues.value.length) return "–";
+  return `${frostValues.value[0].toLocaleString("de-DE", { maximumFractionDigits: 1 })} ${
+    frostCap.value?.unit || "°C"
+  }`;
+});
+
+const onFrostChange = (event: Event) => {
+  const value = Number((event.target as HTMLInputElement).value);
+  if (!Number.isFinite(value)) return;
+  onRoomChange("frost_protection_temperature", value);
+};
+
 const applyEntityUpdate = (updated: Record<string, any>) => {
   if (!room.value) return;
   const list = room.value.entities || [];
@@ -194,6 +234,18 @@ const onRoomChange = async (key: string, value: unknown) => {
   const res = await heatingApi.setRoomCapability(room.value.id, key, value);
   if (res?.data?.entities) {
     for (const entity of res.data.entities) applyEntityUpdate(entity);
+    if (res.errors?.length) {
+      const names = res.errors.map(
+        (err: any) =>
+          (room.value?.entities || []).find((entity: any) => entity.id === err.entity_id)
+            ?.name || `#${err.entity_id}`,
+      );
+      useToast().add({
+        title: "Nicht alle Thermostate erreicht",
+        description: names.join(", "),
+        color: "red",
+      });
+    }
   } else {
     for (const item of previous) {
       applyEntityUpdate({ id: item.id, last_state: { [key]: item.value } });
@@ -399,6 +451,31 @@ watch(
         @change="onRoomChange"
       />
       <HeatingHistoryChart v-if="(room.entities || []).length" :room-id="room.id" />
+    </div>
+
+    <div
+      v-if="frostCap"
+      class="mt-4 space-y-2 border border-neutral-200 rounded-xl bg-white px-4 py-3"
+    >
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-medium text-neutral-800">
+          {{ frostCap.label || "Frostschutz" }}
+        </p>
+        <p class="text-sm tabular-nums text-neutral-700">{{ frostDisplay }}</p>
+      </div>
+      <input
+        type="range"
+        class="w-full accent-neutral-900"
+        :min="frostCap.min ?? 4"
+        :max="frostCap.max ?? 35"
+        :step="frostCap.step ?? 0.5"
+        :value="frostSliderValue"
+        @change="onFrostChange"
+      />
+      <p class="text-xs text-neutral-500">
+        Wird auf alle Thermostate in diesem Raum übertragen. Darunter heizen die Geräte
+        immer, auch wenn sie ausgeschaltet sind.
+      </p>
     </div>
 
     <div class="mt-4 border border-neutral-200 rounded-xl bg-white">

@@ -66,6 +66,7 @@ const mainGroups = ref<NavItem[][]>([
       icon: IconContact,
       defaultOpen: false,
       children: [
+        { label: "Kunden", to: "/booking-system/customers" },
         { label: "Benutzer", to: "/booking-system/users" },
         { label: "Profil", to: "/booking-system/profile" },
       ],

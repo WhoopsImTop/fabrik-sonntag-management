@@ -4,7 +4,7 @@
       <button
         type="button"
         class="mb-4 inline-flex items-center gap-1.5 text-sm text-neutral-500 transition-colors hover:text-neutral-900"
-        @click="$router.push('/booking-system/users')"
+        @click="$router.push(listPath)"
       >
         <UiIcon name="i-lucide-chevron-left" class="size-4" />
         Zurück zur Übersicht
@@ -13,7 +13,9 @@
       <div v-if="loading" class="py-12 text-center text-neutral-500">Lädt…</div>
 
       <template v-else-if="user">
-        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div
+          class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between"
+        >
           <div class="flex items-center gap-4 min-w-0">
             <div
               class="flex size-12 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white"
@@ -21,13 +23,17 @@
               {{ avatarInitials }}
             </div>
             <div class="min-w-0">
-              <h1 class="truncate text-2xl md:text-3xl font-bold tracking-tight text-neutral-900">
+              <h1
+                class="truncate text-2xl md:text-3xl font-bold tracking-tight text-neutral-900"
+              >
                 {{ displayName }}
               </h1>
               <p class="mt-0.5 truncate text-neutral-500">
                 {{ user.email }}
                 <span class="text-neutral-300">·</span>
-                <span class="uppercase tracking-wide text-xs">{{ user.role || "user" }}</span>
+                <span class="uppercase tracking-wide text-xs">{{
+                  user.role || "user"
+                }}</span>
                 <template v-if="user.details?.user_type === 'COMPANY'">
                   <span class="text-neutral-300">·</span> Firma
                 </template>
@@ -38,11 +44,15 @@
           <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
             <div>
               <span class="text-neutral-500">Umsatz</span>
-              <span class="ml-2 font-semibold text-neutral-900">{{ totalRevenue }} €</span>
+              <span class="ml-2 font-semibold text-neutral-900"
+                >{{ totalRevenue }} €</span
+              >
             </div>
             <div>
               <span class="text-neutral-500">Buchungen</span>
-              <span class="ml-2 font-semibold text-neutral-900">{{ user.Bookings?.length || 0 }}</span>
+              <span class="ml-2 font-semibold text-neutral-900">{{
+                user.Bookings?.length || 0
+              }}</span>
             </div>
             <button
               type="button"
@@ -95,10 +105,7 @@
         </div>
 
         <div v-else-if="activeTab === 'communications'">
-          <CommunicationHistory
-            :user-id="user.id"
-            show-booking-link
-          />
+          <CommunicationHistory :user-id="user.id" show-booking-link />
         </div>
 
         <div v-else-if="activeTab === 'memberships'" class="space-y-4">
@@ -140,7 +147,12 @@
                   class="border-b border-neutral-100 transition-colors hover:bg-neutral-50/80"
                 >
                   <td class="py-4 pr-4 font-medium text-neutral-900">
-                    {{ ms.MembershipType?.name }}
+                    <div class="flex flex-col gap-1">
+                      <span>{{ ms.MembershipType?.name }}</span>
+                      <span class="text-sm text-neutral-400">{{
+                        ms.MembershipType?.description
+                      }}</span>
+                    </div>
                   </td>
                   <td class="py-4 pr-4 text-neutral-500">
                     Ab
@@ -153,7 +165,14 @@
                     <template v-else>Unbegrenzt</template>
                   </td>
                   <td class="py-4 pr-4 text-neutral-700">Aktiv</td>
-                  <td class="py-4 text-right">
+                  <td class="py-4 text-right"><button
+                      type="button"
+                      class="inline-flex items-center justify-center p-1.5 text-neutral-400 transition-colors hover:text-red-600"
+                      title="Mitgliedschaft bearbeiten"
+                      @click="showMembershipEditModal = true;"
+                    >
+                      <IconEdit class="size-4" />
+                    </button>
                     <button
                       type="button"
                       class="inline-flex items-center justify-center p-1.5 text-neutral-400 transition-colors hover:text-red-600"
@@ -211,22 +230,29 @@
                     {{ formatQuotaAvailable(quota) }}
                   </td>
                   <td class="py-4 pr-4 text-neutral-500">
-                    <span v-if="quota.Resource?.name">{{ quota.Resource.name }}</span>
+                    <span v-if="quota.Resource?.name">{{
+                      quota.Resource.name
+                    }}</span>
                     <span v-if="quota.PricingPlan?.name">
                       · {{ quota.PricingPlan.name }}
                     </span>
-                    <span v-if="quota.purchase_booking_id"> · Mit Rechnung</span>
+                    <span v-if="quota.purchase_booking_id">
+                      · Mit Rechnung</span
+                    >
                     <span v-else-if="quota.notes"> · {{ quota.notes }}</span>
                     <span v-else> · Kostenlos zugewiesen</span>
                   </td>
                   <td class="py-4 pr-4 text-neutral-500">
                     <template v-if="quota.valid_until">
                       Bis
-                      {{ new Date(quota.valid_until).toLocaleDateString("de-DE") }}
+                      {{
+                        new Date(quota.valid_until).toLocaleDateString("de-DE")
+                      }}
                     </template>
                     <template v-else>Unbegrenzt</template>
                   </td>
                   <td class="py-4 text-right">
+                    
                     <button
                       type="button"
                       class="inline-flex items-center justify-center p-1.5 text-neutral-400 transition-colors hover:text-red-600"
@@ -250,10 +276,7 @@
       role="dialog"
       aria-modal="true"
     >
-      <div
-        class="absolute inset-0"
-        @click="showMembershipModal = false"
-      ></div>
+      <div class="absolute inset-0" @click="showMembershipModal = false"></div>
       <div class="dialog-panel max-w-md">
         <div class="dialog-header">
           <div class="min-w-0 flex-1">
@@ -335,15 +358,102 @@
     </div>
 
     <div
-      v-if="showQuotaModal"
+      v-if="showMembershipEditModal"
       class="dialog-overlay"
       role="dialog"
       aria-modal="true"
     >
       <div
         class="absolute inset-0"
-        @click="showQuotaModal = false"
+        @click="showMembershipEditModal = false"
       ></div>
+      <div class="dialog-panel max-w-md">
+        <div class="dialog-header">
+          <div class="min-w-0 flex-1">
+            <h3 class="dialog-title">Mitgliedschaft bearbeiten</h3>
+            <p class="dialog-desc">
+              Wählen Sie einen Typ und den Gültigkeitszeitraum.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="dialog-close"
+            aria-label="Schließen"
+            @click="showMembershipEditModal = false"
+          >
+            <UiIcon name="i-lucide-x" class="size-5" />
+          </button>
+        </div>
+
+        <form @submit.prevent="updateAssignment">
+          <div class="dialog-body space-y-4">
+            <div>
+              <label class="dialog-label">Typ</label>
+              <select
+                v-model="newMembership.type_id"
+                required
+                class="dialog-input"
+              >
+                <option :value="null" disabled>Bitte wählen...</option>
+                <option
+                  v-for="type in membershipTypes"
+                  :key="type.id"
+                  :value="type.id"
+                >
+                  {{ type.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="dialog-label">Gültig ab</label>
+              <input
+                type="date"
+                v-model="newMembership.valid_from"
+                required
+                class="dialog-input"
+              />
+            </div>
+            <div>
+              <label class="dialog-label">Gültig bis (Optional)</label>
+              <input
+                type="date"
+                v-model="newMembership.valid_until"
+                class="dialog-input"
+                placeholder="Leer lassen für unbegrenzt"
+              />
+              <p class="mt-1 text-xs text-neutral-500">
+                Leer lassen für unbegrenzte Gültigkeit.
+              </p>
+            </div>
+          </div>
+
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn-dialog-cancel"
+              @click="showMembershipEditModal = false"
+            >
+              Abbrechen
+            </button>
+            <button
+              type="submit"
+              class="btn-dialog-primary"
+              :disabled="!newMembership.type_id"
+            >
+              Zuweisen
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      v-if="showQuotaModal"
+      class="dialog-overlay"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="absolute inset-0" @click="showQuotaModal = false"></div>
       <div class="dialog-panel max-w-md">
         <div class="dialog-header">
           <div class="min-w-0 flex-1">
@@ -366,7 +476,9 @@
           <div class="dialog-body space-y-4">
             <div>
               <label class="dialog-label">Art der Zuweisung</label>
-              <div class="flex rounded-none border border-neutral-200 overflow-hidden">
+              <div
+                class="flex rounded-none border border-neutral-200 overflow-hidden"
+              >
                 <button
                   type="button"
                   @click="newQuota.mode = 'free'"
@@ -424,10 +536,7 @@
               </div>
               <div>
                 <label class="dialog-label">Einheit</label>
-                <select
-                  v-model="newQuota.quota_unit"
-                  class="dialog-input"
-                >
+                <select v-model="newQuota.quota_unit" class="dialog-input">
                   <option value="BOOKINGS">Buchungen</option>
                   <option value="HOURS">Stunden</option>
                   <option value="DAYS">Tage</option>
@@ -523,7 +632,17 @@ const { confirm } = useConfirm();
 const loading = ref(true);
 const user = ref<any>(null);
 const activeTab = ref("stammdaten");
+const basePath = (role?: string) =>
+  role === "user" ? "/booking-system/customers" : "/booking-system/users";
+const listPath = computed(() =>
+  user.value
+    ? basePath(user.value.role)
+    : route.path.startsWith("/booking-system/customers")
+      ? "/booking-system/customers"
+      : "/booking-system/users",
+);
 const showMembershipModal = ref(false);
+const showMembershipEditModal = ref(false);
 const showQuotaModal = ref(false);
 const membershipTypes = ref<any[]>([]);
 const resources = ref<any[]>([]);
@@ -561,7 +680,8 @@ const displayName = computed(() => {
   if (details?.user_type === "COMPANY" && details.company) {
     return details.company;
   }
-  const name = `${details?.first_name || ""} ${details?.last_name || ""}`.trim();
+  const name =
+    `${details?.first_name || ""} ${details?.last_name || ""}`.trim();
   return name || user.value.username || "Nutzerprofil";
 });
 
@@ -595,8 +715,7 @@ const formatQuotaUnit = (unit?: string) => {
 };
 
 const formatQuotaAvailable = (quota: any) => {
-  const available =
-    Number(quota.quota_amount) - Number(quota.used_amount || 0);
+  const available = Number(quota.quota_amount) - Number(quota.used_amount || 0);
   return `${available}x ${formatQuotaUnit(quota.quota_unit)} verfügbar`;
 };
 
@@ -616,6 +735,10 @@ const loadUser = async () => {
     const userId = route.params.id;
     const data = await api.users.getOne(userId);
     if (data) user.value = data;
+    // Kanonische URL: Kunden unter /customers, alle anderen unter /users
+    if (data && !route.path.startsWith(`${basePath(data.role)}/`)) {
+      await router.replace(`${basePath(data.role)}/${route.params.id}`);
+    }
   } catch (e) {
     console.error(e);
   } finally {
@@ -687,6 +810,29 @@ const assignQuota = async () => {
   }
 };
 
+const updateAssignment = async () => {
+  try {
+    const result = await api.memberships.updateAssignment(user.value.id, {
+      user_id: user.value.id,
+      membership_type_id: newMembership.value.type_id,
+      valid_from: newMembership.value.valid_from,
+      valid_until: newMembership.value.valid_until || null,
+    });
+
+    if (result) {
+      showMembershipModal.value = false;
+      newMembership.value = {
+        type_id: null,
+        valid_from: new Date().toISOString().split("T")[0],
+        valid_until: "",
+      };
+      await loadUser();
+    }
+  } catch (e: any) {
+    console.error(e);
+  }
+};
+
 const assignMembership = async () => {
   try {
     const result = await api.memberships.assign({
@@ -753,7 +899,7 @@ const handleDeleteUser = async () => {
   try {
     const userId = route.params.id;
     await api.users.delete(userId);
-    router.push("/booking-system/users");
+    router.push(listPath.value);
   } catch (e) {
     window.alert(
       "Benutzer konnte nicht gelöscht werden. Es kann daran liegen, das es versendete Rechnungen gibt.",
