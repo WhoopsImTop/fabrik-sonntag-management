@@ -18,7 +18,7 @@
       :value="value"
     />
     <HeatingBooleanToggle
-      v-else-if="schema.key === 'child_lock' && writable"
+      v-else-if="schema.type === 'boolean' && writable"
       :schema="schema"
       :value="value"
       @change="onChange"

@@ -126,6 +126,23 @@ const onCapabilityChange = async (key: string, value: unknown) => {
   saving.value = false;
 };
 
+const strategySaving = ref(false);
+const onStrategyChange = async (value: string | null) => {
+  if (!entity.value) return;
+  strategySaving.value = true;
+  const res = await heatingApi.updateEntity(entity.value.id, {
+    control_strategy: value,
+  });
+  if (res?.data) entity.value = res.data;
+  strategySaving.value = false;
+};
+
+const showStrategy = computed(
+  () =>
+    isAdminUser.value &&
+    Boolean(entity.value?.supports_smart_control || entity.value?.supports_valve_control),
+);
+
 const onScheduleSave = async (payload: {
   eco_temperature: number;
   intervals: { weekday: number; start: string; end: string; target_temperature: number }[];
@@ -561,6 +578,12 @@ onUnmounted(() => {
           @change="onCapabilityChange"
         />
         <div class="space-y-2">
+          <HeatingControlStrategyPanel
+            v-if="showStrategy"
+            :entity="entity"
+            :disabled="strategySaving"
+            @change="onStrategyChange"
+          />
           <div
             v-for="cap in compactCaps"
             :key="cap.key"
@@ -574,14 +597,14 @@ onUnmounted(() => {
             />
           </div>
           <button
-            v-if="techCaps.length"
+            v-if="isAdminUser && techCaps.length"
             type="button"
             class="text-xs text-neutral-500 underline"
             @click="techOpen = !techOpen"
           >
             {{ techOpen ? "Technik ausblenden" : "Technik anzeigen" }}
           </button>
-          <div v-if="techOpen" class="grid gap-2 sm:grid-cols-2">
+          <div v-if="isAdminUser && techOpen" class="grid gap-2 sm:grid-cols-2">
             <div
               v-for="cap in techCaps"
               :key="cap.key"

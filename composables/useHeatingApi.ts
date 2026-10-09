@@ -76,6 +76,21 @@ export type HeatingEntity = {
   entity_number?: string | null;
   notes?: string | null;
   supports_native_schedule?: boolean;
+  control_strategy?: ControlStrategy;
+  control_strategy_setting?: ControlStrategy | null;
+  supports_smart_control?: boolean;
+  supports_valve_control?: boolean;
+  valve_control?: {
+    mode: "off" | "shadow" | "active";
+    applied: "direct" | "failsafe" | null;
+    target: number | null;
+    output: number | null;
+    integral: number | null;
+    last_sent: number | null;
+    last_sent_at: string | null;
+    sends_24h: number;
+    updated_at: string | null;
+  } | null;
   schema: CapabilitySchema[];
   deviceModel?: {
     id: number;
@@ -92,6 +107,8 @@ export type HeatingEntity = {
     time: string;
   } | null;
 };
+
+export type ControlStrategy = "device_pid" | "backend_pi" | "device_native";
 
 export type ZigbeeCoordinator = {
   id: number;
@@ -647,17 +664,26 @@ export const useHeatingApi = () => {
           }),
         "getScheduleWarnings",
       );
-      return (res?.data || []) as {
+      type WarningBase = {
         entity_id: number;
         name: string;
         room_id: number | null;
         room_name: string | null;
-        expected_temperature: number;
-        reported_temperature: number | null;
-        attempts: number;
         since: string;
-        last_attempt_at: string;
-      }[];
+      };
+      return (res?.data || []) as (
+        | (WarningBase & {
+            type: "unconfirmed";
+            expected_temperature: number;
+            reported_temperature: number | null;
+            attempts: number;
+            last_attempt_at: string;
+          })
+        | (WarningBase & {
+            type: "native_schedule_inactive";
+            system_mode: string | null;
+          })
+      )[];
     },
 
     getGrants: async (query: Record<string, unknown> = {}) => {

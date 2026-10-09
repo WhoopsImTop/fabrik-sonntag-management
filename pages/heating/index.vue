@@ -289,11 +289,18 @@ const removeRoom = async (room: any) => {
 };
 
 // Nur Admins: Thermostate, die den Plan-Soll trotz Nachsendens nicht bestätigen
+// sowie Thermostate, deren Gerätezeitplan wegen Modus "heat" nicht läuft
 const scheduleWarnings = ref<Awaited<ReturnType<typeof heatingApi.getScheduleWarnings>>>([]);
 const loadScheduleWarnings = async () => {
   if (!isAdminUser.value) return;
   scheduleWarnings.value = await heatingApi.getScheduleWarnings();
 };
+const unconfirmedWarnings = computed(() =>
+  scheduleWarnings.value.flatMap((w) => (w.type === "native_schedule_inactive" ? [] : [w])),
+);
+const inactiveScheduleWarnings = computed(() =>
+  scheduleWarnings.value.flatMap((w) => (w.type === "native_schedule_inactive" ? [w] : [])),
+);
 const formatSince = (iso: string) =>
   new Date(iso).toLocaleString("de-DE", {
     day: "2-digit",
@@ -315,17 +322,17 @@ onMounted(() => {
     </h1>
 
     <div
-      v-if="isAdminUser && scheduleWarnings.length"
+      v-if="isAdminUser && unconfirmedWarnings.length"
       class="mt-4 border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
       role="alert"
     >
       <p class="font-semibold">
-        {{ scheduleWarnings.length }}
-        {{ scheduleWarnings.length === 1 ? "Thermostat reagiert" : "Thermostate reagieren" }}
+        {{ unconfirmedWarnings.length }}
+        {{ unconfirmedWarnings.length === 1 ? "Thermostat reagiert" : "Thermostate reagieren" }}
         nicht auf den Heizplan
       </p>
       <ul class="mt-1 space-y-0.5">
-        <li v-for="w in scheduleWarnings" :key="w.entity_id">
+        <li v-for="w in unconfirmedWarnings" :key="w.entity_id">
           <NuxtLink :to="`/heating/entities/${w.entity_id}`" class="underline">
             {{ w.name }}
           </NuxtLink>
@@ -333,6 +340,31 @@ onMounted(() => {
           – Soll {{ w.expected_temperature }} °C, gemeldet
           {{ w.reported_temperature ?? "–" }} °C, seit {{ formatSince(w.since) }}
           ({{ w.attempts }} Versuche)
+        </li>
+      </ul>
+    </div>
+
+    <div
+      v-if="isAdminUser && inactiveScheduleWarnings.length"
+      class="mt-4 border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+      role="alert"
+    >
+      <p class="font-semibold">
+        {{ inactiveScheduleWarnings.length }}
+        {{ inactiveScheduleWarnings.length === 1 ? "Thermostat ignoriert" : "Thermostate ignorieren" }}
+        den eigenen Wochenplan
+      </p>
+      <p class="mt-0.5">
+        Das Gerät steht auf „Heizen“ statt „Auto“ und hält deshalb nur den eingestellten Sollwert.
+        Damit der Plan wieder läuft, den Modus auf „Auto“ stellen.
+      </p>
+      <ul class="mt-1 space-y-0.5">
+        <li v-for="w in inactiveScheduleWarnings" :key="w.entity_id">
+          <NuxtLink :to="`/heating/entities/${w.entity_id}`" class="underline">
+            {{ w.name }}
+          </NuxtLink>
+          <span v-if="w.room_name"> ({{ w.room_name }})</span>
+          – seit {{ formatSince(w.since) }}
         </li>
       </ul>
     </div>

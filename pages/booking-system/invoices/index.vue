@@ -484,9 +484,8 @@ const loadInvoices = async () => {
   try {
     let data = await api.sales.getAll();
     if (Array.isArray(data)) {
-      data.sort((a, b) => {
-        return a.invoice_date - b.invoice_date;
-      });
+      console.log(data)
+      data.sort((a, b) => new Date(b.invoice_date) - new Date(a.invoice_date));
       invoices.value = data;
       calculateStats(data);
     }
