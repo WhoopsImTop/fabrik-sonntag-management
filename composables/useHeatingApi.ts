@@ -65,10 +65,14 @@ export type HeatingEntity = {
   coordinator?: ZigbeeCoordinator | null;
   last_state: Record<string, unknown>;
   last_seen_at?: string | null;
+  // Nur gesetzt, solange der manuelle Eingriff tatsächlich gilt.
   manual_override?: {
     capabilityKey: string;
     value: unknown;
     setAt: string;
+    // device = direkt am Thermostat, app = Thermostat-Seite, room = Raumsteuerung
+    source: "device" | "app" | "room";
+    by?: string | null;
   } | null;
   offline?: boolean;
   battery?: number | null;
@@ -120,6 +124,16 @@ export type ZigbeeCoordinator = {
   last_seen_at?: string | null;
   permit_join?: boolean;
   remaining_seconds?: number | null;
+};
+
+export type BatteryNotificationSettings = {
+  battery_enabled: boolean;
+  battery_recipients: string[];
+  battery_threshold: number;
+  battery_interval_days: number;
+  battery_send_hour: number;
+  battery_last_checked_at?: string | null;
+  battery_last_sent_at?: string | null;
 };
 
 // Form der Einträge in `zigbee_coordinators` (Discovery + permit-join-Antwort):
@@ -631,6 +645,44 @@ export const useHeatingApi = () => {
         "deleteCoordinator",
       ),
 
+    getBatteryNotification: async (): Promise<{
+      data: BatteryNotificationSettings;
+      low_battery_count: number;
+    } | null> => {
+      const res = await apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/notifications/battery`, {
+            headers: getAuthHeaders(),
+          }),
+        "getBatteryNotification",
+      );
+      return res?.data
+        ? { data: res.data, low_battery_count: res.low_battery_count ?? 0 }
+        : null;
+    },
+
+    updateBatteryNotification: (data: Partial<BatteryNotificationSettings>) =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/notifications/battery`, {
+            method: "PUT",
+            headers: jsonHeaders(),
+            body: data,
+          }),
+        "updateBatteryNotification",
+      ),
+
+    sendBatteryNotificationTest: () =>
+      apiCall(
+        () =>
+          $fetch(`${baseURL}/heating/notifications/battery/test`, {
+            method: "POST",
+            headers: jsonHeaders(),
+            body: {},
+          }),
+        "sendBatteryNotificationTest",
+      ),
+
     bulkCreateEntities: (data: {
       room_id?: number | null;
       devices: Record<string, unknown>[];
@@ -680,8 +732,9 @@ export const useHeatingApi = () => {
             last_attempt_at: string;
           })
         | (WarningBase & {
-            type: "native_schedule_inactive";
-            system_mode: string | null;
+            type: "native_schedule_unsynced";
+            error: string | null;
+            last_attempt_at: string | null;
           })
       )[];
     },

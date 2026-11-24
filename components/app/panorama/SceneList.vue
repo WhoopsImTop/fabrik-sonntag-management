@@ -328,9 +328,8 @@ async function handleMediaSelected(ids) {
   showMediaLibrary.value = false;
   if (!id) return;
   try {
-    const res = await fetch(`${apiBase}/media`);
-    const all = await res.json();
-    newSceneMedia.value = all.find((m) => m.id === id) || { id, url: "" };
+    const res = await fetch(`${apiBase}/media/${id}`);
+    newSceneMedia.value = res.ok ? await res.json() : { id, url: "" };
   } catch {
     newSceneMedia.value = { id, url: "" };
   }

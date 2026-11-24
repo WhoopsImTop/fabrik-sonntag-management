@@ -381,15 +381,34 @@ const locationLabel = computed(() => {
   return formatLocation(current.unit?.building, current) || "Nicht zugeordnet";
 });
 
+const OVERRIDE_SOURCE_LABELS: Record<string, string> = {
+  device: "direkt am Thermostat",
+  app: "in der Thermostat-Ansicht",
+  room: "über die Raumsteuerung",
+};
+
 const overrideLabel = computed(() => {
-  if (!entity.value?.manual_override) return null;
-  const next = entity.value.next_schedule;
-  if (!next?.at) return "Manuell bis zum nächsten Heizplan";
-  return `Manuell bis ${new Date(next.at).toLocaleString("de-DE", {
-    weekday: "short",
+  const override = entity.value?.manual_override;
+  if (!override) return null;
+  const source = OVERRIDE_SOURCE_LABELS[override.source] || "manuell";
+  const by = override.by ? ` von ${override.by}` : "";
+  const value = Number(override.value);
+  const temperature = Number.isFinite(value)
+    ? ` auf ${value.toLocaleString("de-DE", { maximumFractionDigits: 1 })} °C`
+    : "";
+  const setAt = new Date(override.setAt).toLocaleTimeString("de-DE", {
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+  });
+  const next = entity.value?.next_schedule;
+  const until = next?.at
+    ? `bis ${new Date(next.at).toLocaleString("de-DE", {
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`
+    : "bis zum nächsten Heizplan";
+  return `Manuell ${source}${by}${temperature} gestellt (${setAt} Uhr) – gilt ${until}`;
 });
 
 const entitySchema = computed(() =>

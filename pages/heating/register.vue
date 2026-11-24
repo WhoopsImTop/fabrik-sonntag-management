@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { entityIsUnassigned, entityLocationLabel } from "~/utils/heatingRoom";
 import type {
+  BatteryNotificationSettings,
   HeatingEntity,
   ZigbeeCoordinator,
   ZigbeeCoordinatorStatus,
@@ -393,6 +394,15 @@ const toggleCoordinatorEnabled = async (coordinator: ZigbeeCoordinator) => {
 };
 
 const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
+  const deviceCount = coordinatorDeviceCount(coordinator.id);
+  const ok = await confirm.confirm({
+    title: "Koordinator löschen?",
+    message: deviceCount
+      ? `${coordinator.label} (${coordinator.base_topic}) wird gelöscht. ${deviceCount} Gerät(e) sind diesem Koordinator zugeordnet.`
+      : `${coordinator.label} (${coordinator.base_topic}) wird gelöscht.`,
+    variant: "danger",
+  });
+  if (!ok) return;
   const res = await heatingApi.deleteCoordinator(coordinator.id);
   if (res?.success) {
     coordinators.value = await heatingApi.getCoordinators();
@@ -403,6 +413,211 @@ const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
     });
   }
 };
+
+const coordinatorDeviceCount = (id: number) =>
+  entities.value.filter((e) => e.coordinator_id === id).length;
+
+const isPairing = (coordinator: ZigbeeCoordinator) =>
+  (pairingState.value[coordinator.id] ?? 0) > 0;
+
+const coordinatorMenu = (coordinator: ZigbeeCoordinator) => [
+  [
+    {
+      label: coordinator.enabled ? "Deaktivieren" : "Aktivieren",
+      icon: coordinator.enabled ? "i-lucide-power-off" : "i-lucide-power",
+      onSelect: () => toggleCoordinatorEnabled(coordinator),
+    },
+  ],
+  [
+    {
+      label: "Löschen",
+      icon: "i-lucide-trash-2",
+      color: "error",
+      onSelect: () => removeCoordinator(coordinator),
+    },
+  ],
+];
+
+const entityMenu = (entity: HeatingEntity) => [
+  [
+    {
+      label: "Details öffnen",
+      icon: "i-lucide-external-link",
+      to: `/heating/entities/${entity.id}`,
+    },
+    {
+      label: "Umbenennen",
+      icon: "i-lucide-pencil",
+      onSelect: () => startEditName(entity),
+    },
+  ],
+  [
+    {
+      label: "Löschen",
+      icon: "i-lucide-trash-2",
+      color: "error",
+      onSelect: () => removeEntity(entity),
+    },
+  ],
+];
+
+// --- Batteriewarnung per E-Mail -------------------------------------------
+
+const INTERVAL_OPTIONS = [
+  { value: 1, label: "Täglich" },
+  { value: 7, label: "Wöchentlich" },
+  { value: 14, label: "Alle 2 Wochen" },
+  { value: 30, label: "Monatlich" },
+];
+
+const batterySettings = ref<BatteryNotificationSettings | null>(null);
+const lowBatteryCount = ref(0);
+const batteryModalOpen = ref(false);
+const batterySaving = ref(false);
+const batteryTesting = ref(false);
+const batteryForm = ref<BatteryNotificationSettings>({
+  battery_enabled: false,
+  battery_recipients: [],
+  battery_threshold: 20,
+  battery_interval_days: 7,
+  battery_send_hour: 8,
+});
+const recipientDraft = ref("");
+
+const intervalLabel = (days: number) =>
+  INTERVAL_OPTIONS.find((o) => o.value === days)?.label ?? `Alle ${days} Tage`;
+
+const formatDateTime = (value?: string | null) =>
+  value
+    ? new Date(value).toLocaleString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "—";
+
+const loadBatterySettings = async () => {
+  const res = await heatingApi.getBatteryNotification();
+  if (!res) return;
+  batterySettings.value = res.data;
+  lowBatteryCount.value = res.low_battery_count;
+};
+
+const openBatterySettings = () => {
+  const current = batterySettings.value;
+  batteryForm.value = {
+    battery_enabled: current?.battery_enabled ?? false,
+    battery_recipients: [...(current?.battery_recipients ?? [])],
+    battery_threshold: current?.battery_threshold ?? 20,
+    battery_interval_days: current?.battery_interval_days ?? 7,
+    battery_send_hour: current?.battery_send_hour ?? 8,
+  };
+  recipientDraft.value = "";
+  batteryModalOpen.value = true;
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Übernimmt den Eingabetext (auch mehrere, per Komma/Leerzeichen getrennt).
+// Gibt false zurück, wenn etwas Ungültiges im Feld stehen bleibt.
+const commitRecipientDraft = () => {
+  const parts = recipientDraft.value
+    .split(/[\s,;]+/)
+    .map((p) => p.trim().toLowerCase())
+    .filter(Boolean);
+  const invalid = parts.filter((p) => !EMAIL_PATTERN.test(p));
+  const valid = parts.filter((p) => EMAIL_PATTERN.test(p));
+  batteryForm.value.battery_recipients = [
+    ...new Set([...batteryForm.value.battery_recipients, ...valid]),
+  ];
+  recipientDraft.value = invalid.join(", ");
+  if (invalid.length) {
+    toast.add({
+      title: "Ungültige E-Mail-Adresse",
+      description: invalid.join(", "),
+      color: "red",
+    });
+    return false;
+  }
+  return true;
+};
+
+const onRecipientKeydown = (event: KeyboardEvent) => {
+  if (event.key === "Enter" || event.key === ",") {
+    event.preventDefault();
+    commitRecipientDraft();
+    return;
+  }
+  // Backspace im leeren Feld entfernt den letzten Empfänger.
+  if (event.key === "Backspace" && !recipientDraft.value) {
+    batteryForm.value.battery_recipients =
+      batteryForm.value.battery_recipients.slice(0, -1);
+  }
+};
+
+const removeRecipient = (mail: string) => {
+  batteryForm.value.battery_recipients =
+    batteryForm.value.battery_recipients.filter((m) => m !== mail);
+};
+
+const saveBatterySettings = async () => {
+  if (!commitRecipientDraft()) return false;
+  if (
+    batteryForm.value.battery_enabled &&
+    !batteryForm.value.battery_recipients.length
+  ) {
+    toast.add({
+      title: "Mindestens einen Empfänger angeben",
+      description: "",
+      color: "red",
+    });
+    return false;
+  }
+  batterySaving.value = true;
+  const res = await heatingApi.updateBatteryNotification({
+    battery_enabled: batteryForm.value.battery_enabled,
+    battery_recipients: batteryForm.value.battery_recipients,
+    battery_threshold: Number(batteryForm.value.battery_threshold),
+    battery_interval_days: Number(batteryForm.value.battery_interval_days),
+    battery_send_hour: Number(batteryForm.value.battery_send_hour),
+  });
+  batterySaving.value = false;
+  if (!res?.data) return false;
+  await loadBatterySettings();
+  return true;
+};
+
+const submitBatterySettings = async () => {
+  if (!(await saveBatterySettings())) return;
+  batteryModalOpen.value = false;
+  toast.add({
+    title: "Benachrichtigung gespeichert",
+    description: "",
+    color: "primary",
+  });
+};
+
+const sendBatteryTest = async () => {
+  // Erst speichern, damit Empfänger/Schwelle der Test-Mail dem Formular entsprechen.
+  if (!(await saveBatterySettings())) return;
+  if (!batteryForm.value.battery_recipients.length) {
+    toast.add({ title: "Keine Empfänger hinterlegt", description: "", color: "red" });
+    return;
+  }
+  batteryTesting.value = true;
+  const res = await heatingApi.sendBatteryNotificationTest();
+  batteryTesting.value = false;
+  if (!res?.success) return;
+  toast.add({
+    title: "Test-Mail versendet",
+    description: `${res.affected} Gerät(e) mit schwacher Batterie enthalten.`,
+    color: "primary",
+  });
+};
+
+onMounted(loadBatterySettings);
 </script>
 
 <template>
@@ -464,79 +679,127 @@ const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
         (Base-Topic, z. B. „zigbee2mqtt_Haus9“).
       </p>
 
-      <div v-else class="grid gap-3 sm:grid-cols-2">
-        <div
+      <ul v-else class="divide-y divide-neutral-100 border border-neutral-200">
+        <li
           v-for="coordinator in coordinators"
           :key="coordinator.id"
-          class="border p-3"
-          :class="
-            (pairingState[coordinator.id] ?? 0) > 0
-              ? 'border-emerald-300 bg-emerald-50'
-              : 'border-neutral-200'
-          "
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 transition-colors"
+          :class="isPairing(coordinator) ? 'bg-emerald-50' : ''"
         >
-          <div class="mb-1 flex items-center justify-between gap-2">
-            <div>
-              <p class="text-sm font-medium text-neutral-900">
+          <span
+            class="size-2 shrink-0 rounded-full"
+            :class="
+              !coordinator.enabled
+                ? 'bg-neutral-300'
+                : isPairing(coordinator)
+                  ? 'animate-pulse bg-emerald-500'
+                  : 'bg-emerald-600'
+            "
+            :title="coordinator.enabled ? 'Aktiv' : 'Deaktiviert'"
+          />
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2">
+              <span
+                class="truncate text-sm font-medium"
+                :class="coordinator.enabled ? 'text-neutral-900' : 'text-neutral-500'"
+              >
                 {{ coordinator.label }}
-              </p>
-              <p class="font-mono text-xs text-neutral-500">
-                {{ coordinator.base_topic }}
-              </p>
+              </span>
+              <span
+                v-if="!coordinator.enabled"
+                class="border border-neutral-300 px-1.5 py-0.5 text-[11px] leading-none text-neutral-500"
+              >
+                Deaktiviert
+              </span>
             </div>
-            <span
-              v-if="!coordinator.enabled"
-              class="border border-neutral-300 px-1.5 py-0.5 text-xs text-neutral-500"
-            >
-              Deaktiviert
+            <span class="font-mono text-xs text-neutral-500">
+              {{ coordinator.base_topic }}
             </span>
           </div>
 
-          <p class="mb-2 text-xs text-neutral-600">
-            <template v-if="(pairingState[coordinator.id] ?? 0) > 0">
-              Netzwerk offen — noch
-              {{ formatRemaining(pairingState[coordinator.id]) }}
-            </template>
-            <template v-else> Netzwerk geschlossen </template>
-          </p>
+          <span class="w-20 text-xs text-neutral-500 tabular-nums">
+            {{ coordinatorDeviceCount(coordinator.id) }} Gerät{{
+              coordinatorDeviceCount(coordinator.id) === 1 ? "" : "e"
+            }}
+          </span>
 
-          <div class="flex flex-wrap gap-2">
+          <span
+            class="w-28 text-xs tabular-nums"
+            :class="isPairing(coordinator) ? 'font-medium text-emerald-700' : 'text-neutral-500'"
+          >
+            <template v-if="isPairing(coordinator)">
+              Offen · {{ formatRemaining(pairingState[coordinator.id]) }}
+            </template>
+            <template v-else>Geschlossen</template>
+          </span>
+
+          <div class="flex items-center gap-1">
             <UiButton
-              v-if="(pairingState[coordinator.id] ?? 0) > 0"
+              v-if="isPairing(coordinator)"
               size="xs"
               variant="outline"
               :loading="pairingBusyId === coordinator.id"
               @click="stopPairing(coordinator.id)"
             >
-              Anlernen beenden
+              Beenden
             </UiButton>
             <UiButton
               v-else
               size="xs"
+              variant="outline"
               icon="i-lucide-radio"
               :loading="pairingBusyId === coordinator.id"
               :disabled="!mqttConnected || !coordinator.enabled"
               @click="startPairing(coordinator.id)"
             >
-              2 Min. anlernen
+              Anlernen
             </UiButton>
-            <button
-              type="button"
-              class="text-xs text-neutral-500 underline"
-              @click="toggleCoordinatorEnabled(coordinator)"
+            <UiDropdownMenu
+              :items="coordinatorMenu(coordinator)"
+              :ui="{ content: 'w-44' }"
             >
-              {{ coordinator.enabled ? "deaktivieren" : "aktivieren" }}
-            </button>
-            <button
-              type="button"
-              class="text-xs text-red-600 underline"
-              @click="removeCoordinator(coordinator)"
-            >
-              löschen
-            </button>
+              <UiButton
+                size="xs"
+                variant="ghost"
+                icon="i-lucide-ellipsis-vertical"
+                aria-label="Weitere Aktionen"
+              />
+            </UiDropdownMenu>
           </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3 border border-neutral-200 p-4">
+      <div class="flex min-w-0 items-start gap-3">
+        <UiIcon
+          name="i-lucide-battery-warning"
+          class="mt-0.5 size-5 shrink-0"
+          :class="lowBatteryCount ? 'text-red-600' : 'text-neutral-400'"
+        />
+        <div class="min-w-0">
+          <h2 class="font-semibold">Batteriewarnung per E-Mail</h2>
+          <p class="text-sm text-neutral-500">
+            <template v-if="batterySettings?.battery_enabled">
+              {{ intervalLabel(batterySettings.battery_interval_days) }} ab
+              {{ String(batterySettings.battery_send_hour).padStart(2, "0") }}:00 Uhr
+              an {{ batterySettings.battery_recipients.length }} Empfänger ·
+              Schwelle {{ batterySettings.battery_threshold }} %
+            </template>
+            <template v-else>Nicht aktiv</template>
+          </p>
+          <p class="mt-0.5 text-xs" :class="lowBatteryCount ? 'text-red-600' : 'text-neutral-500'">
+            Aktuell {{ lowBatteryCount }} Gerät(e) unter der Schwelle<template
+              v-if="batterySettings?.battery_last_sent_at"
+            >
+              · zuletzt gesendet {{ formatDateTime(batterySettings.battery_last_sent_at) }}</template>
+          </p>
         </div>
       </div>
+      <UiButton size="xs" variant="outline" icon="i-lucide-bell" @click="openBatterySettings">
+        Einstellen
+      </UiButton>
     </div>
 
     <p v-if="!models.length" class="mb-6 text-sm text-amber-800">
@@ -629,14 +892,19 @@ const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
       :data="entities"
     >
       <template #actions-cell="{ row }">
-        <button
-          type="button"
-          class="text-neutral-400 hover:text-red-600"
-          aria-label="Gerät löschen"
-          @click="removeEntity(row.original)"
-        >
-          <UiIcon name="i-lucide-trash-2" class="size-4" />
-        </button>
+        <div class="flex justify-end">
+          <UiDropdownMenu
+            :items="entityMenu(row.original)"
+            :ui="{ content: 'w-44' }"
+          >
+            <UiButton
+              size="xs"
+              variant="ghost"
+              icon="i-lucide-ellipsis-vertical"
+              aria-label="Weitere Aktionen"
+            />
+          </UiDropdownMenu>
+        </div>
       </template>
       <template #name-cell="{ row }">
         <div v-if="editingId === row.original.id" class="max-w-xs">
@@ -675,7 +943,14 @@ const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
         }}</span>
       </template>
       <template #battery-cell="{ row }">
-        <span :class="row.original.battery < 10 ? 'text-red-600' : ''"
+        <span v-if="row.original.battery == null" class="text-neutral-400">—</span>
+        <span
+          v-else
+          :class="
+            row.original.battery <= (batterySettings?.battery_threshold ?? 10)
+              ? 'font-medium text-red-600'
+              : ''
+          "
           >{{ row.original.battery }} %</span
         >
       </template>
@@ -778,6 +1053,121 @@ const removeCoordinator = async (coordinator: ZigbeeCoordinator) => {
           @click="saveCoordinator"
         >
           Anlegen
+        </button>
+      </template>
+    </UiModal>
+
+    <UiModal
+      v-model:open="batteryModalOpen"
+      title="Batteriewarnung per E-Mail"
+      max-width="md"
+    >
+      <template #body>
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-medium text-neutral-900">Benachrichtigung aktiv</p>
+            <p class="text-xs text-neutral-500">
+              Es wird nur gesendet, wenn mindestens ein Gerät betroffen ist.
+            </p>
+          </div>
+          <UiToggle v-model="batteryForm.battery_enabled" />
+        </div>
+
+        <label class="dialog-label">Empfänger</label>
+        <div
+          class="dialog-input mb-1 flex min-h-10 flex-wrap items-center gap-1.5 py-1.5"
+        >
+          <span
+            v-for="mail in batteryForm.battery_recipients"
+            :key="mail"
+            class="inline-flex items-center gap-1 border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-xs text-neutral-700"
+          >
+            {{ mail }}
+            <button
+              type="button"
+              class="text-neutral-400 hover:text-red-600"
+              :aria-label="`${mail} entfernen`"
+              @click="removeRecipient(mail)"
+            >
+              <UiIcon name="i-lucide-x" class="size-3" />
+            </button>
+          </span>
+          <input
+            v-model="recipientDraft"
+            type="email"
+            class="min-w-40 flex-1 border-0 bg-transparent p-0 text-sm outline-none focus:ring-0"
+            placeholder="name@beispiel.de"
+            @keydown="onRecipientKeydown"
+            @blur="recipientDraft && commitRecipientDraft()"
+          />
+        </div>
+        <p class="mb-4 text-xs text-neutral-500">
+          Mit Enter oder Komma hinzufügen.
+        </p>
+
+        <div class="mb-4 grid grid-cols-2 gap-3">
+          <div>
+            <label class="dialog-label">Intervall</label>
+            <select v-model.number="batteryForm.battery_interval_days" class="dialog-input">
+              <option v-for="opt in INTERVAL_OPTIONS" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
+          <div>
+            <label class="dialog-label">Uhrzeit</label>
+            <select v-model.number="batteryForm.battery_send_hour" class="dialog-input">
+              <option v-for="h in 24" :key="h - 1" :value="h - 1">
+                {{ String(h - 1).padStart(2, "0") }}:00 Uhr
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <label class="dialog-label">Schwelle Batterie (%)</label>
+        <input
+          v-model.number="batteryForm.battery_threshold"
+          type="number"
+          min="1"
+          max="100"
+          class="dialog-input mb-1"
+        />
+        <p class="mb-4 text-xs text-neutral-500">
+          Gemeldet werden Geräte mit Batterie ≤ Schwelle oder mit
+          Herstellerwarnung „Batterie niedrig“.
+        </p>
+
+        <p
+          v-if="batterySettings?.battery_last_checked_at"
+          class="text-xs text-neutral-500"
+        >
+          Zuletzt geprüft: {{ formatDateTime(batterySettings.battery_last_checked_at) }}
+          · zuletzt gesendet: {{ formatDateTime(batterySettings.battery_last_sent_at) }}
+        </p>
+      </template>
+      <template #footer>
+        <button
+          class="btn-dialog-cancel mr-auto"
+          type="button"
+          :disabled="batteryTesting || batterySaving"
+          @click="sendBatteryTest"
+        >
+          {{ batteryTesting ? "Sende…" : "Test-Mail senden" }}
+        </button>
+        <button
+          class="btn-dialog-cancel"
+          type="button"
+          @click="batteryModalOpen = false"
+        >
+          Abbrechen
+        </button>
+        <button
+          class="btn-dialog-primary"
+          type="button"
+          :disabled="batterySaving"
+          @click="submitBatterySettings"
+        >
+          Speichern
         </button>
       </template>
     </UiModal>

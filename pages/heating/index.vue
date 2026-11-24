@@ -289,17 +289,17 @@ const removeRoom = async (room: any) => {
 };
 
 // Nur Admins: Thermostate, die den Plan-Soll trotz Nachsendens nicht bestätigen
-// sowie Thermostate, deren Gerätezeitplan wegen Modus "heat" nicht läuft
+// sowie Thermostate, auf die der Wochenplan nicht geschrieben werden konnte
 const scheduleWarnings = ref<Awaited<ReturnType<typeof heatingApi.getScheduleWarnings>>>([]);
 const loadScheduleWarnings = async () => {
   if (!isAdminUser.value) return;
   scheduleWarnings.value = await heatingApi.getScheduleWarnings();
 };
 const unconfirmedWarnings = computed(() =>
-  scheduleWarnings.value.flatMap((w) => (w.type === "native_schedule_inactive" ? [] : [w])),
+  scheduleWarnings.value.flatMap((w) => (w.type === "unconfirmed" ? [w] : [])),
 );
-const inactiveScheduleWarnings = computed(() =>
-  scheduleWarnings.value.flatMap((w) => (w.type === "native_schedule_inactive" ? [w] : [])),
+const unsyncedScheduleWarnings = computed(() =>
+  scheduleWarnings.value.flatMap((w) => (w.type === "native_schedule_unsynced" ? [w] : [])),
 );
 const formatSince = (iso: string) =>
   new Date(iso).toLocaleString("de-DE", {
@@ -345,26 +345,26 @@ onMounted(() => {
     </div>
 
     <div
-      v-if="isAdminUser && inactiveScheduleWarnings.length"
+      v-if="isAdminUser && unsyncedScheduleWarnings.length"
       class="mt-4 border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
       role="alert"
     >
       <p class="font-semibold">
-        {{ inactiveScheduleWarnings.length }}
-        {{ inactiveScheduleWarnings.length === 1 ? "Thermostat ignoriert" : "Thermostate ignorieren" }}
-        den eigenen Wochenplan
+        {{ unsyncedScheduleWarnings.length }}
+        {{ unsyncedScheduleWarnings.length === 1 ? "Thermostat hat" : "Thermostate haben" }}
+        den aktuellen Wochenplan noch nicht
       </p>
       <p class="mt-0.5">
-        Das Gerät steht auf „Heizen“ statt „Auto“ und hält deshalb nur den eingestellten Sollwert.
-        Damit der Plan wieder läuft, den Modus auf „Auto“ stellen.
+        Der Plan konnte nicht aufs Gerät geschrieben werden. Bis es klappt, schaltet der Server
+        das Thermostat live; es wird automatisch erneut versucht.
       </p>
       <ul class="mt-1 space-y-0.5">
-        <li v-for="w in inactiveScheduleWarnings" :key="w.entity_id">
+        <li v-for="w in unsyncedScheduleWarnings" :key="w.entity_id">
           <NuxtLink :to="`/heating/entities/${w.entity_id}`" class="underline">
             {{ w.name }}
           </NuxtLink>
           <span v-if="w.room_name"> ({{ w.room_name }})</span>
-          – seit {{ formatSince(w.since) }}
+          – seit {{ formatSince(w.since) }}<span v-if="w.error">: {{ w.error }}</span>
         </li>
       </ul>
     </div>

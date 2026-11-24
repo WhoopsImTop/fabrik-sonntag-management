@@ -74,7 +74,11 @@ const mainGroups = ref<NavItem[][]>([
     {
       label: "Kommunikation",
       icon: IconMail,
-      to: "/booking-system/email-templates",
+      defaultOpen: false,
+      children: [
+        { label: "Vorlagen", to: "/booking-system/email-templates" },
+        { label: "Versendete E-Mails", to: "/booking-system/email-log" },
+      ],
     },
   ],
   [

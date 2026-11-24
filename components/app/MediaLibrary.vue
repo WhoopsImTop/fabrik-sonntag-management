@@ -124,7 +124,7 @@
 
     <!-- Empty -->
     <div
-      v-else-if="filteredImages.length === 0"
+      v-else-if="images.length === 0"
       class="flex flex-col items-center justify-center gap-3 border border-neutral-200 bg-neutral-50 py-16 text-center"
     >
       <UiIcon name="i-lucide-images" class="size-10 text-neutral-300" />
@@ -154,11 +154,14 @@
     <!-- Grid -->
     <div
       v-else
-      class="grid grid-cols-2 gap-3 overflow-y-auto sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+      class="overflow-y-auto"
       :class="manageOnly ? '' : 'max-h-[min(55vh,28rem)]'"
     >
+    <div
+      class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+    >
       <button
-        v-for="image in filteredImages"
+        v-for="image in images"
         :key="image.id"
         type="button"
         class="group relative aspect-square overflow-hidden border bg-neutral-100 text-left transition-shadow focus:outline-none focus:ring-2 focus:ring-neutral-400"
@@ -172,10 +175,13 @@
         @dblclick="handleDoubleClick(image.id)"
       >
         <img
-          :src="getImageUrl(image.previewUrl || image.url)"
+          :src="thumbnailUrl(image)"
           :alt="image.name || 'Bild'"
           class="h-full w-full object-contain"
           loading="lazy"
+          decoding="async"
+          width="240"
+          height="240"
           draggable="false"
         />
 
@@ -216,6 +222,28 @@
       </button>
     </div>
 
+      <div
+        ref="loadMoreSentinel"
+        class="flex items-center justify-center gap-3 py-4 text-xs text-neutral-500"
+      >
+        <template v-if="loadingMore">
+          <UiIcon name="i-lucide-loader-2" class="size-4 animate-spin" />
+          Weitere Bilder werden geladen…
+        </template>
+        <button
+          v-else-if="hasMore"
+          type="button"
+          class="btn-dialog-cancel"
+          @click="loadMore"
+        >
+          Mehr laden
+        </button>
+        <span v-if="total">
+          {{ images.length }} von {{ total }} Bildern
+        </span>
+      </div>
+    </div>
+
     <ConversionStatusModal
       :open="conversionOpen"
       :items="conversionItems"
@@ -229,7 +257,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from "vue";
 import ConversionStatusModal from "@/components/app/ConversionStatusModal.vue";
 
 const props = defineProps({
@@ -267,21 +295,26 @@ const conversionItems = ref([]);
 const conversionCurrent = ref(0);
 const conversionTotal = ref(0);
 const conversionCurrentName = ref("");
+const PAGE_SIZE = 40;
+const page = ref(0);
+const total = ref(0);
+const totalPages = ref(1);
+const loadingMore = ref(false);
+const loadMoreSentinel = ref(null);
+let observer = null;
+let searchTimer = null;
+let requestSeq = 0;
+
+const apiUrl = import.meta.env.VITE_INTERNAL_API_URL;
+const authHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+});
+
+const hasMore = computed(() => page.value < totalPages.value);
 
 const allowMultiSelect = computed(
   () => props.manageOnly || props.isMultiSelect,
 );
-
-const filteredImages = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase();
-  const list = [...images.value].sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
-  if (!q) return list;
-  return list.filter((img) => {
-    const name = (img.name || "").toLowerCase();
-    const id = String(img.id ?? "");
-    return name.includes(q) || id.includes(q);
-  });
-});
 
 const confirmLabel = computed(() => {
   const count = selectedImages.value.length;
@@ -294,26 +327,94 @@ const confirmLabel = computed(() => {
 
 onMounted(async () => {
   await loadImages();
+  setupObserver();
 });
 
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  clearTimeout(searchTimer);
+});
+
+// Suche läuft serverseitig, damit nicht alle Bilder geladen werden müssen
+watch(searchQuery, () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadImages(), 300);
+});
+
+function setupObserver() {
+  observer?.disconnect();
+  if (typeof IntersectionObserver === "undefined") return;
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) loadMore();
+    },
+    { rootMargin: "400px 0px" },
+  );
+  if (loadMoreSentinel.value) observer.observe(loadMoreSentinel.value);
+}
+
+// Sentinel existiert nur, solange das Grid gerendert ist (nicht bei Laden/Leer)
+watch(loadMoreSentinel, (el, prev) => {
+  if (prev) observer?.unobserve(prev);
+  if (el) observer?.observe(el);
+});
+
+async function fetchPage(pageNumber) {
+  const params = new URLSearchParams({
+    page: String(pageNumber),
+    limit: String(PAGE_SIZE),
+  });
+  const q = searchQuery.value.trim();
+  if (q) params.set("q", q);
+  const response = await fetch(`${apiUrl}/media?${params}`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) throw new Error("Failed to load images");
+  return response.json();
+}
+
+// Lädt ab Seite 1 neu (Suche, Upload, Mount)
 async function loadImages({ silent = false } = {}) {
+  const seq = ++requestSeq;
   if (!silent) loading.value = true;
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_INTERNAL_API_URL}/media`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-      },
-    );
-    if (!response.ok) throw new Error("Failed to load images");
-    images.value = await response.json();
+    const data = await fetchPage(1);
+    if (seq !== requestSeq) return;
+    images.value = data.items;
+    page.value = data.page;
+    total.value = data.total;
+    totalPages.value = data.totalPages;
   } catch (error) {
     console.error("Error loading images:", error);
     toast.add({ title: "Fehler beim Laden der Bilder", color: "error" });
   } finally {
-    if (!silent) loading.value = false;
+    if (seq === requestSeq && !silent) loading.value = false;
+  }
+}
+
+async function loadMore() {
+  if (loading.value || loadingMore.value || !hasMore.value) return;
+  const seq = requestSeq;
+  loadingMore.value = true;
+  try {
+    const data = await fetchPage(page.value + 1);
+    if (seq !== requestSeq) return;
+    const known = new Set(images.value.map((img) => img.id));
+    images.value.push(...data.items.filter((img) => !known.has(img.id)));
+    page.value = data.page;
+    total.value = data.total;
+    totalPages.value = data.totalPages;
+  } catch (error) {
+    console.error("Error loading more images:", error);
+    toast.add({ title: "Fehler beim Nachladen", color: "error" });
+  } finally {
+    loadingMore.value = false;
+  }
+  // Sentinel noch sichtbar (große Bildschirme) → direkt weiterladen
+  await nextTick();
+  const el = loadMoreSentinel.value;
+  if (el && hasMore.value && el.getBoundingClientRect().top < window.innerHeight + 400) {
+    loadMore();
   }
 }
 
@@ -434,6 +535,9 @@ async function convertSelectedToAvif() {
       const data = await response.json();
       if (data.converted?.length) {
         item.status = "converted";
+        const converted = data.converted[0].media;
+        const idx = images.value.findIndex((img) => img.id === converted?.id);
+        if (idx !== -1) images.value[idx] = { ...images.value[idx], ...converted };
       } else if (data.skipped?.length) {
         item.status = "skipped";
       } else {
@@ -448,7 +552,6 @@ async function convertSelectedToAvif() {
 
   conversionDone.value = true;
   isConverting.value = false;
-  await loadImages({ silent: true });
 }
 
 async function deleteImage(imageId) {
@@ -474,6 +577,7 @@ async function deleteImage(imageId) {
     if (!response.ok) throw new Error("Failed to delete image");
 
     images.value = images.value.filter((img) => img.id !== imageId);
+    total.value = Math.max(0, total.value - 1);
     selectedImages.value = selectedImages.value.filter((id) => id !== imageId);
     toast.add({ title: "Bild gelöscht", color: "green" });
   } catch (error) {
@@ -519,6 +623,12 @@ function getImageUrl(url) {
   if (!url) return "";
   if (url.startsWith("http")) return url;
   return `${import.meta.env.VITE_INTERNAL_IMAGE_URL}${url}`;
+}
+
+// Nie das Original laden: vorhandenes Preview direkt, sonst erzeugt die API es
+function thumbnailUrl(image) {
+  if (image.previewUrl) return getImageUrl(image.previewUrl);
+  return `${apiUrl}/media/${image.id}/thumbnail`;
 }
 
 function fileExtension(image) {

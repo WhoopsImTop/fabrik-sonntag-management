@@ -477,6 +477,25 @@ const formatDate = (date: string) => {
   });
 };
 
+const toTime = (date: string | null | undefined) => {
+  if (!date) return null;
+  const t = new Date(date).getTime();
+  return Number.isNaN(t) ? null : t;
+};
+
+// Entwürfe ohne Rechnungsdatum zuerst (neueste zuerst nach Erstellung),
+// danach alle übrigen nach Rechnungsdatum absteigend.
+const compareInvoices = (a: any, b: any) => {
+  const aDate = toTime(a.invoice_date);
+  const bDate = toTime(b.invoice_date);
+  if (aDate === null && bDate !== null) return -1;
+  if (aDate !== null && bDate === null) return 1;
+  if (aDate === null && bDate === null) {
+    return (toTime(b.createdAt ?? b.created_at) ?? 0) - (toTime(a.createdAt ?? a.created_at) ?? 0);
+  }
+  return (bDate as number) - (aDate as number);
+};
+
 // --- Actions ---
 
 const loadInvoices = async () => {
@@ -484,8 +503,7 @@ const loadInvoices = async () => {
   try {
     let data = await api.sales.getAll();
     if (Array.isArray(data)) {
-      console.log(data)
-      data.sort((a, b) => new Date(b.invoice_date) - new Date(a.invoice_date));
+      data.sort(compareInvoices);
       invoices.value = data;
       calculateStats(data);
     }

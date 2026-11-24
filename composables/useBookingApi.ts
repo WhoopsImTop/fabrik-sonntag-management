@@ -1336,6 +1336,44 @@ export const useBookingApi = () => {
         "communications.getByBooking",
       );
     },
+    // Globales Versandprotokoll (alle E-Mails des Systems)
+    getAll: async (params: {
+      q?: string;
+      status?: "sent" | "failed" | "";
+      template_key?: string;
+      from?: string;
+      to?: string;
+      limit?: number;
+      offset?: number;
+    }) => {
+      const clean = Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== "" && v != null),
+      );
+      return await apiCall(
+        () =>
+          $fetch<{
+            rows: any[];
+            count: number;
+            limit: number;
+            offset: number;
+            failed_total: number;
+            template_keys: string[];
+          }>(`${baseURL}/communications/all`, {
+            headers: getAuthHeaders(),
+            params: clean,
+          }),
+        "communications.getAll",
+      );
+    },
+    getOne: async (id: number) => {
+      return await apiCall(
+        () =>
+          $fetch<any>(`${baseURL}/communications/${id}`, {
+            headers: getAuthHeaders(),
+          }),
+        "communications.getOne",
+      );
+    },
   };
 
   const auth = {

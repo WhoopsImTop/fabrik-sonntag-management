@@ -235,7 +235,7 @@ watch(
 const hint = computed(() => {
   if (props.hint) return props.hint;
   return props.native
-    ? "Auf dem Gerät gespeichert (Auto-Modus)."
+    ? "Auf dem Gerät gespeichert; im Modus „Auto“ schaltet es selbst, sonst der Server."
     : "Server schaltet per MQTT zur jeweiligen Uhrzeit.";
 });
 

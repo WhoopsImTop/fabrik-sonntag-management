@@ -80,8 +80,36 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 let chart: Chart<"line"> | null = null;
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
-const toPoints = (rows?: SeriesPoint[]) =>
-  (rows || []).map((row) => ({ x: Date.parse(row.t), y: row.v }));
+type ChartPoint = { x: number; y: number | null };
+
+// Ist, Soll und Fenster werden zu unterschiedlichen Zeiten geloggt. Der
+// Tooltip (mode "index") greift aber je Datensatz denselben Array-Index ab –
+// ohne gemeinsames Zeitraster zeigt er also Werte von verschiedenen Uhrzeiten.
+// Deshalb alle Reihen auf dieselben Zeitpunkte bringen und den jeweils letzten
+// Wert halten (Stufenverlauf).
+const toAlignedPoints = (list: (SeriesPoint[] | undefined)[]) => {
+  const parsed = list.map((rows) =>
+    (rows || [])
+      .map((row) => ({ x: Date.parse(row.t), y: row.v }))
+      .filter((point) => Number.isFinite(point.x))
+      .sort((a, b) => a.x - b.x),
+  );
+  const times = [...new Set(parsed.flatMap((rows) => rows.map((p) => p.x)))].sort(
+    (a, b) => a - b,
+  );
+  return parsed.map((rows): ChartPoint[] => {
+    if (!rows.length) return [];
+    let idx = 0;
+    let current: number | null = null;
+    return times.map((x) => {
+      while (idx < rows.length && rows[idx].x <= x) {
+        current = rows[idx].y;
+        idx += 1;
+      }
+      return { x, y: current };
+    });
+  });
+};
 
 const hasData = computed(() => {
   const current = series.value.current_temperature?.length || 0;
@@ -106,11 +134,15 @@ const buildChart = () => {
   chart = null;
   if (!hasData.value) return;
 
-  const windowPoints = toPoints(series.value.window_open);
+  const [currentPoints, targetPoints, windowPoints] = toAlignedPoints([
+    series.value.current_temperature,
+    series.value.target_temperature,
+    series.value.window_open,
+  ]);
   const datasets: any[] = [
     {
       label: "Ist",
-      data: toPoints(series.value.current_temperature),
+      data: currentPoints,
       borderColor: "#171717",
       backgroundColor: "#171717",
       stepped: "after",
@@ -121,7 +153,7 @@ const buildChart = () => {
     },
     {
       label: "Soll",
-      data: toPoints(series.value.target_temperature),
+      data: targetPoints,
       borderColor: "#ea580c",
       backgroundColor: "#ea580c",
       stepped: "after",
@@ -160,6 +192,7 @@ const buildChart = () => {
           labels: { boxWidth: 12, font: { size: 11 } },
         },
         tooltip: {
+          filter: (item) => item.parsed?.y != null,
           callbacks: {
             title: (items) => {
               const x = items[0]?.parsed?.x;
